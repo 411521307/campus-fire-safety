@@ -917,7 +917,7 @@ function initSurvivalSimulator() {
     const hintEl = document.getElementById('survivalStatusHint');
     if (!hintEl) return;
     const isZh = currentLang === 'zh';
-    const sec = (currentAction === 1 || currentAction === 2) ? 24 : 16;
+    const sec = (currentAction >= 1 && currentAction <= 3) ? 24 : 16;
     if (isPlaying) {
       hintEl.textContent = isZh
         ? `💡 自動輪播中（此動作完整示範 ${sec} 秒，速度 ${playbackSpeed}x）。點擊任一動作可停駐觀看細節。`
@@ -2012,155 +2012,284 @@ function initSurvivalSimulator() {
     }
 
     // =============================================================
-    // SCENE 3: STOP, DROP & ROLL (Complete Sequence: Running -> Stopping -> Dropping -> Rolling!)
+    // SCENE 3: STOP, DROP & ROLL (Burning Doorway -> Panic Run -> Stop -> Drop -> Roll -> Extinguished)
     // =============================================================
     else if (currentAction === 3) {
-      ctx.fillStyle = '#111827';
+      const cycle = (actionTimer % 1440);
+      const centerX = w * 0.55;
+
+      const isAct1 = cycle < 380;
+      const isAct2 = cycle >= 380 && cycle < 560;
+      const isAct3 = cycle >= 560 && cycle < 740;
+      const isAct4 = cycle >= 740 && cycle < 1240;
+      const isAct5 = cycle >= 1240;
+
+      // -------------------------------------------------------------
+      // 1. BACKGROUND: ROOM WITH OPEN DOORWAY AND RAGING INFERNO BEHIND IT
+      // -------------------------------------------------------------
+      // Room wall
+      ctx.fillStyle = '#0d1322';
       ctx.fillRect(0, 0, w, groundY);
 
-      const s3Cycle = (actionTimer % 960);
-      const centerX = w * 0.5;
+      // Room floor
+      ctx.fillStyle = '#060911';
+      ctx.fillRect(0, groundY, w, h - groundY);
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, groundY);
+      ctx.lineTo(w, groundY);
+      ctx.stroke();
+
+      // Skirting board
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, groundY - 14, w, 14);
+
+      // Room interior details: Window, ceiling pendant lamp
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(w * 0.75, 70, 100, 90);
+      ctx.strokeStyle = '#334155';
+      ctx.strokeRect(w * 0.75, 70, 100, 90);
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.beginPath();
+      ctx.moveTo(w * 0.75 + 50, 70);
+      ctx.lineTo(w * 0.75 + 50, 160);
+      ctx.moveTo(w * 0.75, 115);
+      ctx.lineTo(w * 0.75 + 100, 115);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(w * 0.52, 0);
+      ctx.lineTo(w * 0.52, 45);
+      ctx.stroke();
+      ctx.fillStyle = '#cbd5e1';
+      ctx.beginPath();
+      ctx.arc(w * 0.52, 48, 8, Math.PI, Math.PI * 2);
+      ctx.fill();
 
       // -------------------------------------------------------------
-      // SUB-PHASE 1: PANIC RUNNING (Frames 0 to 220)
+      // OPEN DOORWAY ON THE LEFT WITH A LOT OF FIRE BEHIND IT
       // -------------------------------------------------------------
-      if (s3Cycle < 220) {
+      const doorX = 40;
+      const doorW = 120;
+      const doorH = groundY - 35;
+      const doorY = 35;
+
+      // Dark hallway cavity behind door
+      ctx.fillStyle = '#1a0505';
+      ctx.fillRect(doorX, doorY, doorW, doorH);
+
+      // Roaring inferno behind the open door
+      drawEnchantedFire(ctx, doorX + 35, groundY, 45, 150, 1.25, 4, frame * 1.1, true);
+      drawEnchantedFire(ctx, doorX + 70, groundY, 55, 190, 1.45, -6, frame * 1.3, true);
+      drawEnchantedFire(ctx, doorX + 105, groundY, 40, 140, 1.2, 5, frame * 1.2, true);
+
+      // Amber/red light spilling out from the doorway onto room floor
+      const spillGrad = ctx.createRadialGradient(
+        doorX + doorW, groundY, 10,
+        doorX + doorW + 180, groundY, 260
+      );
+      spillGrad.addColorStop(0, 'rgba(249, 115, 22, 0.45)');
+      spillGrad.addColorStop(0.5, 'rgba(239, 68, 68, 0.15)');
+      spillGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = spillGrad;
+      ctx.fillRect(doorX, doorY - 20, doorW + 280, doorH + 60);
+
+      // Door Frame
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 5;
+      ctx.strokeRect(doorX, doorY, doorW, doorH);
+
+      // Swung open door slab
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(doorX - 22, doorY, 22, doorH);
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(doorX - 22, doorY, 22, doorH);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(doorX - 16, doorY + doorH * 0.52, 10, 5);
+
+      // Top door warning pill
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.9)';
+      ctx.fillRect(doorX, doorY - 24, doorW, 20);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(currentLang === 'zh' ? '🔥 門後猛烈火海' : '🔥 RAGING INFERNO', doorX + doorW / 2, doorY - 10);
+
+      // -------------------------------------------------------------
+      // 2. CHARACTER ACTIONS & PANIC / EXTINCTION ANIMATION
+      // -------------------------------------------------------------
+      if (isAct1) {
+        // ACT 1: Burst out of door on fire, running around like crazy with hands waving in panic!
         drawPill(ctx, currentLang === 'zh'
-          ? '⚠️ 慌亂奔跑 (RUNNING) - 錯誤示範！奔跑會灌注氧氣助長火勢！'
-          : '⚠️ PANIC RUNNING - DANGER! RUNNING FEEDS OXYGEN TO FLAMES!', centerX, 30, '#ef4444', '#ffffff', 13, 24, 8);
+          ? '⚠️ 著火驚慌失措！雙手亂揮狂奔！(錯誤示範：狂奔灌注氧氣如鼓風爐，助長火勢！)'
+          : '⚠️ PANIC FLAGGING & RUNNING! (RUNNING FEEDS OXYGEN LIKE A BELLOWS!)', w * 0.5, 30, '#ef4444', '#ffffff', 13, 24, 8);
 
-        // Character running from left to center
-        const runT = s3Cycle / 220;
-        const pX = w * 0.2 + runT * (centerX - w * 0.2);
-        const pY = groundY;
+        let personX;
+        let facingRight = true;
+        if (cycle < 160) {
+          const t = cycle / 160;
+          personX = (doorX + 90) + t * (w * 0.65 - (doorX + 90));
+          facingRight = true;
+        } else if (cycle < 270) {
+          const t = (cycle - 160) / 110;
+          personX = w * 0.65 - t * 90;
+          facingRight = false;
+        } else {
+          const t = (cycle - 270) / 110;
+          personX = (w * 0.65 - 90) + t * (centerX - (w * 0.65 - 90));
+          facingRight = true;
+        }
 
-        const runGait = (s3Cycle * 0.25);
-        const legAngle = Math.sin(runGait) * 0.55;
-        const armAngle = Math.cos(runGait) * 0.55;
+        const personY = groundY;
+        const runGait = actionTimer * 0.35 * playbackSpeed;
+        const legSwing = Math.sin(runGait) * 36;
 
-        // Running Legs (scissoring)
+        ctx.save();
+        ctx.translate(personX, personY);
+
+        const waveAngle1 = Math.sin(actionTimer * 0.45 * playbackSpeed) * 0.65 + 0.4;
+        const waveAngle2 = Math.cos(actionTimer * 0.48 * playbackSpeed) * 0.65 + 0.4;
+
+        // Legs (scissoring fast)
         ctx.strokeStyle = '#1e293b';
         ctx.lineWidth = 11;
         ctx.lineCap = 'round';
-        // Left Leg
-        ctx.beginPath();
-        ctx.moveTo(pX, pY - 80);
-        ctx.lineTo(pX - Math.sin(legAngle) * 32, pY - 40);
-        ctx.lineTo(pX - Math.sin(legAngle) * 45, pY - 5);
-        ctx.stroke();
-        // Right Leg
-        ctx.beginPath();
-        ctx.moveTo(pX, pY - 80);
-        ctx.lineTo(pX + Math.sin(legAngle) * 32, pY - 40);
-        ctx.lineTo(pX + Math.sin(legAngle) * 45, pY - 5);
-        ctx.stroke();
-
-        // Leaning Torso (running forward tilt)
-        ctx.save();
-        ctx.translate(pX, pY - 80);
-        ctx.rotate(0.18); // Forward lean
-
-        ctx.fillStyle = '#0284c7';
-        ctx.beginPath();
-        ctx.roundRect(-18, -85, 36, 85, 6);
-        ctx.fill();
-
-        // Head looking forward in terror
-        ctx.fillStyle = '#fed7aa';
-        ctx.beginPath();
-        ctx.arc(8, -105, 17, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#1e293b';
-        ctx.beginPath();
-        ctx.arc(8, -112, 17, Math.PI * 1.1, Math.PI * 2.2);
-        ctx.fill();
-
-        // Pumping Arms in panic
-        ctx.strokeStyle = '#0284c7';
-        ctx.lineWidth = 10;
         ctx.beginPath();
         ctx.moveTo(0, -75);
-        ctx.lineTo(Math.sin(armAngle) * 30 + 10, -50);
+        ctx.lineTo(-legSwing * 0.7, -40);
+        ctx.lineTo(-legSwing, -4);
         ctx.stroke();
 
-        // ENCHANTED FIRE ON BACK (Wind-blown horizontally to the left!)
-        drawEnchantedFire(ctx, -18, -45, 35, 65, 1.3, -35, frame);
+        ctx.beginPath();
+        ctx.moveTo(0, -75);
+        ctx.lineTo(legSwing * 0.7, -40);
+        ctx.lineTo(legSwing, -4);
+        ctx.stroke();
+
+        // Leaning Torso (wobbly frantically)
+        const torsoTilt = (facingRight ? 0.22 : -0.22) + Math.sin(actionTimer * 0.3) * 0.08;
+        ctx.rotate(torsoTilt);
+
+        // Clothes (on fire!)
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.roundRect(-18, -155, 36, 80, 6);
+        ctx.fill();
+
+        // Head screaming / in terror
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(0, -178, 16, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hair
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(0, -184, 17, Math.PI * 0.9, Math.PI * 2.1);
+        ctx.fill();
+
+        // Terror eyes & screaming mouth
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(facingRight ? 6 : -6, -179, 2.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(facingRight ? 8 : -8, -170, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // WAVING HANDS IN PANIC! (both arms flailing wildly high overhead)
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 9;
+        ctx.beginPath();
+        ctx.moveTo(12, -145);
+        ctx.lineTo(24 + Math.sin(waveAngle1) * 25, -175 - Math.cos(waveAngle1) * 20);
+        ctx.lineTo(30 + Math.sin(waveAngle1) * 40, -210 - Math.cos(waveAngle1) * 25);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(-12, -145);
+        ctx.lineTo(-24 - Math.sin(waveAngle2) * 25, -175 - Math.cos(waveAngle2) * 20);
+        ctx.lineTo(-30 - Math.sin(waveAngle2) * 40, -210 - Math.cos(waveAngle2) * 25);
+        ctx.stroke();
+
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(30 + Math.sin(waveAngle1) * 40, -210 - Math.cos(waveAngle1) * 25, 6, 0, Math.PI * 2);
+        ctx.arc(-30 - Math.sin(waveAngle2) * 40, -210 - Math.cos(waveAngle2) * 25, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // ENCHANTED FIRE ON BACK & CLOTHES (Wind-blown trail!)
+        const windDrift = facingRight ? -30 : 30;
+        drawEnchantedFire(ctx, facingRight ? -16 : 16, -95, 34, 75, 1.4, windDrift, frame * 1.4);
 
         ctx.restore();
 
         drawPill(ctx, currentLang === 'zh'
-          ? '奔跑產生的風勢如鼓風爐，火焰會迅速向上吞噬臉部！'
-          : 'Wind from running feeds flames like a bellows. Stop moving immediately!', centerX, groundY - 14, 'rgba(15,23,42,0.85)', '#fca5a5', 11, 16, 5);
-      }
+          ? '奔跑產生的風勢有如鼓風爐，雙手亂揮更會將火焰迅速往頭頸口鼻引導！'
+          : 'Wind from running feeds flames like a bellows. Flailing hands pull flames toward face!', w * 0.5, groundY - 14, 'rgba(15,23,42,0.85)', '#fca5a5', 11, 16, 5);
 
-      // -------------------------------------------------------------
-      // SUB-PHASE 2: STOP! (Frames 220 to 420)
-      // -------------------------------------------------------------
-      else if (s3Cycle < 420) {
+      } else if (isAct2) {
+        // ACT 2: Stop for a second! Realizes running makes it worse!
         drawPill(ctx, currentLang === 'zh'
-          ? '🛑 步驟 1：停 (STOP) - 立即停住腳步！絕對不要奔跑！'
-          : '🛑 STEP 1: STOP - STOP MOVING IMMEDIATELY! NEVER RUN!', centerX, 30, '#dc2626', '#ffffff', 14, 24, 9);
+          ? '🛑 步驟 1：停 (STOP) - 立即站定停住腳步！絕對不要奔跑！'
+          : '🛑 STEP 1: STOP - HALT IMMEDIATELY! NEVER RUN!', w * 0.5, 30, '#dc2626', '#ffffff', 14, 24, 9);
 
-        const pX = centerX;
-        const pY = groundY;
+        const personX = centerX;
+        const personY = groundY;
 
-        // Legs upright
         ctx.fillStyle = '#1e293b';
-        ctx.fillRect(pX - 14, pY - 85, 11, 85);
-        ctx.fillRect(pX + 3, pY - 85, 11, 85);
+        ctx.fillRect(personX - 14, personY - 85, 12, 85);
+        ctx.fillRect(personX + 2, personY - 85, 12, 85);
 
-        // Torso upright
         ctx.fillStyle = '#0284c7';
-        ctx.fillRect(pX - 18, pY - 170, 36, 85);
+        ctx.fillRect(personX - 18, personY - 165, 36, 80);
 
-        // Head
         ctx.fillStyle = '#fed7aa';
         ctx.beginPath();
-        ctx.arc(pX, pY - 192, 17, 0, Math.PI * 2);
+        ctx.arc(personX, personY - 188, 16, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#1e293b';
         ctx.beginPath();
-        ctx.arc(pX, pY - 200, 18, Math.PI, Math.PI * 2);
+        ctx.arc(personX, personY - 195, 17, Math.PI, Math.PI * 2);
         ctx.fill();
 
-        // Arms at sides
         ctx.strokeStyle = '#0284c7';
         ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
         ctx.beginPath();
-        ctx.moveTo(pX - 16, pY - 160);
-        ctx.lineTo(pX - 22, pY - 105);
-        ctx.moveTo(pX + 16, pY - 160);
-        ctx.lineTo(pX + 22, pY - 105);
+        ctx.moveTo(personX - 16, personY - 155);
+        ctx.lineTo(personX - 22, personY - 105);
+        ctx.moveTo(personX + 16, personY - 155);
+        ctx.lineTo(personX + 22, personY - 105);
         ctx.stroke();
 
-        // ENCHANTED FIRE ON CLOTHES (Rising vertically, no wind tilt)
-        drawEnchantedFire(ctx, pX - 18, pY - 120, 36, 68, 1.1, -6, frame);
+        // Fire on clothes (vertical, air wind halted)
+        drawEnchantedFire(ctx, personX - 14, personY - 110, 32, 60, 1.1, -4, frame);
 
         drawPill(ctx, currentLang === 'zh'
-          ? '立即站定切斷對流風勢！準備順勢躺下！'
-          : 'Standing still halts convective airflow. Prepare to drop to the floor!', centerX, groundY - 14, 'rgba(15,23,42,0.85)', '#fca5a5', 11, 16, 5);
-      }
+          ? '立即站定切斷對流風勢！準備順勢趴下！'
+          : 'Standing still halts convective airflow. Prepare to drop to the floor!', w * 0.5, groundY - 14, 'rgba(15,23,42,0.85)', '#fca5a5', 11, 16, 5);
 
-      // -------------------------------------------------------------
-      // SUB-PHASE 3: SMOOTH DROPPING TRANSITION (Frames 420 to 580)
-      // -------------------------------------------------------------
-      else if (s3Cycle < 580) {
+      } else if (isAct3) {
+        // ACT 3: Dropping / Lying down on the ground, covering face!
         drawPill(ctx, currentLang === 'zh'
           ? '🧎 步驟 2：躺 (DROP) - 順勢趴躺地面，雙手緊摀臉部！'
-          : '🧎 STEP 2: DROP - DROP DOWN TO FLOOR, COVER FACE WITH HANDS!', centerX, 30, '#f59e0b', '#000000', 14, 24, 9);
+          : '🧎 STEP 2: DROP - DROP DOWN TO FLOOR, CUP HANDS OVER FACE!', w * 0.5, 30, '#f59e0b', '#000000', 14, 24, 9);
 
-        // Smooth interpolation from standing to lying on floor
-        const dropT = (s3Cycle - 420) / 160;
-        const easeT = dropT * dropT * (3 - 2 * dropT); // Smooth step
+        const dropT = Math.min(1.0, (cycle - 560) / 160);
+        const easeT = dropT * dropT * (3 - 2 * dropT);
 
         const hipY = (groundY - 85) + easeT * 65;
-        const torsoAngle = easeT * (Math.PI / 2); // Rotates from vertical (0) to horizontal (90 deg)
-        const pX = centerX;
+        const torsoAngle = easeT * (Math.PI / 2);
+        const personX = centerX;
 
         ctx.save();
-        ctx.translate(pX, hipY);
+        ctx.translate(personX, hipY);
 
-        // Legs bending down to floor
         ctx.strokeStyle = '#1e293b';
         ctx.lineWidth = 12;
         ctx.lineCap = 'round';
@@ -2170,49 +2299,45 @@ function initSurvivalSimulator() {
         ctx.lineTo(-80 * easeT, 15 * easeT);
         ctx.stroke();
 
-        // Torso rotating towards floor
         ctx.rotate(torsoAngle);
         ctx.fillStyle = '#0284c7';
         ctx.beginPath();
         ctx.roundRect(-16, -75, 32, 75, 8);
         ctx.fill();
 
-        // Head
         ctx.fillStyle = '#fed7aa';
         ctx.beginPath();
         ctx.arc(0, -92, 16, 0, Math.PI * 2);
         ctx.fill();
 
-        // Hands moving up to cover face!
-        ctx.fillStyle = '#fde047';
-        const handCoverY = -75 + (1 - easeT) * 35;
+        // Hands covering face firmly
+        ctx.fillStyle = '#fed7aa';
         ctx.beginPath();
-        ctx.roundRect(-10, -100, 20, 18, 5);
+        ctx.roundRect(-12, -98, 24, 18, 5);
         ctx.fill();
 
         // Fire on back lowering into floor contact
-        drawEnchantedFire(ctx, -18, -40, 30, 48 * (1 - easeT * 0.4), 1.0, 0, frame);
+        drawEnchantedFire(ctx, -16, -38, 28, 45 * (1 - easeT * 0.4), 0.95, 0, frame);
 
         ctx.restore();
 
         drawPill(ctx, currentLang === 'zh'
           ? '雙手緊摀口鼻與雙眼，保護呼吸道不被高溫熱氣灼傷！'
-          : 'Cup hands firmly over mouth, nose, and eyes to protect airway!', centerX, groundY - 14, 'rgba(15,23,42,0.85)', '#fef08a', 11, 16, 5);
-      }
+          : 'Cup hands firmly over mouth, nose, and eyes to protect airway!', w * 0.5, groundY - 14, 'rgba(15,23,42,0.85)', '#fef08a', 11, 16, 5);
 
-      // -------------------------------------------------------------
-      // SUB-PHASE 4: ROLLING & SMOTHERING (Frames 580 to 900)
-      // -------------------------------------------------------------
-      else if (s3Cycle < 900) {
+      } else if (isAct4) {
+        // ACT 4: Spin around until the fire is out!
         drawPill(ctx, currentLang === 'zh'
-          ? '🔄 步驟 3：滾 (ROLL) - 來回翻滾壓滅火苗！完全熄滅！'
-          : '🔄 STEP 3: ROLL - ROLL BACK & FORTH TO SMOTHER ALL FLAMES!', centerX, 30, '#10b981', '#ffffff', 14, 24, 9);
+          ? '🔄 步驟 3：滾 (ROLL) - 來回翻滾壓滅火苗！完全撲滅！'
+          : '🔄 STEP 3: ROLL - ROLL BACK & FORTH TO SMOTHER ALL FLAMES!', w * 0.5, 30, '#10b981', '#ffffff', 14, 24, 9);
 
-        // Continuous 360-degree cylindrical rolling human figure
-        const rollCycle = (s3Cycle - 580) * 0.08;
-        const rollX = centerX + Math.sin(rollCycle * 0.5) * 85;
+        const rollCycle = (cycle - 740) * 0.08 * playbackSpeed;
+        const rollX = centerX + Math.sin(rollCycle * 0.5) * 90;
         const rollY = groundY - 22;
         const rollAngle = rollCycle * 1.5;
+
+        const rollProgress = Math.min(1.0, (cycle - 740) / 440);
+        const remainingFire = Math.max(0, 1.0 - rollProgress);
 
         ctx.save();
         ctx.translate(rollX, rollY);
@@ -2229,7 +2354,6 @@ function initSurvivalSimulator() {
         ctx.beginPath();
         ctx.arc(36, 0, 14, 0, Math.PI * 2);
         ctx.fill();
-        // Arms wrapped tightly over face
         ctx.fillStyle = '#38bdf8';
         ctx.fillRect(26, -10, 16, 20);
 
@@ -2239,27 +2363,28 @@ function initSurvivalSimulator() {
         ctx.roundRect(-70, -10, 44, 20, 6);
         ctx.fill();
 
+        // Shrinking fire on body as it is smothered
+        if (remainingFire > 0.05) {
+          drawEnchantedFire(ctx, -6, 0, 24 * remainingFire, 32 * remainingFire, remainingFire, 0, frame * 1.5);
+        }
+
         ctx.restore();
 
-        // Smothering flame sparks & steam puffs at contact point
-        const rollProgress = Math.min(1.0, (s3Cycle - 580) / 280);
-        const remainingFire = Math.max(0, 1.0 - rollProgress);
-
-        if (remainingFire > 0.05 && Math.random() < 0.65) {
+        // Steam puffs and smothered ember particles
+        if (remainingFire > 0.05 && Math.random() < 0.7) {
           fireExtinguishPuffs.push({
-            x: rollX + (Math.random() - 0.5) * 40,
+            x: rollX + (Math.random() - 0.5) * 45,
             y: groundY - 8,
-            radius: Math.random() * 12 + 6,
+            radius: Math.random() * 14 + 6,
             life: 1.0
           });
         }
 
-        // Draw puff particles
         for (let p = fireExtinguishPuffs.length - 1; p >= 0; p--) {
           const puff = fireExtinguishPuffs[p];
           puff.y -= 0.8;
           puff.radius *= 1.04;
-          puff.life -= 0.04;
+          puff.life -= 0.035;
           if (puff.life <= 0) {
             fireExtinguishPuffs.splice(p, 1);
             continue;
@@ -2270,23 +2395,18 @@ function initSurvivalSimulator() {
           ctx.fill();
         }
 
-        // Dynamically measured status pill - positioned well above student to prevent overlap
         if (remainingFire > 0.05) {
-          drawPill(ctx, `🔥 ${currentLang === 'zh' ? '翻滾阻絕空氣中' : 'Smothering Flames'} (${Math.round(remainingFire * 100)}%)`, centerX, groundY - 145, 'rgba(15, 23, 42, 0.9)', '#f59e0b', 12, 22, 8, '#f59e0b');
+          drawPill(ctx, `🔥 ${currentLang === 'zh' ? '翻滾阻絕空氣中' : 'Smothering Flames'} (${Math.round(remainingFire * 100)}%)`, w * 0.5, groundY - 145, 'rgba(15, 23, 42, 0.9)', '#f59e0b', 12, 22, 8, '#f59e0b');
         } else {
-          drawPill(ctx, `✅ ${currentLang === 'zh' ? '火焰完全壓熄！口鼻安全！' : 'FLAMES COMPLETELY EXTINGUISHED!'}`, centerX, groundY - 145, '#065f46', '#a7f3d0', 12, 24, 8, '#10b981');
+          drawPill(ctx, `✅ ${currentLang === 'zh' ? '火焰完全壓熄！口鼻安全！' : 'FLAMES COMPLETELY EXTINGUISHED!'}`, w * 0.5, groundY - 145, '#065f46', '#a7f3d0', 12, 24, 8, '#10b981');
         }
-      }
 
-      // -------------------------------------------------------------
-      // SUB-PHASE 5: VICTORY & LOOP (Frames 900 to 960)
-      // -------------------------------------------------------------
-      else {
+      } else {
+        // ACT 5: Fire completely extinguished! Lying safely on the ground, victorious!
         drawPill(ctx, currentLang === 'zh'
           ? '✅ 示範成功：火焰完全撲滅！保護口鼻無嗆傷！'
-          : '✅ SUCCESS: FLAMES EXTINGUISHED! AIRWAY PROTECTED!', centerX, 30, '#065f46', '#a7f3d0', 14, 24, 9);
+          : '✅ SUCCESS: FLAMES EXTINGUISHED! AIRWAY PROTECTED!', w * 0.5, 30, '#065f46', '#a7f3d0', 14, 24, 9);
 
-        // Person resting safely on floor
         const bodyY = groundY - 24;
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(centerX - 95, bodyY + 4, 65, 18);
@@ -2296,10 +2416,38 @@ function initSurvivalSimulator() {
         ctx.beginPath();
         ctx.arc(centerX + 42, bodyY + 8, 16, 0, Math.PI * 2);
         ctx.fill();
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(centerX + 42, bodyY + 2, 17, Math.PI * 0.8, Math.PI * 2.1);
+        ctx.fill();
+
+        // Extinguished smoke wisps drifting gently
+        if (Math.random() < 0.25) {
+          fireExtinguishPuffs.push({
+            x: centerX - 10 + (Math.random() - 0.5) * 30,
+            y: bodyY - 5,
+            radius: Math.random() * 8 + 4,
+            life: 0.8
+          });
+        }
+        for (let p = fireExtinguishPuffs.length - 1; p >= 0; p--) {
+          const puff = fireExtinguishPuffs[p];
+          puff.y -= 0.6;
+          puff.radius *= 1.03;
+          puff.life -= 0.025;
+          if (puff.life <= 0) {
+            fireExtinguishPuffs.splice(p, 1);
+            continue;
+          }
+          ctx.fillStyle = `rgba(226, 232, 240, ${puff.life * 0.5})`;
+          ctx.beginPath();
+          ctx.arc(puff.x, puff.y, puff.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
         drawPill(ctx, currentLang === 'zh'
           ? '✅ 衣服著火：停、躺、滾完整動作示範完畢'
-          : '✅ Stop, Drop, and Roll demonstration complete', centerX, groundY - 85, 'rgba(15,23,42,0.9)', '#10b981', 12, 22, 8, '#10b981');
+          : '✅ Stop, Drop, and Roll demonstration complete', w * 0.5, groundY - 85, 'rgba(15,23,42,0.9)', '#10b981', 12, 22, 8, '#10b981');
       }
     }
 
@@ -2490,8 +2638,8 @@ function initSurvivalSimulator() {
         : '🪟 STEP 4: SIGNAL AT WINDOW WITH BRIGHT CLOTH & FLASHLIGHT! NEVER JUMP!', w * 0.5, 30, '#0284c7', '#ffffff', 13, 24, 8);
     }
 
-    // Auto-advance timer logic (Action 1 & 2 are 24s cinematic experiences; other actions are 16s)
-    const currentActionDuration = (currentAction === 1 || currentAction === 2) ? 1440 : actionDuration;
+    // Auto-advance timer logic (Actions 1, 2, and 3 are 24s cinematic experiences; Action 4 is 16s)
+    const currentActionDuration = (currentAction >= 1 && currentAction <= 3) ? 1440 : actionDuration;
     if (isPlaying) {
       actionTimer += playbackSpeed;
       const progressPercent = Math.min(100, (actionTimer / currentActionDuration) * 100);
