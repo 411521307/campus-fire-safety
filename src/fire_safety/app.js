@@ -996,8 +996,25 @@ function initSurvivalSimulator() {
   const speedBtn = document.getElementById('survivalSpeedBtn');
   if (speedBtn) {
     speedBtn.addEventListener('click', () => {
-      playbackSpeed = playbackSpeed === 1.0 ? 0.5 : 1.0;
-      speedBtn.textContent = playbackSpeed === 1.0 ? "⚡ 1x" : "🐢 0.5x";
+      if (playbackSpeed === 1.0) {
+        playbackSpeed = 2.0;
+        speedBtn.textContent = "🚀 2x";
+        speedBtn.style.color = "#f97316";
+        speedBtn.style.borderColor = "#f97316";
+        speedBtn.style.boxShadow = "0 0 10px rgba(249, 115, 22, 0.45)";
+      } else if (playbackSpeed === 2.0) {
+        playbackSpeed = 0.5;
+        speedBtn.textContent = "🐢 0.5x";
+        speedBtn.style.color = "#38bdf8";
+        speedBtn.style.borderColor = "#38bdf8";
+        speedBtn.style.boxShadow = "0 0 10px rgba(56, 189, 248, 0.45)";
+      } else {
+        playbackSpeed = 1.0;
+        speedBtn.textContent = "⚡ 1x";
+        speedBtn.style.color = "";
+        speedBtn.style.borderColor = "";
+        speedBtn.style.boxShadow = "";
+      }
       updateStatusHint();
     });
   }
@@ -1841,7 +1858,7 @@ function initSurvivalSimulator() {
         const crawlX = startX - crawlOutProg * (startX - targetDoorX);
         const crawlY = groundY;
 
-        const gait = (actionTimer * 0.11 * playbackSpeed) % (Math.PI * 2); // 20% slower crawling rhythm
+        const gait = (actionTimer * 0.11) % (Math.PI * 2); // 20% slower crawling rhythm
         const undulate = Math.sin(gait) * 2.5;
 
         ctx.save();
@@ -1891,7 +1908,7 @@ function initSurvivalSimulator() {
         const crawlX = startX - corridorProg * (startX - exitDoorStopX);
         const crawlY = groundY;
 
-        const gait = (actionTimer * 0.12 * playbackSpeed) % (Math.PI * 2); // 20% slower crawling
+        const gait = (actionTimer * 0.12) % (Math.PI * 2); // 20% slower crawling
         const undulate = Math.sin(gait) * 2.5;
 
         ctx.save();
@@ -2190,14 +2207,14 @@ function initSurvivalSimulator() {
         }
 
         const personY = groundY;
-        const runGait = actionTimer * 0.38 * playbackSpeed;
+        const runGait = actionTimer * 0.38;
         const legSwing = Math.sin(runGait) * 36;
 
         ctx.save();
         ctx.translate(personX, personY);
 
-        const waveAngle1 = Math.sin(actionTimer * 0.48 * playbackSpeed) * 0.65 + 0.4;
-        const waveAngle2 = Math.cos(actionTimer * 0.52 * playbackSpeed) * 0.65 + 0.4;
+        const waveAngle1 = Math.sin(actionTimer * 0.48) * 0.65 + 0.4;
+        const waveAngle2 = Math.cos(actionTimer * 0.52) * 0.65 + 0.4;
 
         // Legs (scissoring fast)
         ctx.strokeStyle = '#1e293b';
@@ -2286,7 +2303,7 @@ function initSurvivalSimulator() {
         const personX = centerX;
         const personY = groundY;
 
-        const pantCycle = actionTimer * 0.176 * playbackSpeed;
+        const pantCycle = actionTimer * 0.176;
         const chestHeave = Math.sin(pantCycle) * 4.5;
         const hunchAngle = 0.26 + Math.sin(pantCycle) * 0.05;
 
@@ -2372,7 +2389,7 @@ function initSurvivalSimulator() {
         ctx.restore(); // end torso transform
 
         // Panting steam puffs from mouth (20% slower rhythm)
-        const pantPuff = (actionTimer * 0.096 * playbackSpeed) % 1;
+        const pantPuff = (actionTimer * 0.096) % 1;
         ctx.fillStyle = `rgba(241, 245, 249, ${0.7 - pantPuff * 0.65})`;
         ctx.beginPath();
         ctx.arc(28 + pantPuff * 14, -160 + pantPuff * 8, 3.5 + pantPuff * 5, 0, Math.PI * 2);
@@ -2441,7 +2458,7 @@ function initSurvivalSimulator() {
           ? '🔄 步驟 3：滾 (ROLL) - 來回翻滾壓滅火苗！完全撲滅！'
           : '🔄 STEP 3: ROLL - ROLL BACK & FORTH TO SMOTHER ALL FLAMES!', w * 0.5, 30, '#10b981', '#ffffff', 14, 24, 9);
 
-        const rollCycle = (cycle - 910) * 0.064 * playbackSpeed;
+        const rollCycle = (cycle - 910) * 0.064;
         const rollX = centerX + Math.sin(rollCycle * 0.5) * 90;
         const rollY = groundY - 22;
         const rollAngle = rollCycle * 1.25;
