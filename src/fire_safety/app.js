@@ -73,6 +73,12 @@ const i18nData = {
       4: { badge: "動作四：走廊受阻就地防煙待救 (SHELTER & SIGNAL)", text: "若逃生動線受阻，立刻退回寢室內關門，用濕毛巾塞緊門縫阻止濃煙滲入，打開窗戶並揮動鮮豔衣物或手電筒等待救援。" }
     },
     s2_survival_tip: "💡 保命準則：濃煙殺傷力遠大於火焰。手背感到發燙絕對不開門，絕不搭乘電梯，不可貪戀財物！",
+    s2_ruleCards: [
+      { title: "🚪 手背觸摸門把門板", desc: "以手背感受金屬把手與門板上方溫度。若發燙表示門外已是火海，萬不可開門！若門涼，先開一條門縫確認無煙再逃生。" },
+      { title: "💨 壓低身軀沿牆爬行", desc: "高溫有毒濃煙（一氧化碳）向上浮升至天花板。離地面30至60公分處溫度較低且濃煙最稀薄，雙膝跪地低頭爬行。" },
+      { title: "🚪 隨手關門阻隔火勢", desc: "逃出寢室或通過常閉式防火門時，隨手將門關上！此舉能切斷氧氣供應，若為防火門更能爭取30分鐘至1小時的寶貴逃生時間。" },
+      { title: "🪟 門縫塞毛巾於窗邊呼救", desc: "若逃生通道受阻，立刻退回房內關門，用濕毛巾或衣物塞緊門縫阻止濃煙滲入，打開窗戶並揮動鮮豔衣物或手電筒求救。" }
+    ],
 
     // Section 3: P.A.S.S.
     s3_title: "🧯 滅火器 P.A.S.S. 動態實作模擬",
@@ -226,6 +232,12 @@ const i18nData = {
       4: { badge: "ACTION 4: SHELTER IN PLACE & SIGNAL", text: "If exit corridors are blocked by smoke, retreat inside your room, close the door, seal cracks with wet towels, and signal at window for rescue." }
     },
     s2_survival_tip: "💡 Survival Rule: Smoke kills faster than flames. Never open a hot door, never use elevators, and never delay escape for belongings!",
+    s2_ruleCards: [
+      { title: "🚪 Feel Door With Back of Hand", desc: "Check metal handle and upper door with the back of your hand. If hot, fire is outside—DO NOT OPEN! If cool, crack door slightly to check for smoke before escaping." },
+      { title: "💨 Crawl Low Below Rising Smoke", desc: "Superheated toxic gases and carbon monoxide float to the ceiling. The air layer 30–60 cm above the floor is coolest and least smoky. Crawl low on hands and knees." },
+      { title: "🚪 Close Doors Behind You", desc: "Always close doors behind you when evacuating your room or passing stairwells! This cuts off oxygen and contains fire/smoke to buy precious evacuation time." },
+      { title: "🪟 Seal Cracks & Signal at Window", desc: "If escape corridors are impassable, retreat inside, close the door, pack wet towels/blankets tightly into door cracks to block smoke, and signal at window for rescue." }
+    ],
 
     // Section 3: P.A.S.S.
     s3_title: "🧯 Interactive P.A.S.S. Extinguisher Simulator",
@@ -413,6 +425,16 @@ function initLanguageEngine() {
         : '💡 Slow-paced demo cycle (16s per action). Click any action tab to inspect.';
     }
 
+    const ruleCards = document.querySelectorAll('.survival-grid-cards .survival-rule-item');
+    ruleCards.forEach((card, idx) => {
+      if (t.s2_ruleCards && t.s2_ruleCards[idx]) {
+        const h4 = card.querySelector('h4');
+        const p = card.querySelector('p');
+        if (h4) h4.textContent = t.s2_ruleCards[idx].title;
+        if (p) p.textContent = t.s2_ruleCards[idx].desc;
+      }
+    });
+
     // Section 3: P.A.S.S.
     const s3Title = document.querySelector('#slide-3 .section-title');
     if (s3Title) s3Title.textContent = t.s3_title;
@@ -588,6 +610,10 @@ function initSlideDeck() {
     dots.forEach((dot, i) => {
       dot.classList.toggle('active', i === currentSlide);
     });
+
+    if (currentSlide === 1 && window.resumeSurvivalSimulator) {
+      window.resumeSurvivalSimulator();
+    }
 
     if (pageIndicator) {
       const t = i18nData[currentLang];
@@ -815,10 +841,16 @@ function initSurvivalSimulator() {
     }
   }
 
-  // Action tabs
+  // Action tabs - switch and continue autoplay
   document.querySelectorAll('.survival-step-btn[data-action]').forEach(btn => {
-    btn.addEventListener('click', () => setAction(parseInt(btn.dataset.action), true));
+    btn.addEventListener('click', () => setAction(parseInt(btn.dataset.action), false));
   });
+
+  // Global helper to ensure autoplay runs whenever Page 2 is opened
+  window.resumeSurvivalSimulator = function() {
+    isPlaying = true;
+    updatePlayPauseUI();
+  };
 
   // Header controls
   const prevBtn = document.getElementById('survivalPrevBtn');
@@ -1507,29 +1539,73 @@ function initSurvivalSimulator() {
       ctx.strokeStyle = '#475569';
       ctx.strokeRect(roomX, roomY, 18, roomH);
 
-      // Wet towel rolls at door crack
-      const towelX = roomX + 16;
-      const towelY = groundY - 20;
+      // Rolled Damp Towels & Linens tightly sealing the bottom door crack
+      const towelBaseX = roomX - 4;
+      const towelBaseY = groundY - 14;
+      const towelW = 90;
+      const towelH = 14;
 
-      ctx.fillStyle = '#0284c7';
+      // Bottom main rolled towel (heavy folded fabric cylinder)
+      const towelGrad1 = ctx.createLinearGradient(towelBaseX, towelBaseY, towelBaseX, towelBaseY + towelH);
+      towelGrad1.addColorStop(0, '#1e40af'); // deep navy blue cloth
+      towelGrad1.addColorStop(0.5, '#3b82f6'); // mid-tone cloth
+      towelGrad1.addColorStop(1, '#1d4ed8'); // darker shadow
+      ctx.fillStyle = towelGrad1;
       ctx.beginPath();
-      ctx.roundRect(towelX, towelY, 48, 18, 9);
-      ctx.roundRect(towelX + 18, towelY - 14, 42, 16, 8);
+      ctx.roundRect(towelBaseX, towelBaseY, towelW, towelH, 6);
       ctx.fill();
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#60a5fa';
+      ctx.lineWidth = 1;
       ctx.stroke();
 
-      ctx.fillStyle = '#bae6fd';
+      // Top folded rolled towel (overlapping to create a tight seal)
+      const towelGrad2 = ctx.createLinearGradient(towelBaseX + 6, towelBaseY - 10, towelBaseX + 6, towelBaseY + 2);
+      towelGrad2.addColorStop(0, '#2563eb');
+      towelGrad2.addColorStop(0.5, '#60a5fa');
+      towelGrad2.addColorStop(1, '#1e40af');
+      ctx.fillStyle = towelGrad2;
       ctx.beginPath();
-      ctx.arc(towelX + 15, towelY + 8, 2.5, 0, Math.PI * 2);
-      ctx.arc(towelX + 35, towelY + 6, 2, 0, Math.PI * 2);
+      ctx.roundRect(towelBaseX + 8, towelBaseY - 10, towelW - 18, 12, 5);
       ctx.fill();
+      ctx.strokeStyle = '#93c5fd';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Cloth fold seams across the roll
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 1.2;
+      for (let s = 0; s < 3; s++) {
+        const foldX = towelBaseX + 22 + s * 22;
+        ctx.beginPath();
+        ctx.moveTo(foldX, towelBaseY + 2);
+        ctx.quadraticCurveTo(foldX + 4, towelBaseY + 7, foldX, towelBaseY + 12);
+        ctx.stroke();
+      }
+
+      // Rolled spiral curve on the towel end
+      ctx.strokeStyle = '#93c5fd';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(towelBaseX + towelW - 8, towelBaseY + 7, 5, 0, Math.PI * 1.6);
+      ctx.stroke();
+
+      // Gentle damp moisture shimmer along floor contact
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+      ctx.fillRect(towelBaseX - 6, groundY - 3, towelW + 12, 3);
+
+      // Clean Callout Label with subtle pointer line
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(towelBaseX + 50, towelBaseY - 12);
+      ctx.lineTo(towelBaseX + 70, towelBaseY - 24);
+      ctx.lineTo(towelBaseX + 110, towelBaseY - 24);
+      ctx.stroke();
 
       ctx.fillStyle = '#38bdf8';
       ctx.font = 'bold 11px sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(currentLang === 'zh' ? '💧 濕毛巾/衣物塞緊門縫 (Sealed)' : '💧 Wet Towels Seal Crack', towelX + 54, towelY + 8);
+      ctx.fillText(currentLang === 'zh' ? '💧 濕毛巾/衣物塞緊門縫阻煙' : '💧 Damp Towels Packed Tightly In Crack', towelBaseX + 115, towelBaseY - 21);
 
       // Central AC Off Notice - Dynamically measured pill (NO OVERFLOW!)
       drawPill(ctx, currentLang === 'zh'
