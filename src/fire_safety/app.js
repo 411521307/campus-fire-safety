@@ -668,7 +668,18 @@ function initSlideDeck() {
     }
   }, { passive: true });
 
-  goToSlide(0);
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialSlide = urlParams.has('slide') ? parseInt(urlParams.get('slide')) : 0;
+  goToSlide(initialSlide);
+  if (urlParams.has('action')) {
+    setTimeout(() => {
+      const act = parseInt(urlParams.get('action'));
+      if (!isNaN(act)) {
+        const btn = document.querySelector(`.survival-step-btn[data-action="${act}"]`);
+        if (btn) btn.click();
+      }
+    }, 150);
+  }
 }
 
 /* ==========================================================================
@@ -736,57 +747,133 @@ function initSurvivalSimulator() {
     context.restore();
   }
 
-  // Helper: Draw enchanting, realistic, multi-layered fluid fire
-  function drawEnchantedFire(context, x, y, baseW, height, intensity = 1.0, windX = 0, f = 0) {
+  // Helper: Draw enchanting, realistic circular-particle fluid fire (matching reference aesthetic)
+  function drawEnchantedFire(context, x, y, baseW, height, intensity = 1.0, windX = 0, f = 0, showBase = false) {
     if (intensity <= 0.01) return;
     context.save();
     context.translate(x, y);
 
-    // Warm radial glow
-    const glow = context.createRadialGradient(windX * 0.3, -height * 0.4, 4, windX * 0.5, -height * 0.5, height * 1.3);
-    glow.addColorStop(0, `rgba(245, 158, 11, ${0.45 * intensity})`);
-    glow.addColorStop(0.5, `rgba(239, 68, 68, ${0.25 * intensity})`);
+    // Wood base dimensions: wide solid dark brown block matching reference
+    const bw = baseW * 1.55;
+    const bh = Math.max(16, baseW * 0.22);
+    const baseTopY = showBase ? -bh : 0;
+
+    // 1. Solid charcoal wood fuel platform
+    if (showBase) {
+      const bx = -bw * 0.5;
+      const by = -bh;
+      context.fillStyle = '#341508';
+      context.fillRect(bx, by, bw, bh);
+      // Top warm wood edge highlight
+      context.fillStyle = '#54240e';
+      context.fillRect(bx, by, bw, 3);
+      // Bottom ground contact shadow
+      context.fillStyle = '#140702';
+      context.fillRect(bx, by + bh - 3, bw, 3);
+    }
+
+    // 2. Subtle warm ambient radial glow
+    const glowRadius = height * 1.15;
+    const glow = context.createRadialGradient(windX * 0.25, baseTopY - height * 0.45, 6, windX * 0.35, baseTopY - height * 0.5, glowRadius);
+    glow.addColorStop(0, `rgba(245, 158, 11, ${0.22 * intensity})`);
+    glow.addColorStop(0.45, `rgba(239, 68, 68, ${0.11 * intensity})`);
     glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
     context.fillStyle = glow;
     context.beginPath();
-    context.arc(windX * 0.5, -height * 0.5, height * 1.3, 0, Math.PI * 2);
+    context.arc(windX * 0.35, baseTopY - height * 0.5, glowRadius, 0, Math.PI * 2);
     context.fill();
 
-    // 5 Organic animated flame tongues
-    const tongues = [
-      { offsetRatio: -0.35, hScale: 0.8, color: '#dc2626', speed: 0.18, phase: 0.5 },
-      { offsetRatio: 0.35, hScale: 0.85, color: '#ea580c', speed: 0.22, phase: 1.8 },
-      { offsetRatio: -0.15, hScale: 1.05, color: '#f59e0b', speed: 0.25, phase: 2.7 },
-      { offsetRatio: 0.15, hScale: 1.1, color: '#fbbf24', speed: 0.2, phase: 3.9 },
-      { offsetRatio: 0.0, hScale: 0.75, color: '#fef08a', speed: 0.28, phase: 4.5 }
+    // 3. Stable base anchor circles sitting directly ON the wood block
+    // Translucent overlapping disks (alpha 0.72 - 0.78) so interior overlaps multiply cleanly
+    const basePulse = Math.sin(f * 0.1) * 0.04;
+    const anchorDiscs = [
+      // Center-bottom golden-orange disc
+      { rx: baseW * 0.02, ry: baseTopY - baseW * 0.26, r: baseW * 0.38 * (1 + basePulse), color: 'rgba(217, 119, 6, 0.78)' },
+      // Left coral-red disc
+      { rx: -baseW * 0.20, ry: baseTopY - baseW * 0.32, r: baseW * 0.35 * (1 - basePulse), color: 'rgba(239, 68, 68, 0.75)' },
+      // Right warm yellow-gold disc
+      { rx: baseW * 0.24, ry: baseTopY - baseW * 0.30, r: baseW * 0.36 * (1 + basePulse * 0.8), color: 'rgba(245, 158, 11, 0.78)' },
+      // Center-high warm orange disc
+      { rx: -baseW * 0.05, ry: baseTopY - baseW * 0.50, r: baseW * 0.32 * (1 + basePulse * 1.2), color: 'rgba(234, 88, 12, 0.74)' },
+      // Mid-right golden-ochre disc
+      { rx: baseW * 0.16, ry: baseTopY - baseW * 0.66, r: baseW * 0.28 * (1 - basePulse), color: 'rgba(202, 138, 4, 0.72)' }
     ];
 
-    tongues.forEach((t) => {
-      const flicker = Math.sin(f * t.speed + t.phase) * 0.18 + Math.cos(f * t.speed * 1.7) * 0.1;
-      const tW = baseW * 0.45 * (1 + flicker * 0.5);
-      const tH = height * t.hScale * (1 + flicker) * intensity;
-      const tX = baseW * t.offsetRatio;
-      const tipX = tX + windX + Math.sin(f * 0.15 + t.phase) * 8;
-
-      context.fillStyle = t.color;
+    anchorDiscs.forEach(d => {
+      context.fillStyle = d.color;
       context.beginPath();
-      context.moveTo(tX - tW, 0);
-      context.quadraticCurveTo(tX - tW * 0.6, -tH * 0.5, tipX, -tH);
-      context.quadraticCurveTo(tX + tW * 0.6, -tH * 0.5, tX + tW, 0);
-      context.closePath();
+      context.arc(d.rx + windX * 0.08, d.ry, d.r * intensity, 0, Math.PI * 2);
       context.fill();
     });
 
-    // Rising sparks
-    for (let i = 0; i < 3; i++) {
-      const sparkPhase = (f * 0.06 + i * 2.1) % 1;
-      const sparkY = -height * 0.25 - sparkPhase * height * 1.0;
-      const sparkX = (Math.sin(i * 1.7 + f * 0.1) * baseW * 0.6) + windX * sparkPhase;
-      const sparkAlpha = (1 - sparkPhase) * intensity;
-      if (sparkAlpha > 0.05) {
-        context.fillStyle = `rgba(254, 240, 138, ${sparkAlpha})`;
+    // 4. Overlapping translucent rising circular fire particles
+    // 30 particles with organic S-curve wavering and vertical distribution matching reference image
+    const particleCount = 30;
+    for (let i = 0; i < particleCount; i++) {
+      const seed = (i * 9.731) % 1.0;
+      const seed2 = (i * 17.183) % 1.0;
+      const speed = 0.0055 + seed * 0.0065;
+      const phase = seed2;
+
+      const pCycle = (f * speed + phase) % 1.0;
+
+      // Height: from baseTopY up to -height * 1.05
+      const py = baseTopY - baseW * 0.22 - pCycle * (height * 0.98);
+
+      // Organic S-curve sway matching the curved column in the reference image
+      const sCurve = Math.sin(pCycle * Math.PI * 1.8 + 0.4) * (baseW * 0.25);
+      const flutter = Math.sin(f * 0.08 + i * 1.3) * (baseW * 0.12 * (0.3 + pCycle * 0.7));
+      const baseSpread = (seed - 0.5) * (baseW * 0.55) * (1 - pCycle * 0.6);
+      const windOffset = windX * Math.pow(pCycle, 1.3);
+      const px = baseSpread + sCurve + flutter + windOffset;
+
+      // Radius: starts large at bottom, shrinks gently as it climbs
+      const initialR = baseW * (0.26 + seed2 * 0.15);
+      const pr = Math.max(3, initialR * (1 - pCycle * 0.72) * intensity);
+
+      // Color & Opacity gradient across height cycle:
+      let colorStr;
+      if (pCycle < 0.25) {
+        const colorType = i % 3;
+        const a = (0.72 + seed2 * 0.08) * intensity;
+        if (colorType === 0) colorStr = `rgba(249, 115, 22, ${a})`;  // warm orange
+        else if (colorType === 1) colorStr = `rgba(234, 179, 8, ${a})`; // golden amber
+        else colorStr = `rgba(239, 68, 68, ${a})`;                   // coral red
+      } else if (pCycle < 0.58) {
+        const colorType = i % 4;
+        const a = (0.62 + seed2 * 0.1) * intensity * (1 - (pCycle - 0.25) * 0.45);
+        if (colorType === 0) colorStr = `rgba(202, 138, 4, ${a})`;   // golden ochre
+        else if (colorType === 1) colorStr = `rgba(220, 38, 38, ${a})`;  // crimson red
+        else if (colorType === 2) colorStr = `rgba(234, 88, 12, ${a})`;  // fiery orange
+        else colorStr = `rgba(217, 119, 6, ${a})`;                  // warm amber
+      } else if (pCycle < 0.85) {
+        const a = (0.50 * (1 - (pCycle - 0.58) / 0.27)) * intensity;
+        const colorType = i % 3;
+        if (colorType === 0) colorStr = `rgba(159, 18, 57, ${a})`;  // deep wine red
+        else if (colorType === 1) colorStr = `rgba(146, 64, 14, ${a})`; // dusky dark amber
+        else colorStr = `rgba(136, 19, 55, ${a})`;                 // purple burgundy
+      } else {
+        // Drifting top ember circles
+        const a = Math.max(0, (1 - pCycle) / 0.15 * 0.35 * intensity);
+        colorStr = (i % 2 === 0) ? `rgba(136, 19, 55, ${a})` : `rgba(110, 35, 45, ${a})`;
+      }
+
+      context.fillStyle = colorStr;
+      context.beginPath();
+      context.arc(px, py, pr, 0, Math.PI * 2);
+      context.fill();
+    }
+
+    // 5. High Drifting Sparks / Micro Embers (dissolving into air at the very top)
+    for (let j = 0; j < 6; j++) {
+      const sparkCycle = (f * 0.012 + j * 0.18) % 1.0;
+      const sy = baseTopY - height * 0.75 - sparkCycle * height * 0.4;
+      const sx = Math.sin(j * 2.3 + f * 0.08) * (baseW * 0.22) + windX * (0.6 + sparkCycle * 0.6);
+      const sa = Math.max(0, (1 - sparkCycle) * 0.45 * intensity);
+      if (sa > 0.02) {
+        context.fillStyle = (j % 2 === 0) ? `rgba(245, 158, 11, ${sa})` : `rgba(190, 24, 93, ${sa})`;
         context.beginPath();
-        context.arc(sparkX, sparkY, 2, 0, Math.PI * 2);
+        context.arc(sx, sy, 2.5 + (j % 3), 0, Math.PI * 2);
         context.fill();
       }
     }
@@ -1523,9 +1610,8 @@ function initSurvivalSimulator() {
       ctx.fillStyle = '#1c0a0a';
       ctx.fillRect(0, 0, roomX, groundY);
 
-      // Roaring hallway fire flames leaping against the door
-      drawEnchantedFire(ctx, roomX * 0.35, groundY - 30, 70, 160, 1.4, 15, frame);
-      drawEnchantedFire(ctx, roomX * 0.65, groundY - 50, 50, 120, 1.2, 8, frame + 30);
+      // Roaring hallway fire with wood base and translucent circular particles (matching reference aesthetic)
+      drawEnchantedFire(ctx, roomX * 0.48, groundY, 70, 200, 1.35, 8, frame, true);
 
       drawPill(ctx, currentLang === 'zh' ? '⚠️ 走廊已是火海濃煙 (DO NOT EXIT)' : '⚠️ HALLWAY BLOCKED BY SMOKE', roomX * 0.5, 30, 'rgba(239,68,68,0.9)', '#ffffff', 10, 14, 6);
 
