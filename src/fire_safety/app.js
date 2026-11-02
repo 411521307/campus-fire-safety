@@ -3537,19 +3537,218 @@ function initDormEvacuationCanvas() {
   resize();
   window.addEventListener('resize', resize);
 
-  const evacuees = [
-    { x: 75, y: 85, targetX: 234, targetY: 28, speed: 1.1, label: "X01" },
-    { x: 110, y: 85, targetX: 234, targetY: 28, speed: 1.3, label: "X02" },
-    { x: 180, y: 85, targetX: 234, targetY: 28, speed: 1.2, label: "X04" },
-    { x: 450, y: 85, targetX: 234, targetY: 28, speed: 1.2, label: "X08" },
-    { x: 450, y: 200, targetX: 370, targetY: 417, speed: 1.4, label: "X13" },
-    { x: 450, y: 320, targetX: 370, targetY: 417, speed: 1.3, label: "X17" },
-    { x: 315, y: 370, targetX: 370, targetY: 417, speed: 1.2, label: "X22" },
-    { x: 235, y: 370, targetX: 370, targetY: 417, speed: 1.1, label: "X24" },
-    { x: 115, y: 370, targetX: 370, targetY: 417, speed: 1.0, label: "X27" }
+  // Corridor centerlines:
+  // Top Corridor: Y = 85 (x: 55..485, y: 65..105)
+  // Left Corridor: X = 77.5 (x: 55..100, y: 65..395)
+  // Bottom Corridor: Y = 372.5 (x: 55..485, y: 350..395)
+  // Right Corridor: X = 462.5 (x: 440..485, y: 65..395)
+  // North Stairs Passage: X = 275 (x: 265..285, y: 15..65), turns West into North Stairs at (234, 28)
+  // South Stairs: X = 370.5 (x: 338..403, y: 395..440), leads from Y = 372.5 to Y = 420
+  // Fire location: Room X11 (Right column, y: 161..193) -> rooms above X11 evacuate NORTH, rooms below evacuate SOUTH
+
+  const evacueeRoutes = [
+    // Top Wing (evacuates East to North Stairs passage)
+    {
+      label: 'X01',
+      speed: 0.95,
+      waypoints: [[73, 85], [275, 85], [275, 28], [234, 28]]
+    },
+    {
+      label: 'X02',
+      speed: 1.1,
+      waypoints: [[109, 85], [275, 85], [275, 28], [234, 28]]
+    },
+    {
+      label: 'X04',
+      speed: 1.05,
+      waypoints: [[182, 85], [275, 85], [275, 28], [234, 28]]
+    },
+
+    // Left Wing Upper (evacuates North to North Stairs)
+    {
+      label: 'X43',
+      speed: 1.0,
+      waypoints: [[77.5, 120], [77.5, 85], [275, 85], [275, 28], [234, 28]]
+    },
+    {
+      label: 'X39',
+      speed: 1.15,
+      waypoints: [[77.5, 185], [77.5, 85], [275, 85], [275, 28], [234, 28]]
+    },
+
+    // Left Wing Lower (evacuates South to South Stairs)
+    {
+      label: 'X35',
+      speed: 1.0,
+      waypoints: [[77.5, 245], [77.5, 372.5], [370.5, 372.5], [370.5, 420]]
+    },
+    {
+      label: 'X31',
+      speed: 1.1,
+      waypoints: [[77.5, 310], [77.5, 372.5], [370.5, 372.5], [370.5, 420]]
+    },
+
+    // Bottom Wing (evacuates East to South Stairs)
+    {
+      label: 'X27',
+      speed: 0.95,
+      waypoints: [[115, 372.5], [370.5, 372.5], [370.5, 420]]
+    },
+    {
+      label: 'X25',
+      speed: 1.15,
+      waypoints: [[175, 372.5], [370.5, 372.5], [370.5, 420]]
+    },
+    {
+      label: 'X23',
+      speed: 1.05,
+      waypoints: [[255, 372.5], [370.5, 372.5], [370.5, 420]]
+    },
+
+    // Right Wing Above Fire (Fire at X11: X08, X10 evacuate North to North Stairs)
+    {
+      label: 'X08',
+      speed: 1.0,
+      waypoints: [[462.5, 81], [462.5, 85], [275, 85], [275, 28], [234, 28]]
+    },
+    {
+      label: 'X10',
+      speed: 1.1,
+      waypoints: [[462.5, 145], [462.5, 85], [275, 85], [275, 28], [234, 28]]
+    },
+
+    // Right Wing Below Fire (X13, X16, X18 evacuate South to South Stairs)
+    {
+      label: 'X13',
+      speed: 1.2,
+      waypoints: [[462.5, 240], [462.5, 372.5], [370.5, 372.5], [370.5, 420]]
+    },
+    {
+      label: 'X16',
+      speed: 1.05,
+      waypoints: [[462.5, 305], [462.5, 372.5], [370.5, 372.5], [370.5, 420]]
+    },
+    {
+      label: 'X18',
+      speed: 0.95,
+      waypoints: [[462.5, 360], [462.5, 372.5], [370.5, 372.5], [370.5, 420]]
+    }
   ];
 
+  function computeTotalLength(pts) {
+    let len = 0;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const dx = pts[i+1][0] - pts[i][0];
+      const dy = pts[i+1][1] - pts[i][1];
+      len += Math.sqrt(dx * dx + dy * dy);
+    }
+    return Math.max(1, len);
+  }
+
+  function getInterpolatedPoint(pts, dist) {
+    let covered = 0;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p1 = pts[i];
+      const p2 = pts[i+1];
+      const dx = p2[0] - p1[0];
+      const dy = p2[1] - p1[1];
+      const segLen = Math.sqrt(dx * dx + dy * dy);
+      if (dist <= covered + segLen) {
+        const t = segLen > 0 ? (dist - covered) / segLen : 0;
+        return {
+          x: p1[0] + dx * t,
+          y: p1[1] + dy * t,
+          angle: Math.atan2(dy, dx)
+        };
+      }
+      covered += segLen;
+    }
+    const last = pts[pts.length - 1];
+    return { x: last[0], y: last[1], angle: 0 };
+  }
+
+  const evacuees = evacueeRoutes.map((r, i) => {
+    const totalDist = computeTotalLength(r.waypoints);
+    const startProgress = ((i * 0.27 + 0.1) * totalDist) % totalDist;
+    return {
+      ...r,
+      totalDist,
+      progress: startProgress
+    };
+  });
+
   let frame = 0;
+
+  function drawFloorGuideArrows() {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(16, 185, 129, 0.45)';
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    function drawChevron(cx, cy, dirAngle) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(dirAngle);
+      ctx.beginPath();
+      ctx.moveTo(-3.5, -3.5);
+      ctx.lineTo(2.5, 0);
+      ctx.lineTo(-3.5, 3.5);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Top corridor:
+    // Left side moving East towards North Stairs passage (x: 275)
+    for (let x = 110; x <= 250; x += 35) {
+      const shift = ((x + frame * 0.7) % 35) - 17.5;
+      drawChevron(x + shift * 0.25, 85, 0); // East
+    }
+    // Right side moving West towards North Stairs passage
+    for (let x = 430; x >= 305; x -= 35) {
+      const shift = ((x - frame * 0.7) % 35) - 17.5;
+      drawChevron(x - shift * 0.25, 85, Math.PI); // West
+    }
+    // North stair passage: pointing North
+    drawChevron(275, 55, -Math.PI / 2);
+    drawChevron(275, 38, -Math.PI / 2);
+
+    // Bottom corridor:
+    // Moving East towards South Stairs (x: 370.5)
+    for (let x = 110; x <= 340; x += 35) {
+      const shift = ((x + frame * 0.7) % 35) - 17.5;
+      drawChevron(x + shift * 0.25, 372.5, 0); // East
+    }
+    // From right corner moving West towards South Stairs
+    drawChevron(430, 372.5, Math.PI); // West
+    drawChevron(395, 372.5, Math.PI); // West
+    // South stair entry: pointing South
+    drawChevron(370.5, 400, Math.PI / 2);
+
+    // Left corridor:
+    // Upper half moving North towards top corridor
+    for (let y = 180; y >= 110; y -= 35) {
+      const shift = ((y - frame * 0.7) % 35) - 17.5;
+      drawChevron(77.5, y - shift * 0.25, -Math.PI / 2); // North
+    }
+    // Lower half moving South towards bottom corridor
+    for (let y = 240; y <= 330; y += 35) {
+      const shift = ((y + frame * 0.7) % 35) - 17.5;
+      drawChevron(77.5, y + shift * 0.25, Math.PI / 2); // South
+    }
+
+    // Right corridor:
+    // Upper section (above fire at y=177) moving North
+    drawChevron(462.5, 135, -Math.PI / 2); // North
+    drawChevron(462.5, 105, -Math.PI / 2); // North
+    // Lower section (below fire at y=177) moving South
+    for (let y = 220; y <= 330; y += 35) {
+      const shift = ((y + frame * 0.7) % 35) - 17.5;
+      drawChevron(462.5, y + shift * 0.25, Math.PI / 2); // South
+    }
+
+    ctx.restore();
+  }
 
   function drawDormPlan() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -3583,10 +3782,16 @@ function initDormEvacuationCanvas() {
 
     // Corridors
     ctx.fillStyle = 'rgba(30, 41, 59, 0.7)';
-    ctx.fillRect(55, 65, 430, 40);
-    ctx.fillRect(55, 65, 45, 325);
-    ctx.fillRect(55, 350, 430, 45);
-    ctx.fillRect(440, 65, 45, 325);
+    ctx.fillRect(55, 65, 430, 40);  // Top corridor (center Y = 85)
+    ctx.fillRect(55, 65, 45, 325);  // Left corridor (center X = 77.5)
+    ctx.fillRect(55, 350, 430, 45); // Bottom corridor (center Y = 372.5)
+    ctx.fillRect(440, 65, 45, 325); // Right corridor (center X = 462.5)
+
+    // North Stairs access passage connecting Top Corridor to North Stairs landing
+    ctx.fillRect(265, 15, 20, 55);
+
+    // Corridor Floor Guide Chevrons
+    drawFloorGuideArrows();
 
     function drawRoom(x, y, rw, rh, label) {
       ctx.fillStyle = '#1e293b';
@@ -3667,13 +3872,13 @@ function initDormEvacuationCanvas() {
 
     // 1F Exits Callouts
     ctx.fillStyle = '#ef4444';
-    ctx.fillRect(275, 17, 105, 22);
+    ctx.fillRect(290, 17, 105, 22);
     ctx.strokeStyle = '#fca5a5';
-    ctx.strokeRect(275, 17, 105, 22);
+    ctx.strokeRect(290, 17, 105, 22);
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 8.5px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(currentLang === 'zh' ? '⬆ 1F車棚門(經樓梯)' : '⬆ 1F PARKING EXIT', 327, 31);
+    ctx.fillText(currentLang === 'zh' ? '⬆ 1F車棚門(經樓梯)' : '⬆ 1F PARKING EXIT', 342, 31);
 
     const northPulse = Math.sin(frame * 0.1) * 3;
     ctx.fillStyle = '#f59e0b';
@@ -3692,42 +3897,65 @@ function initDormEvacuationCanvas() {
     ctx.textAlign = 'center';
     ctx.fillText(currentLang === 'zh' ? '⬇ 1F前門大廳(經樓梯)' : '⬇ 1F MAIN EXIT', 457, 420);
 
+    // Fire in room X11
     ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
     ctx.fillRect(485, 161, 40, 32);
     ctx.fillStyle = '#fff';
     ctx.font = '12px sans-serif';
     ctx.fillText('🔥', 505, 182);
 
+    // Render evacuating students strictly along the corridor waypoints
     evacuees.forEach(e => {
-      const dx = e.targetX - e.x;
-      const dy = e.targetY - e.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      if (dist > 3) {
-        e.x += (dx / dist) * e.speed;
-        e.y += (dy / dist) * e.speed;
-      } else {
-        if (e.label === 'X01') { e.x = 75; e.y = 85; }
-        else if (e.label === 'X02') { e.x = 110; e.y = 85; }
-        else if (e.label === 'X04') { e.x = 180; e.y = 85; }
-        else if (e.label === 'X08') { e.x = 450; e.y = 85; }
-        else if (e.label === 'X13') { e.x = 450; e.y = 200; }
-        else if (e.label === 'X17') { e.x = 450; e.y = 320; }
-        else if (e.label === 'X22') { e.x = 315; e.y = 370; }
-        else if (e.label === 'X24') { e.x = 235; e.y = 370; }
-        else { e.x = 115; e.y = 370; }
+      e.progress += e.speed;
+      if (e.progress >= e.totalDist) {
+        e.progress = 0;
       }
 
-      ctx.fillStyle = '#38bdf8';
+      const pos = getInterpolatedPoint(e.waypoints, e.progress);
+
+      // Smooth fade-in near room start and fade-out at stair exit
+      let alpha = 1;
+      if (e.progress < 20) {
+        alpha = e.progress / 20;
+      } else if (e.progress > e.totalDist - 20) {
+        alpha = (e.totalDist - e.progress) / 20;
+      }
+      alpha = Math.max(0.05, Math.min(1, alpha));
+
+      // Motion trail echoes along the exact corridor path
+      if (e.progress > 7) {
+        const t1 = getInterpolatedPoint(e.waypoints, e.progress - 5);
+        ctx.fillStyle = `rgba(56, 189, 248, ${0.28 * alpha})`;
+        ctx.beginPath();
+        ctx.arc(t1.x, t1.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (e.progress > 14) {
+        const t2 = getInterpolatedPoint(e.waypoints, e.progress - 10);
+        ctx.fillStyle = `rgba(56, 189, 248, ${0.14 * alpha})`;
+        ctx.beginPath();
+        ctx.arc(t2.x, t2.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Outer glow pulse
+      const pulse = 1 + Math.sin(frame * 0.12 + e.progress * 0.05) * 0.22;
+      ctx.fillStyle = `rgba(56, 189, 248, ${0.32 * alpha})`;
       ctx.beginPath();
-      ctx.arc(e.x, e.y, 4, 0, Math.PI * 2);
+      ctx.arc(pos.x, pos.y, 6.5 * pulse, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
-      ctx.lineWidth = 1;
+      // Cyan core dot
+      ctx.fillStyle = `rgba(56, 189, 248, ${alpha})`;
       ctx.beginPath();
-      ctx.arc(e.x, e.y, 7, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Crisp center highlight
+      ctx.fillStyle = `rgba(255, 255, 255, ${0.9 * alpha})`;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, 1.5, 0, Math.PI * 2);
+      ctx.fill();
     });
 
     ctx.restore();
