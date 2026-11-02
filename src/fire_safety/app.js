@@ -1,0 +1,2460 @@
+/**
+ * Campus & Dormitory Fire Safety System - Advanced Interactive Engine
+ * 8-Section Presentation Slide Deck Edition
+ * 1. 🏠 Home
+ * 2. 🚨 Fire Survival Actions (Animated Canvas: Door Heat Check, Low Smoke Crawl, Stop-Drop-Roll, Shelter)
+ * 3. 🧯 P.A.S.S. Particle Extinguisher Simulator (unobstructed stage)
+ * 4. 🗺️ Dormitory Evacuation Map (hollow courtyard, X-numbering, parking/main exits)
+ * 5. 🏢 Filterable Campus Safety Zones
+ * 6. ✅ Interactive Circular Gauge Dorm Room Audit
+ * 7. 🧠 Scenario Decision Drills with Dynamic Bilingual Re-rendering
+ * 8. 📞 Taiwan Official Emergency Hotlines (119, 110, 112, 1999, 1925, 165, 113)
+ */
+
+let currentSlide = 0;
+const totalSlides = 8;
+let currentLang = 'zh'; // 'zh' (Traditional Chinese) or 'en' (English)
+
+document.addEventListener('DOMContentLoaded', () => {
+  initAmbientParticles();
+  initLanguageEngine();
+  initSlideDeck();
+  initSurvivalSimulator();
+  initPassMotionSimulator();
+  initDormEvacuationCanvas();
+  initZoneFilters();
+  initAuditGauge();
+  initDrills();
+  initEmergencyAlarm();
+});
+
+/* ==========================================================================
+   BILINGUAL TRANSLATION DATA
+   ========================================================================== */
+const i18nData = {
+  zh: {
+    langBtn: "English",
+    brand: "校園與宿舍防災系統",
+    alarmBtn: "警報演習",
+    alarmBtnSilence: "靜音演習",
+    voiceAnnouncement: "火警演習啟動，請所有人員立刻由安全梯進行疏散。切勿搭乘電梯。",
+    pageIndicator: "第 {curr} 頁 / 共 {total} 頁",
+
+    // Tabs
+    tabs: ["🏠 首頁", "🚨 逃生要領", "🧯 滅火器", "🗺️ 疏散簡圖", "🏢 校園分區", "✅ 寢室查核", "🧠 應變測驗", "📞 緊急專線"],
+
+    // Section 1: Home
+    s1_badge: "⚡ 校園與學生宿舍安全防護網",
+    s1_heading: "校園與學生宿舍火災防護暨避難系統",
+    s1_subtitle: "專為住宿生、教職員與校園師生打造之火災預防、滅火器動態模擬、宿舍避難地圖與台灣官方緊急求助指南。",
+    s1_cards: [
+      { title: "火災應變要領", desc: "手背觸摸門把測溫、低姿勢爬行、關門防煙避難動作示範。" },
+      { title: "滅火器動態模擬", desc: "四步驟滅火粒子物理即時動態操作演練。" },
+      { title: "宿舍緊急疏散簡圖", desc: "中央中庭天井中空建築格局與即時疏散動線。" },
+      { title: "校園分區安全守則", desc: "寢室生活、公共廚房、AI機房與走廊防護要點。" },
+      { title: "寢室安全自主查核", desc: "即時圓形儀表板評估寢室用電與防火安全合格率。" },
+      { title: "緊急情境應變演練", desc: "凌晨火警、油鍋起火與濃煙樓梯之直覺應變測驗。" },
+      { title: "台灣官方緊急專線", desc: "119、110、112、1999、1925、165、113官方求助電話。" }
+    ],
+
+    // Section 2: Survival Protocols (NEW!)
+    s2_survival_title: "🚨 火災生存應變守則：第一時間保命要領",
+    s2_survival_desc: "互動動態圖解火場核心保命動作：門把手背測溫、低姿勢爬行、身上著火停躺滾與就地防煙待救。",
+    s2_survival_nav: [
+      "1. 🚪 觸摸門把門板 (Door Heat)",
+      "2. 💨 濃煙低姿勢爬行 (Crawl Low)",
+      "3. 🔥 著火停躺滾 (Stop-Drop-Roll)",
+      "4. 🪟 就地阻煙待救 (Shelter & Signal)"
+    ],
+    s2_survival_info: {
+      1: { badge: "動作一：手背觸摸門把門板 (CHECK DOOR HEAT)", text: "開門前務必先以手背觸摸金屬門把與門板上方。若發燙表示門外已是火海，萬不可開門！若微涼，先開一條門縫確認無煙再行逃生。" },
+      2: { badge: "動作二：低姿勢爬行避濃煙 (CRAWL LOW UNDER SMOKE)", text: "高溫有毒濃煙向上浮升聚集於天花板。離地面30至60公分處有最高含氧量與清新空氣層，應雙手雙膝著地低頭沿牆爬行。" },
+      3: { badge: "動作三：若身上著火切勿奔跑 (STOP, DROP & ROLL)", text: "身上衣物著火時奔跑會助長風勢火勢！應立刻『停』住腳步，雙手摀臉『躺』下，就地左右來回『滾』動以壓滅火焰。" },
+      4: { badge: "動作四：走廊受阻就地防煙待救 (SHELTER & SIGNAL)", text: "若逃生動線受阻，立刻退回寢室內關門，用濕毛巾塞緊門縫阻止濃煙滲入，打開窗戶並揮動鮮豔衣物或手電筒等待救援。" }
+    },
+    s2_survival_tip: "💡 保命準則：濃煙殺傷力遠大於火焰。手背感到發燙絕對不開門，絕不搭乘電梯，不可貪戀財物！",
+
+    // Section 3: P.A.S.S.
+    s3_title: "🧯 滅火器 P.A.S.S. 動態實作模擬",
+    s3_desc: "針對燃燒火源之滅火器四字訣（拉、瞄、壓、掃）即時動態操作演練。",
+    s3_stepsNav: ["1. 🧷 拉插銷 (Pull)", "2. 🎯 瞄火源 (Aim)", "3. ✊ 壓把柄 (Squeeze)", "4. ↔️ 掃基底 (Sweep)"],
+    s3_stepsInfo: {
+      1: { badge: "步驟一：拉開安全插銷 (PULL PIN)", text: "拔掉金屬安全插銷與塑膠封條，解除壓把鎖定。" },
+      2: { badge: "步驟二：瞄準火源根部 (AIM LOW)", text: "將噴嘴朝向燃燒物體的根底部位，切勿朝頂部火焰噴射。" },
+      3: { badge: "步驟三：用力壓住把柄 (SQUEEZE LEVER)", text: "用力壓下壓把，噴出加壓乾粉滅火藥劑。" },
+      4: { badge: "步驟四：向火源左右掃射 (SWEEP SIDE)", text: "將噴嘴朝火源根部左右持續均勻掃射，直至火勢完全撲滅。" }
+    },
+    s3_play: "▶ 播放示範",
+    s3_pause: "⏸ 暫停示範",
+    s3_tip: "⚠️ 安全準則：僅在火勢小於垃圾桶且背後有暢通逃生出口時嘗試滅火，否則立刻撤離！",
+
+    // Section 4: Evacuation Map
+    s4_title: "🗺️ 宿舍緊急疏散簡圖 (Dormitory Emergency Evacuation Map)",
+    s4_desc: "中央中庭天井中空建築格局，房間編號（X01-X44）及逃生動線指引。",
+    s4_legendStairs: "安全樓梯 (Exit Stairs)",
+    s4_legendExits: "1F 出口指引 (1F Exits via Stairs)",
+    s4_legendStudents: "疏散學生 (Evacuating Students)",
+    s4_legendCourtyard: "中庭天井 (Void Courtyard)",
+    s4_card1_title: "🚪 核心疏散出口配置 (Key Exits)",
+    s4_card1_body: "<ul><li><strong>北側樓梯 (North Stairs):</strong> 位於 X04 寢室右側（電梯上方），通往 1F 車棚門。</li><li><strong>南側樓梯 (South Stairs):</strong> 位於 X22 寢室右側，通往 1F 前門大門與草坪。</li><li><strong>電梯配置 (Lift):</strong> 位於 X04 旁樓梯正下方，火警時嚴禁搭乘。</li><li><strong>高樓層連續配置:</strong> 本樓層右側各寢室（X08-X18）無間斷，出口位於一樓。</li></ul>",
+    s4_card2_title: "🚫 絕對禁止使用電梯 (No Elevators)",
+    s4_card2_body: "<p>電梯井在火災時會產生煙囪效應抽吸濃煙，切勿搭乘電梯，一律步行由兩側安全梯疏散！</p>",
+    s4_card3_title: "🔑 隨身攜帶寢室鑰匙 (Take Room Key)",
+    s4_card3_body: "<p>若走廊已被濃煙吞沒無法通行，立刻退回寢室內關門防煙，並於窗邊揮動衣物呼救等待救援。</p>",
+
+    // Section 5: Campus Zones
+    s5_title: "🏢 校園分區安全防護準則",
+    s5_desc: "針對寢室生活、公共廚房、AI電腦機房與逃生走廊之防火與用電安全規範。",
+    s5_tabs: ["全區規範", "寢室生活", "公共廚房", "AI與實驗室", "逃生走廊"],
+    s5_zoneTags: ["寢室生活", "公共廚房", "AI與實驗室", "逃生走廊"],
+    s5_zones: [
+      {
+        tag: "Dormitory Rooms",
+        title: "🛌 寢室生活用電與明火管制",
+        items: [
+          "嚴禁於寢室內點燃蠟燭、薰香、精油燈或瓦斯爐。",
+          "高耗電加熱電器（電磁爐、熱水壺、電暖器）禁止於寢室插座使用。",
+          "吹風機、離子夾等美髮器具使用完畢後務必立即拔除插頭。",
+          "嚴禁將行動電源、電動滑板車鋰電池置於床鋪上徹夜充電。"
+        ]
+      },
+      {
+        tag: "Kitchen & Lounges",
+        title: "🍳 公共廚房與烹飪安全",
+        items: [
+          "人離火熄：烹煮食材、熱湯或微波食物時，切勿擅自離開現場。",
+          "油鍋起火切勿澆水：迅速蓋上鍋蓋切斷空氣，並關閉瓦斯/爐具開關。",
+          "定期清理微波爐內部油漬與烤麵包機底盤麵包屑，避免積熱自燃。",
+          "洗衣間烘衣機每次使用前後，務必清除棉絮濾網上的易燃棉屑。"
+        ]
+      },
+      {
+        tag: "Tech & Science Labs",
+        title: "🔬 AI電腦機房與實驗室規範",
+        items: [
+          "伺服器機櫃與高瓦數GPU工作站周圍保持通風良好，嚴禁堆置紙箱。",
+          "嚴禁延長線「章魚腳」串接（延長線接延長線）導致電線走火。",
+          "化學溶劑（異丙醇、去漬油）應存放於專用黃色防爆櫃內。",
+          "精密電子設備區域應配置二氧化碳 (CO2) 或潔淨氣體滅火器。"
+        ]
+      },
+      {
+        tag: "Egress & Corridors",
+        title: "🚪 走廊通道與常閉式防火門",
+        items: [
+          "走廊及避難逃生樓梯間嚴禁堆放鞋架、行李箱、垃圾桶或腳踏車。",
+          "常閉式防火門嚴禁以木塞、滅火器蓄意卡門敞開，以免火勢濃煙竄升。",
+          "走廊上方緊急出口指示燈與緊急照明燈應隨時保持通電待命狀態。",
+          "熟悉主要逃生梯與次要備用逃生梯的精確步行路線。"
+        ]
+      }
+    ],
+
+    // Section 6: Audit
+    s6_title: "✅ 寢室防火安全自主查核",
+    s6_desc: "檢核個人與室友之居住環境是否符合校園防火防電安全規範。",
+    s6_gaugeLabel: "安全合格率",
+    s6_statusHigh: "HIGH RISK (高風險)",
+    s6_statusMod: "MODERATE (部分待改善)",
+    s6_statusSafe: "CAMPUS SAFE (符合校園規範)",
+    s6_checks: [
+      { title: "偵煙器與自動灑水頭周圍保持淨空", sub: "天花板灑水頭周圍約45公分（18英吋）內無任何懸掛衣物、布簾或障礙物遮蔽。" },
+      { title: "無違規使用高功率家電或串接延長線", sub: "使用具備過載自動斷電保護之安規延長線，且直接插於牆面插座，無串接情形。" },
+      { title: "寢室內零違禁明火與香氛物品", sub: "房內絕無蠟燭、線香、打火機充氣瓶、高熱鹵素燈或卡式爐。" },
+      { title: "通往寢室大門之走道通暢無阻", sub: "房門能完全敞開90度以上，門後無堆放髒衣籃、鞋盒或阻礙逃生之雜物。" },
+      { title: "室友均清楚北側/南側安全梯走向", sub: "全體室友均親自走過最近的安全梯（X04旁北梯、X22旁南梯）。" },
+      { title: "牢記戶外指定集結避難場所", sub: "火警警報響起時，全員知曉應前往戶外指定草坪集結點進行點名。" }
+    ],
+
+    // Section 7: Drills
+    s7_title: "🧠 緊急情境直覺應變測驗",
+    s7_desc: "透過真實宿舍火災模擬情境，強化第一時間之正確逃生決策。",
+
+    // Section 8: Hotlines
+    s8_title: "📞 台灣緊急與服務專線 (Taiwan Emergency & Public Service Hotlines)",
+    s8_desc: "台灣官方緊急救助與便民服務專線，點擊卡片即可快速撥號。",
+    s8_cards: [
+      { title: "Fire & Ambulance", subtitle: "消防報案、火災搶救、緊急救護車", desc: "24小時全年無休，發生火災、人員受傷或化學災害時第一時間直撥。" },
+      { title: "Police Emergency", subtitle: "警察局報案專線 (犯罪、危急治安)", desc: "校園暴力、可疑人員入侵、縱火事件或重大治安威脅緊急求助直撥。" },
+      { title: "Global Mobile Emergency", subtitle: "行動電話全球緊急救助專線", desc: "手機無SIM卡、或使用其他電信業者基地台時仍可撥通（須有行動基地台訊號涵蓋），由語音導引轉接119或110。" },
+      { title: "Citizen Hotline", subtitle: "各縣市政府便民服務與重大災情通報 (非24小時全國緊急專線)", desc: "各直轄市與縣市政府通話專線，提供市政諮詢、公用設施損壞通報。" },
+      { title: "Mental Health Hotline", subtitle: "衛福部安心專線 (依舊愛我)", desc: "24小時免付費心理諮詢與自傷危機干預輔導，給予即時心理支持。" },
+      { title: "Anti-Fraud Hotline", subtitle: "內政部警政署反詐騙諮詢專線", desc: "遇疑似詐騙電話、假冒檢警、交友匯款或網購詐欺查證與通報。" },
+      { title: "Protection Hotline", subtitle: "婦幼保護與家庭暴力防治專線", desc: "遭遇家庭暴力、性騷擾、性侵害、兒少保護等緊急求助與諮詢。" }
+    ],
+    s8_note: "在台灣遭遇緊急狀況之通報原則：火警直撥 119，若遇手機收訊不良請改撥 112。注意：112仍須在有行動電話基地台訊號涵蓋時方可接通。通話時請冷靜清楚說明：(1) 所在學校校名 (2) 宿舍樓棟名稱 (3) 樓層與寢室房號 (4) 現場所見火勢與煙霧狀況。"
+  },
+
+  en: {
+    langBtn: "繁體中文",
+    brand: "CAMPUS FIRE SAFE",
+    alarmBtn: "Test Alarm",
+    alarmBtnSilence: "Silence Alarm",
+    voiceAnnouncement: "Fire emergency drill activated. Please evacuate the building immediately through the nearest stairwell. Do not use elevators.",
+    pageIndicator: "Page {curr} / {total}",
+
+    // Tabs
+    tabs: ["🏠 Home", "🚨 Survival", "🧯 P.A.S.S.", "🗺️ Evacuation", "🏢 Campus", "✅ Audit", "🧠 Drills", "📞 Hotlines"],
+
+    // Section 1: Home
+    s1_badge: "⚡ University Life-Safety Network",
+    s1_heading: "Campus & Residence Hall Fire Defense System",
+    s1_subtitle: "Interactive fire prevention, evacuation simulation, extinguisher training, and Taiwan emergency protocols designed for dorm residents, students, and faculty.",
+    s1_cards: [
+      { title: "Fire Survival Actions", desc: "Door heat tests, low smoke crawl posture, and escape priorities." },
+      { title: "P.A.S.S. Simulator", desc: "Interactive 4-step extinguisher motion training with particle physics." },
+      { title: "Dorm Evacuation Map", desc: "Architectural hollow-courtyard floorplan with live evacuation flow." },
+      { title: "Campus Zones", desc: "Specific fire rules for dorm rooms, kitchens, labs, and stairwells." },
+      { title: "Dorm Room Audit", desc: "Interactive compliance checklist with real-time risk gauge." },
+      { title: "Decision Drills", desc: "Scenario simulations for 3 AM alarms and kitchen grease fires." },
+      { title: "Taiwan Hotlines", desc: "119, 110, 112, 1999, 1925, 165, 113 official emergency contacts." }
+    ],
+
+    // Section 2: Survival Protocols (NEW!)
+    s2_survival_title: "🚨 Fire Survival Actions: What To Do In Case of Fire",
+    s2_survival_desc: "Interactive animated demonstration of life-critical reactions: door heat checks, low smoke crawling, and emergency survival.",
+    s2_survival_nav: [
+      "1. 🚪 Check Door Heat",
+      "2. 💨 Crawl Low (Smoke)",
+      "3. 🔥 Stop, Drop & Roll",
+      "4. 🪟 Shelter & Signal"
+    ],
+    s2_survival_info: {
+      1: { badge: "ACTION 1: CHECK DOOR HANDLE HEAT", text: "Always feel the metal door handle and door surface with the back of your hand before opening. If hot, DO NOT open!" },
+      2: { badge: "ACTION 2: CRAWL LOW UNDER SMOKE", text: "Toxic smoke and gases rise toward the ceiling. The cleanest, breathable air layer is within 30-60 cm of the floor. Crawl low on hands and knees." },
+      3: { badge: "ACTION 3: STOP, DROP & ROLL", text: "If your clothes catch fire, never run (running feeds fire with oxygen). Stop moving, drop to the floor covering your face, and roll back and forth." },
+      4: { badge: "ACTION 4: SHELTER IN PLACE & SIGNAL", text: "If exit corridors are blocked by smoke, retreat inside your room, close the door, seal cracks with wet towels, and signal at window for rescue." }
+    },
+    s2_survival_tip: "💡 Survival Rule: Smoke kills faster than flames. Never open a hot door, never use elevators, and never delay escape for belongings!",
+
+    // Section 3: P.A.S.S.
+    s3_title: "🧯 Interactive P.A.S.S. Extinguisher Simulator",
+    s3_desc: "Interactive motion demonstration of the 4-step extinguisher technique against burning fuel.",
+    s3_stepsNav: ["1. 🧷 Pull Pin", "2. 🎯 Aim Low", "3. ✊ Squeeze Lever", "4. ↔️ Sweep Across"],
+    s3_stepsInfo: {
+      1: { badge: "STEP 1: PULL THE PIN", text: "Pull the metal safety ring pin to break the plastic tamper seal and unlock the handle." },
+      2: { badge: "STEP 2: AIM LOW AT BASE", text: "Aim the discharge nozzle or horn directly at the base of the fuel, not at the high flames." },
+      3: { badge: "STEP 3: SQUEEZE LEVER", text: "Depress the upper lever slowly and firmly to release pressurized dry chemical extinguishing agent." },
+      4: { badge: "STEP 4: SWEEP SIDE TO SIDE", text: "Sweep the nozzle in a smooth back-and-forth motion across the entire fire base until fully out." }
+    },
+    s3_play: "▶ Play Demo",
+    s3_pause: "⏸ Pause Demo",
+    s3_tip: "⚠️ Rule of Thumb: Only fight fires smaller than a wastebasket. Always keep an unobstructed exit behind you!",
+
+    // Section 4: Evacuation Map
+    s4_title: "🗺️ Dormitory Emergency Evacuation Map",
+    s4_desc: "Hollow-square perimeter layout with room naming (X01-X44) and closest stairwell exits.",
+    s4_legendStairs: "Exit Stairs",
+    s4_legendExits: "1F Exits via Stairs",
+    s4_legendStudents: "Evacuating Students",
+    s4_legendCourtyard: "Void Courtyard",
+    s4_card1_title: "🚪 Key Exit Configuration",
+    s4_card1_body: "<ul><li><strong>North Stairs:</strong> Located beside room X04 (above lift), leading down to 1F Parking Exit.</li><li><strong>South Stairs:</strong> Located beside room X22, leading down to 1F Main Exit.</li><li><strong>Lift Location:</strong> Positioned directly below North Stairs; strictly prohibited during fire alarms.</li><li><strong>Continuous Upper Floor:</strong> Rooms X08-X18 form a solid wall; physical exits are located on the ground floor.</li></ul>",
+    s4_card2_title: "🚫 Strictly Do Not Use Elevators",
+    s4_card2_body: "<p>Elevator shafts create a lethal chimney draft drawing toxic carbon monoxide upward. Always evacuate via stairs!</p>",
+    s4_card3_title: "🔑 Always Carry Your Room Key & ID",
+    s4_card3_body: "<p>If corridors are impassable due to thick smoke, retreat inside your room, seal door cracks, and signal at window.</p>",
+
+    // Section 5: Campus Zones
+    s5_title: "🏢 Campus & Residence Hall Safety Protocols",
+    s5_desc: "Hazard prevention and electrical codes tailored for each specific zone on campus.",
+    s5_tabs: ["All Campus Zones", "Dorm Rooms", "Communal Kitchens", "AI & Science Labs", "Corridors & Fire Doors"],
+    s5_zoneTags: ["Dorm Living", "Communal Kitchen", "AI & Labs", "Corridors & Exits"],
+    s5_zones: [
+      {
+        tag: "Dormitory Rooms",
+        title: "🛌 Dorm Living & Appliance Regulations",
+        items: [
+          "Open flames, candles, and incense are strictly prohibited in university housing.",
+          "High-wattage heating appliances (hot plates, electric kettles, space heaters) are banned.",
+          "Hair straighteners and curling irons must be unplugged immediately after use.",
+          "Never charge e-scooters or lithium power banks overnight on bedding or desks."
+        ]
+      },
+      {
+        tag: "Kitchen & Lounges",
+        title: "🍳 Communal Kitchen Protocols",
+        items: [
+          "Never leave stovetop cooking, hot soup, or microwave food unattended.",
+          "Never throw water on hot oil fires; cover with a metal lid to smother flames.",
+          "Clean microwave interiors and toaster crumb trays regularly to prevent fire ignition.",
+          "Clean laundry dryer lint filters before and after every single drying load."
+        ]
+      },
+      {
+        tag: "Tech & Science Labs",
+        title: "🔬 AI & Computer Lab Codes",
+        items: [
+          "Maintain clear ventilation around high-wattage GPU server racks and workstations.",
+          "Do not daisy-chain extension cords or surge protectors together.",
+          "Store chemical solvents (isopropyl alcohol, acetone) in rated yellow safety cabinets.",
+          "Keep Class C or Clean-Agent CO2 extinguishers accessible near electronics."
+        ]
+      },
+      {
+        tag: "Egress & Corridors",
+        title: "🚪 Corridors & Fire Doors",
+        items: [
+          "Never prop open heavy self-closing fire doors with trash cans or wedges.",
+          "Keep corridors, stairwells, and room doorways 100% free of bicycles or boxes.",
+          "Ensure overhead emergency exit signs are brightly illuminated 24/7.",
+          "Know the primary and secondary escape routes if one stairwell is blocked by smoke."
+        ]
+      }
+    ],
+
+    // Section 6: Audit
+    s6_title: "✅ Interactive Dorm Room Safety Audit",
+    s6_desc: "Evaluate your dormitory room compliance against campus fire safety regulations.",
+    s6_gaugeLabel: "Compliance",
+    s6_statusHigh: "HIGH RISK",
+    s6_statusMod: "MODERATE",
+    s6_statusSafe: "CAMPUS SAFE",
+    s6_checks: [
+      { title: "Unobstructed Smoke Detector & Sprinkler Heads", sub: "Nothing hanging within 18 inches (45 cm) of ceiling sprinkler heads." },
+      { title: "No Multi-Plug Octopus Outlets or Daisy Chains", sub: "All surge protectors are UL-certified and plugged directly into wall receptacles." },
+      { title: "Zero Prohibited Open-Flame Items", sub: "No candles, incense burners, halogen lamps, or unapproved heating appliances." },
+      { title: "Clear Path to Dorm Exit Door", sub: "Exit door swings fully open with no hampers, shoes, or clutter blocking egress." },
+      { title: "Memorized North & South Exit Stairwells", sub: "All roommates know the routes to North Stairs (beside X04) and South Stairs (beside X22)." },
+      { title: "Designated Outdoor Assembly Area Known", sub: "Everyone knows the designated lawn gathering point for headcount verification." }
+    ],
+
+    // Section 7: Drills
+    s7_title: "🧠 Emergency Decision Drills",
+    s7_desc: "Sharpen your crisis reaction instinct under simulated university dormitory emergencies.",
+
+    // Section 8: Hotlines
+    s8_title: "📞 Taiwan Emergency Hotlines (台灣官方緊急求助專線)",
+    s8_desc: "Official emergency numbers and citizen service hotlines in Taiwan. Click any card to dial directly.",
+    s8_cards: [
+      { title: "Fire & Ambulance", subtitle: "Fire, Rescue & Emergency Medical Ambulance", desc: "Available 24/7. Dial immediately for structural fire, injury, or chemical hazards." },
+      { title: "Police Emergency", subtitle: "Police Department Emergency Reporting", desc: "Dial for campus violence, intruders, arson threats, or public safety emergencies." },
+      { title: "Global Mobile Emergency", subtitle: "International Mobile SOS (Cellular Required)", desc: "Connects even without a SIM card or active roaming via available cell towers, with voice routing to 119 or 110." },
+      { title: "Citizen Service Hotline", subtitle: "Municipal Public Services & Local Reports (Non-24/7 Emergency)", desc: "Local county/city citizen hotline for municipal inquiries, utility outages, and infrastructure repair." },
+      { title: "Mental Health Hotline", subtitle: "MOHW Psychological Support & Crisis Helpline", desc: "24/7 toll-free mental health support, emotional counseling, and self-harm crisis intervention." },
+      { title: "Anti-Fraud Hotline", subtitle: "NPA Anti-Fraud Consultation & Reporting", desc: "Verify suspicious phone calls, phishing scams, impersonation frauds, or cyber extortion." },
+      { title: "Protection Hotline", subtitle: "Domestic Violence & Women/Children Protection", desc: "24/7 confidential counseling and emergency intervention for domestic violence, abuse, or harassment." }
+    ],
+    s8_note: "Emergency reporting protocol in Taiwan: Dial 119 for fire and ambulance. If your mobile has poor signal, dial 112 (requires cellular coverage from any carrier). Stay calm and state: (1) School name (2) Dorm building name (3) Floor and room number (4) Nature of fire and smoke conditions."
+  }
+};
+
+/* ==========================================================================
+   1. LANGUAGE ENGINE
+   ========================================================================== */
+function initLanguageEngine() {
+  const langToggleBtn = document.getElementById('langToggleBtn');
+  const langBtnLabel = document.getElementById('langBtnLabel');
+
+  function applyLanguage(lang) {
+    currentLang = lang;
+    const t = i18nData[lang];
+    document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
+
+    if (langBtnLabel) langBtnLabel.textContent = t.langBtn;
+
+    const brandText = document.querySelector('.brand span');
+    if (brandText) brandText.textContent = t.brand;
+    const alarmBtnText = document.getElementById('alarmBtnLabel');
+    if (alarmBtnText) alarmBtnText.textContent = t.alarmBtn;
+
+    const tabBtns = document.querySelectorAll('.nav-tab-btn');
+    tabBtns.forEach((btn, idx) => {
+      if (t.tabs[idx]) btn.innerHTML = t.tabs[idx];
+    });
+
+    const pageIndicator = document.getElementById('currentSlideIndicator');
+    if (pageIndicator) {
+      pageIndicator.textContent = t.pageIndicator
+        .replace('{curr}', currentSlide + 1)
+        .replace('{total}', totalSlides);
+    }
+
+    // Section 1: Home
+    const s1Badge = document.querySelector('#slide-1 .hero-badge');
+    if (s1Badge) s1Badge.textContent = t.s1_badge;
+    const s1Heading = document.querySelector('#slide-1 .hero-heading');
+    if (s1Heading) s1Heading.textContent = t.s1_heading;
+    const s1Subtitle = document.querySelector('#slide-1 .hero-subtitle');
+    if (s1Subtitle) s1Subtitle.textContent = t.s1_subtitle;
+
+    const quickBoxes = document.querySelectorAll('.quick-feature-box');
+    quickBoxes.forEach((box, i) => {
+      if (t.s1_cards[i]) {
+        const h4 = box.querySelector('h4');
+        const p = box.querySelector('p');
+        if (h4) h4.textContent = t.s1_cards[i].title;
+        if (p) p.textContent = t.s1_cards[i].desc;
+      }
+    });
+
+    // Section 2: Survival
+    const s2Title = document.querySelector('#slide-2 .section-title');
+    if (s2Title) s2Title.textContent = t.s2_survival_title;
+    const s2Desc = document.querySelector('#slide-2 .section-desc');
+    if (s2Desc) s2Desc.textContent = t.s2_survival_desc;
+
+    const survivalStepBtns = document.querySelectorAll('.survival-step-btn[data-action]');
+    survivalStepBtns.forEach((btn, idx) => {
+      if (t.s2_survival_nav[idx]) btn.textContent = t.s2_survival_nav[idx];
+    });
+
+    const activeSurvivalBtn = document.querySelector('.survival-step-btn[data-action].active');
+    const currAct = activeSurvivalBtn ? parseInt(activeSurvivalBtn.dataset.action) : 1;
+    const badgeEl = document.getElementById('survivalStepBadge');
+    const textEl = document.getElementById('survivalStepText');
+    if (badgeEl && t.s2_survival_info[currAct]) badgeEl.textContent = t.s2_survival_info[currAct].badge;
+    if (textEl && t.s2_survival_info[currAct]) textEl.textContent = t.s2_survival_info[currAct].text;
+
+    const survivalTip = document.getElementById('survivalStatusHint');
+    if (survivalTip) {
+      survivalTip.textContent = currentLang === 'zh'
+        ? '💡 緩速示範循環中（每動態停留 16 秒）。點擊任一動作可停駐觀看細節。'
+        : '💡 Slow-paced demo cycle (16s per action). Click any action tab to inspect.';
+    }
+
+    // Section 3: P.A.S.S.
+    const s3Title = document.querySelector('#slide-3 .section-title');
+    if (s3Title) s3Title.textContent = t.s3_title;
+    const s3Desc = document.querySelector('#slide-3 .section-desc');
+    if (s3Desc) s3Desc.textContent = t.s3_desc;
+
+    const passStepBtns = document.querySelectorAll('.pass-step-btn[data-step]');
+    passStepBtns.forEach((btn, idx) => {
+      if (t.s3_stepsNav[idx]) btn.textContent = t.s3_stepsNav[idx];
+    });
+
+    const activePassBtn = document.querySelector('.pass-step-btn[data-step].active');
+    const curPassStep = activePassBtn ? parseInt(activePassBtn.dataset.step) : 1;
+    const passBadgeEl = document.getElementById('passStepBadge');
+    const passTextEl = document.getElementById('passStepText');
+    if (passBadgeEl && t.s3_stepsInfo[curPassStep]) passBadgeEl.textContent = t.s3_stepsInfo[curPassStep].badge;
+    if (passTextEl && t.s3_stepsInfo[curPassStep]) passTextEl.textContent = t.s3_stepsInfo[curPassStep].text;
+
+    const passPlayPauseBtn = document.getElementById('passPlayPauseBtn');
+    if (passPlayPauseBtn) {
+      const isPaused = passPlayPauseBtn.textContent.includes('Play') || passPlayPauseBtn.textContent.includes('播放');
+      passPlayPauseBtn.textContent = isPaused ? t.s3_play : t.s3_pause;
+    }
+
+    const passTip = document.querySelector('.extinguisher-toolbar div[style*="font-size:0.84rem"]');
+    if (passTip) passTip.textContent = t.s3_tip;
+
+    // Section 4: Evacuation
+    const s4Title = document.querySelector('#slide-4 .section-title');
+    if (s4Title) s4Title.textContent = t.s4_title;
+    const s4Desc = document.querySelector('#slide-4 .section-desc');
+    if (s4Desc) s4Desc.textContent = t.s4_desc;
+
+    const cards = document.querySelectorAll('.sidebar-notes .dorm-info-card');
+    if (cards[0]) {
+      cards[0].querySelector('h4').textContent = t.s4_card1_title;
+      cards[0].querySelector('ul').outerHTML = t.s4_card1_body;
+    }
+    if (cards[1]) {
+      cards[1].querySelector('h4').textContent = t.s4_card2_title;
+      cards[1].querySelector('p').outerHTML = t.s4_card2_body;
+    }
+    if (cards[2]) {
+      cards[2].querySelector('h4').textContent = t.s4_card3_title;
+      cards[2].querySelector('p').outerHTML = t.s4_card3_body;
+    }
+
+    // Section 5: Zones
+    const s5Title = document.querySelector('#slide-5 .section-title');
+    if (s5Title) s5Title.textContent = t.s5_title;
+    const s5Desc = document.querySelector('#slide-5 .section-desc');
+    if (s5Desc) s5Desc.textContent = t.s5_desc;
+
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach((btn, i) => {
+      if (t.s5_tabs[i]) btn.textContent = t.s5_tabs[i];
+    });
+
+    const zoneTags = document.querySelectorAll('.zone-tile .zone-tag');
+    zoneTags.forEach((tag, i) => {
+      if (t.s5_zoneTags && t.s5_zoneTags[i]) tag.textContent = t.s5_zoneTags[i];
+    });
+
+    const zoneTiles = document.querySelectorAll('.zone-tile');
+    zoneTiles.forEach((tile, i) => {
+      if (t.s5_zones[i]) {
+        tile.querySelector('h3').textContent = t.s5_zones[i].title;
+        const ul = tile.querySelector('ul');
+        ul.innerHTML = t.s5_zones[i].items.map(it => `<li>${it}</li>`).join('');
+      }
+    });
+
+    // Section 6: Audit
+    const s6Title = document.querySelector('#slide-6 .section-title');
+    if (s6Title) s6Title.textContent = t.s6_title;
+    const s6Desc = document.querySelector('#slide-6 .section-desc');
+    if (s6Desc) s6Desc.textContent = t.s6_desc;
+
+    const gaugeLabel = document.querySelector('.circular-gauge-inner span[style*="text-transform:uppercase"]');
+    if (gaugeLabel) gaugeLabel.textContent = t.s6_gaugeLabel;
+
+    const auditLabels = document.querySelectorAll('.audit-check-label');
+    auditLabels.forEach((label, i) => {
+      if (t.s6_checks[i]) {
+        label.querySelector('strong').textContent = t.s6_checks[i].title;
+        label.querySelector('span').textContent = t.s6_checks[i].sub;
+      }
+    });
+
+    // Section 7: Drills
+    const s7Title = document.querySelector('#slide-7 .section-title');
+    if (s7Title) s7Title.textContent = t.s7_title;
+    const s7Desc = document.querySelector('#slide-7 .section-desc');
+    if (s7Desc) s7Desc.textContent = t.s7_desc;
+
+    initDrills();
+
+    // Section 8: Hotlines
+    const s8Title = document.querySelector('#slide-8 .section-title');
+    if (s8Title) s8Title.textContent = t.s8_title;
+    const s8Desc = document.querySelector('#slide-8 .section-desc');
+    if (s8Desc) s8Desc.textContent = t.s8_desc;
+
+    const hotlineCards = document.querySelectorAll('.hotlines-grid .hotline-card');
+    hotlineCards.forEach((card, idx) => {
+      if (t.s8_cards && t.s8_cards[idx]) {
+        const h3 = card.querySelector('h3');
+        const zhTitle = card.querySelector('.zh-title');
+        const p = card.querySelector('p');
+        if (h3) h3.textContent = t.s8_cards[idx].title;
+        if (zhTitle) zhTitle.textContent = t.s8_cards[idx].subtitle;
+        if (p) p.textContent = t.s8_cards[idx].desc;
+      }
+    });
+
+    const flagNoteP = document.querySelector('.taiwan-flag-note p');
+    if (flagNoteP) flagNoteP.textContent = t.s8_note;
+
+    if (window.updateAuditGaugeFunc) window.updateAuditGaugeFunc();
+  }
+
+  if (langToggleBtn) {
+    langToggleBtn.addEventListener('click', () => {
+      applyLanguage(currentLang === 'zh' ? 'en' : 'zh');
+    });
+  }
+
+  applyLanguage(currentLang);
+}
+
+/* ==========================================================================
+   2. 8-SECTION SLIDE DECK CONTROLLER (Directional Energy Wipe & Cascade)
+   ========================================================================== */
+function initSlideDeck() {
+  const track = document.getElementById('sliderTrack');
+  const tabs = document.querySelectorAll('.nav-tab-btn');
+  const dots = document.querySelectorAll('.slide-dot');
+  const pageIndicator = document.getElementById('currentSlideIndicator');
+  const prevBtn = document.getElementById('slidePrevBtn');
+  const nextBtn = document.getElementById('slideNextBtn');
+  const slides = document.querySelectorAll('.slide-section');
+  const wipeSweep = document.getElementById('pageWipeSweep');
+
+  function goToSlide(index) {
+    if (index < 0) index = 0;
+    if (index >= totalSlides) index = totalSlides - 1;
+    if (index === currentSlide && slides[0].classList.contains('active')) return;
+
+    const isForward = index >= currentSlide;
+    currentSlide = index;
+
+    // Trigger Modern Web Guidance Directional Sweep Effect
+    if (wipeSweep) {
+      wipeSweep.className = 'page-wipe-sweep';
+      void wipeSweep.offsetWidth; // force reflow
+      wipeSweep.className = isForward ? 'page-wipe-sweep sweep-forward' : 'page-wipe-sweep sweep-backward';
+    }
+
+    const offset = -(currentSlide * (100 / totalSlides));
+    track.style.transform = `translateX(${offset}%)`;
+
+    slides.forEach((s, idx) => {
+      s.classList.toggle('active', idx === currentSlide);
+    });
+
+    tabs.forEach((tab, i) => {
+      tab.classList.toggle('active', i === currentSlide);
+    });
+    if (tabs[currentSlide]) {
+      tabs[currentSlide].scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    }
+
+    dots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === currentSlide);
+    });
+
+    if (pageIndicator) {
+      const t = i18nData[currentLang];
+      pageIndicator.textContent = t.pageIndicator
+        .replace('{curr}', currentSlide + 1)
+        .replace('{total}', totalSlides);
+    }
+
+    if (slides[currentSlide]) {
+      slides[currentSlide].scrollTop = 0;
+    }
+  }
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => goToSlide(i));
+  });
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => goToSlide(i));
+  });
+
+  if (prevBtn) prevBtn.addEventListener('click', () => goToSlide(currentSlide - 1));
+  if (nextBtn) nextBtn.addEventListener('click', () => goToSlide(currentSlide + 1));
+
+  document.querySelectorAll('.quick-feature-box').forEach(box => {
+    box.addEventListener('click', () => {
+      const target = parseInt(box.dataset.slide);
+      if (!isNaN(target)) goToSlide(target);
+    });
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') {
+      goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft') {
+      goToSlide(currentSlide - 1);
+    }
+  });
+
+  let touchStartX = 0;
+  let touchEndX = 0;
+  track.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+
+  track.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    if (touchStartX - touchEndX > 50) {
+      goToSlide(currentSlide + 1);
+    } else if (touchEndX - touchStartX > 50) {
+      goToSlide(currentSlide - 1);
+    }
+  }, { passive: true });
+
+  goToSlide(0);
+}
+
+/* ==========================================================================
+   3. FIRE SURVIVAL PROTOCOLS ANIMATED SIMULATOR (Section 2 - Upgraded)
+   ========================================================================== */
+function initSurvivalSimulator() {
+  const canvas = document.getElementById('survivalCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = 460;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let currentAction = 1; // 1: Door Heat, 2: Smoke Crawl, 3: Stop-Drop-Roll, 4: Shelter & Signal
+  let isPlaying = true;
+  let playbackSpeed = 1.0;
+  let actionTimer = 0;
+  const actionDuration = 960; // ~16 seconds at 60fps (thorough cinematic pacing)
+  let frame = 0;
+
+  // Particle systems
+  const smokeParticles = [];
+  for (let i = 0; i < 45; i++) {
+    smokeParticles.push({
+      x: Math.random() * 900,
+      y: Math.random() * 160 + 20,
+      radius: Math.random() * 32 + 20,
+      vx: (Math.random() - 0.5) * 0.7,
+      vy: (Math.random() - 0.5) * 0.3,
+      opacity: Math.random() * 0.35 + 0.25
+    });
+  }
+
+  const fireExtinguishPuffs = [];
+
+  // Helper: Draw dynamically sized pills to prevent ANY text clipping
+  function drawPill(context, text, centerX, centerY, bgColor, textColor, fontSize = 13, paddingX = 18, paddingY = 8, borderColor = null) {
+    context.save();
+    context.font = `bold ${fontSize}px sans-serif`;
+    const textW = context.measureText(text).width;
+    const boxW = textW + paddingX * 2;
+    const boxH = fontSize + paddingY * 2;
+    const boxX = centerX - boxW / 2;
+    const boxY = centerY - boxH / 2;
+
+    context.fillStyle = bgColor;
+    context.beginPath();
+    context.roundRect(boxX, boxY, boxW, boxH, boxH / 2);
+    context.fill();
+
+    if (borderColor) {
+      context.strokeStyle = borderColor;
+      context.lineWidth = 1.5;
+      context.stroke();
+    }
+
+    context.fillStyle = textColor;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(text, centerX, centerY);
+    context.restore();
+  }
+
+  // Helper: Draw enchanting, realistic, multi-layered fluid fire
+  function drawEnchantedFire(context, x, y, baseW, height, intensity = 1.0, windX = 0, f = 0) {
+    if (intensity <= 0.01) return;
+    context.save();
+    context.translate(x, y);
+
+    // Warm radial glow
+    const glow = context.createRadialGradient(windX * 0.3, -height * 0.4, 4, windX * 0.5, -height * 0.5, height * 1.3);
+    glow.addColorStop(0, `rgba(245, 158, 11, ${0.45 * intensity})`);
+    glow.addColorStop(0.5, `rgba(239, 68, 68, ${0.25 * intensity})`);
+    glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    context.fillStyle = glow;
+    context.beginPath();
+    context.arc(windX * 0.5, -height * 0.5, height * 1.3, 0, Math.PI * 2);
+    context.fill();
+
+    // 5 Organic animated flame tongues
+    const tongues = [
+      { offsetRatio: -0.35, hScale: 0.8, color: '#dc2626', speed: 0.18, phase: 0.5 },
+      { offsetRatio: 0.35, hScale: 0.85, color: '#ea580c', speed: 0.22, phase: 1.8 },
+      { offsetRatio: -0.15, hScale: 1.05, color: '#f59e0b', speed: 0.25, phase: 2.7 },
+      { offsetRatio: 0.15, hScale: 1.1, color: '#fbbf24', speed: 0.2, phase: 3.9 },
+      { offsetRatio: 0.0, hScale: 0.75, color: '#fef08a', speed: 0.28, phase: 4.5 }
+    ];
+
+    tongues.forEach((t) => {
+      const flicker = Math.sin(f * t.speed + t.phase) * 0.18 + Math.cos(f * t.speed * 1.7) * 0.1;
+      const tW = baseW * 0.45 * (1 + flicker * 0.5);
+      const tH = height * t.hScale * (1 + flicker) * intensity;
+      const tX = baseW * t.offsetRatio;
+      const tipX = tX + windX + Math.sin(f * 0.15 + t.phase) * 8;
+
+      context.fillStyle = t.color;
+      context.beginPath();
+      context.moveTo(tX - tW, 0);
+      context.quadraticCurveTo(tX - tW * 0.6, -tH * 0.5, tipX, -tH);
+      context.quadraticCurveTo(tX + tW * 0.6, -tH * 0.5, tX + tW, 0);
+      context.closePath();
+      context.fill();
+    });
+
+    // Rising sparks
+    for (let i = 0; i < 3; i++) {
+      const sparkPhase = (f * 0.06 + i * 2.1) % 1;
+      const sparkY = -height * 0.25 - sparkPhase * height * 1.0;
+      const sparkX = (Math.sin(i * 1.7 + f * 0.1) * baseW * 0.6) + windX * sparkPhase;
+      const sparkAlpha = (1 - sparkPhase) * intensity;
+      if (sparkAlpha > 0.05) {
+        context.fillStyle = `rgba(254, 240, 138, ${sparkAlpha})`;
+        context.beginPath();
+        context.arc(sparkX, sparkY, 2, 0, Math.PI * 2);
+        context.fill();
+      }
+    }
+
+    context.restore();
+  }
+
+  function setAction(action, pauseAutoplay = false) {
+    currentAction = action;
+    actionTimer = 0;
+    if (pauseAutoplay) {
+      isPlaying = false;
+      updatePlayPauseUI();
+    }
+
+    document.querySelectorAll('.survival-step-btn[data-action]').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.action) === action);
+    });
+
+    const badgeEl = document.getElementById('survivalStepBadge');
+    const textEl = document.getElementById('survivalStepText');
+    const t = i18nData[currentLang];
+    const info = t.s2_survival_info[action];
+
+    if (badgeEl && info) badgeEl.textContent = info.badge;
+    if (textEl && info) textEl.textContent = info.text;
+
+    updateStatusHint();
+  }
+
+  function updatePlayPauseUI() {
+    const playPauseBtn = document.getElementById('survivalPlayPauseBtn');
+    if (playPauseBtn) {
+      playPauseBtn.textContent = isPlaying ? "⏸" : "▶";
+      playPauseBtn.title = isPlaying ? "Pause Demo / 暫停示範" : "Resume Autoplay / 繼續輪播";
+    }
+    updateStatusHint();
+  }
+
+  function updateStatusHint() {
+    const hintEl = document.getElementById('survivalStatusHint');
+    if (!hintEl) return;
+    const isZh = currentLang === 'zh';
+    if (isPlaying) {
+      hintEl.textContent = isZh
+        ? `💡 自動輪播中（每動作停留 16 秒，速度 ${playbackSpeed}x）。點擊任一動作可停駐觀看細節。`
+        : `💡 Auto-advancing (16s per action, speed ${playbackSpeed}x). Click any action tab to pause & inspect.`;
+    } else {
+      hintEl.textContent = isZh
+        ? `⏸ 已停駐於動作 ${currentAction}。點擊「▶」可恢復自動輪播。`
+        : `⏸ Paused on Action ${currentAction}. Click "▶" to resume auto-advance.`;
+    }
+  }
+
+  // Action tabs
+  document.querySelectorAll('.survival-step-btn[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => setAction(parseInt(btn.dataset.action), true));
+  });
+
+  // Header controls
+  const prevBtn = document.getElementById('survivalPrevBtn');
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      let prev = currentAction - 1;
+      if (prev < 1) prev = 4;
+      setAction(prev, false);
+    });
+  }
+
+  const nextBtn = document.getElementById('survivalNextBtn');
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      let next = currentAction + 1;
+      if (next > 4) next = 1;
+      setAction(next, false);
+    });
+  }
+
+  const playPauseBtn = document.getElementById('survivalPlayPauseBtn');
+  if (playPauseBtn) {
+    playPauseBtn.addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      updatePlayPauseUI();
+    });
+  }
+
+  const speedBtn = document.getElementById('survivalSpeedBtn');
+  if (speedBtn) {
+    speedBtn.addEventListener('click', () => {
+      playbackSpeed = playbackSpeed === 1.0 ? 0.5 : 1.0;
+      speedBtn.textContent = playbackSpeed === 1.0 ? "⚡ 1x" : "🐢 0.5x";
+      updateStatusHint();
+    });
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const w = canvas.width;
+    const h = canvas.height;
+    frame += playbackSpeed;
+
+    const groundY = h - 55;
+
+    // Ground floor
+    ctx.fillStyle = '#0a0f1d';
+    ctx.fillRect(0, groundY, w, 55);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, groundY);
+    ctx.lineTo(w, groundY);
+    ctx.stroke();
+
+    // Floor baseboard
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.6)';
+    ctx.fillRect(0, groundY, w, 6);
+
+    // =============================================================
+    // SCENE 1: DOOR HEAT CHECK (手背測門把與門板 - No confusing 1A/1B)
+    // =============================================================
+    if (currentAction === 1) {
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, w, groundY);
+
+      const doorX = w * 0.42;
+      const doorW = 150;
+      const doorH = groundY - 45;
+      const doorY = 45;
+
+      // Outer drywall trim
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(doorX - 25, doorY - 15, doorW + 50, doorH + 15);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.strokeRect(doorX - 25, doorY - 15, doorW + 50, doorH + 15);
+
+      // Heavy fire door body
+      ctx.fillStyle = '#1c2438';
+      ctx.fillRect(doorX, doorY, doorW, doorH);
+
+      // Door panels
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(doorX + 16, doorY + 20, doorW - 32, (doorH - 60) / 2);
+      ctx.strokeRect(doorX + 16, doorY + 30 + (doorH - 60) / 2, doorW - 32, (doorH - 60) / 2);
+
+      // Hinges & Door closer
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(doorX + 8, doorY + 4, 38, 8);
+      ctx.fillRect(doorX + doorW - 6, doorY + 35, 6, 20);
+      ctx.fillRect(doorX + doorW - 6, doorY + doorH - 55, 6, 20);
+
+      // Metallic Lever Door Handle
+      const knobX = doorX + 28;
+      const knobY = doorY + doorH * 0.52;
+
+      // Single clean continuous action: approaches, touches handle with back of hand, handle heats up, hand recoils!
+      const subCycle = (actionTimer % 720) / 720;
+      const isHandleHot = subCycle >= 0.4 && subCycle < 0.78;
+      const isRecoiling = subCycle >= 0.55 && subCycle < 0.78;
+
+      // Lever Handle rendering
+      ctx.save();
+      ctx.fillStyle = isHandleHot ? '#ef4444' : '#cbd5e1';
+      ctx.shadowColor = isHandleHot ? 'rgba(239, 68, 68, 0.85)' : 'transparent';
+      ctx.shadowBlur = isHandleHot ? 16 : 0;
+      ctx.fillRect(knobX - 10, knobY - 26, 20, 52);
+      ctx.fillRect(knobX - 2, knobY - 5, 34, 10);
+      ctx.beginPath();
+      ctx.arc(knobX + 32, knobY, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Thermal ripples when hot
+      if (isHandleHot) {
+        const pulse = (frame * 0.1) % 1;
+        ctx.strokeStyle = `rgba(239, 68, 68, ${1 - pulse})`;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(knobX + 16, knobY, 15 + pulse * 45, 0, Math.PI * 2);
+        ctx.stroke();
+
+        drawPill(ctx, currentLang === 'zh' ? '🌡️ 極度高溫（示範數據）切勿開門！' : '🌡️ EXTREMELY HOT! DO NOT OPEN!', knobX - 25, knobY - 50, '#dc2626', '#ffffff', 11, 20, 6);
+      }
+
+      // Evacuee on right
+      const personX = doorX + doorW + 110;
+      const personY = groundY;
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(personX - 16, personY - 95, 12, 95);
+      ctx.fillRect(personX + 4, personY - 95, 12, 95);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(personX - 20, personY - 10, 18, 10);
+      ctx.fillRect(personX, personY - 10, 18, 10);
+
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.roundRect(personX - 20, personY - 180, 40, 90, 8);
+      ctx.fill();
+
+      ctx.fillStyle = '#fed7aa';
+      ctx.beginPath();
+      ctx.arc(personX - 4, personY - 205, 18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.arc(personX - 4, personY - 212, 19, Math.PI, Math.PI * 2);
+      ctx.fill();
+
+      let targetHandX = knobX + 38;
+      let targetHandY = knobY;
+
+      if (isRecoiling) {
+        targetHandX = personX - 40;
+        targetHandY = knobY + 20;
+      }
+
+      const shoulderX = personX - 12;
+      const shoulderY = personY - 165;
+      const elbowX = (shoulderX + targetHandX) / 2 + 15;
+      const elbowY = (shoulderY + targetHandY) / 2 - 10;
+
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 14;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(shoulderX, shoulderY);
+      ctx.lineTo(elbowX, elbowY);
+      ctx.lineTo(targetHandX + 16, targetHandY);
+      ctx.stroke();
+
+      // Hand with distinct back-of-hand anatomy
+      ctx.save();
+      ctx.translate(targetHandX, targetHandY);
+      ctx.fillStyle = '#fed7aa';
+      ctx.beginPath();
+      ctx.roundRect(-2, -12, 20, 24, [4, 8, 8, 4]);
+      ctx.fill();
+      ctx.fillStyle = '#fdba74';
+      ctx.fillRect(8, -10, 8, 20);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(0, -9, 4, 4);
+      ctx.fillRect(0, -3, 4, 4);
+      ctx.fillRect(0, 3, 4, 4);
+      ctx.fillRect(0, 9, 4, 4);
+      ctx.restore();
+
+      // Clean single action banner - NO PART 1A / 1B!
+      if (isHandleHot) {
+        drawPill(ctx, currentLang === 'zh'
+          ? '🚨 門把發燙！門外已是火海，萬不可開門！手背遇熱立刻縮回！'
+          : '🚨 DOOR IS SCORCHING HOT! DO NOT OPEN! RECOIL SAFELY!', w * 0.5, 30, '#ef4444', '#ffffff', 14, 24, 9);
+      } else {
+        drawPill(ctx, currentLang === 'zh'
+          ? '🚪 以「手背」觸摸金屬門把與門板 (Touch Handle with BACK OF HAND)'
+          : '🚪 FEEL METAL HANDLE WITH BACK OF HAND (DORSAL SIDE)', w * 0.5, 30, '#0284c7', '#ffffff', 14, 24, 9);
+      }
+
+      // Life saving Callout Box
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(w * 0.08, groundY - 110, w * 0.32, 95, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(currentLang === 'zh' ? '💡 為什麼必須用「手背」？' : '💡 WHY USE BACK OF HAND?', w * 0.08 + 14, groundY - 88);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '10px sans-serif';
+      if (currentLang === 'zh') {
+        ctx.fillText('• 掌心觸高溫會引發肌肉痙攣（屈肌反射），', w * 0.08 + 14, groundY - 70);
+        ctx.fillText('  導致手掌死死握住發燙把手無法脫開！', w * 0.08 + 14, groundY - 54);
+        ctx.fillText('• 手背觸碰遇熱自然向後彈開，確保不燙傷。', w * 0.08 + 14, groundY - 38);
+      } else {
+        ctx.fillText('• Palm contact triggers flexor spasms,', w * 0.08 + 14, groundY - 70);
+        ctx.fillText('  causing involuntary gripping of hot metal!', w * 0.08 + 14, groundY - 54);
+        ctx.fillText('• Back of hand recoils safely away.', w * 0.08 + 14, groundY - 38);
+      }
+    }
+
+    // =============================================================
+    // SCENE 2: LOW SMOKE CRAWL (濃煙低姿勢沿牆爬行)
+    // =============================================================
+    else if (currentAction === 2) {
+      const smokeBoundaryY = groundY - 140;
+
+      ctx.fillStyle = '#060913';
+      ctx.fillRect(0, 0, w, smokeBoundaryY);
+
+      smokeParticles.forEach(p => {
+        p.x += p.vx * playbackSpeed;
+        p.y += p.vy * playbackSpeed;
+        if (p.x < -60) p.x = w + 60;
+        if (p.x > w + 60) p.x = -60;
+        if (p.y < 10) p.y = smokeBoundaryY - 15;
+        if (p.y > smokeBoundaryY) p.y = 20;
+
+        ctx.fillStyle = `rgba(30, 41, 59, ${p.opacity})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      drawPill(ctx, currentLang === 'zh'
+        ? '⚠️ 致命濃煙高溫層 (>500°C 劇毒一氧化碳 CO，吸入數口迅速致命！)'
+        : '⚠️ LETHAL TOXIC SMOKE LAYER (>500°C Carbon Monoxide & Cyanide)', w * 0.5, 30, 'rgba(239, 68, 68, 0.9)', '#ffffff', 12, 22, 7);
+
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.06)';
+      ctx.fillRect(0, smokeBoundaryY, w, groundY - smokeBoundaryY);
+
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([8, 8]);
+      ctx.beginPath();
+      ctx.moveTo(0, smokeBoundaryY);
+      ctx.lineTo(w, smokeBoundaryY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#10b981';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(currentLang === 'zh'
+        ? '🟢 離地 30-60 公分：新鮮高含氧呼吸層 (CLEAN AIR LAYER - CRAWL HERE)'
+        : '🟢 30-60 CM ABOVE FLOOR: CLEAN BREATHABLE AIR LAYER (CRAWL HERE)', 15, smokeBoundaryY + 18);
+
+      // Height ruler
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.fillRect(8, 55, 60, groundY - 55);
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.strokeRect(8, 55, 60, groundY - 55);
+
+      ctx.font = 'bold 9px sans-serif';
+      ctx.fillStyle = '#ef4444';
+      ctx.fillText('180cm 💀', 14, 75);
+      ctx.fillText('100cm ⚠️', 14, 135);
+      ctx.fillStyle = '#10b981';
+      ctx.fillText('60cm 🟢', 14, smokeBoundaryY + 3);
+      ctx.fillText('0cm ──', 14, groundY - 4);
+
+      // Exit Door
+      const exitDoorX = w - 70;
+      ctx.fillStyle = '#065f46';
+      ctx.fillRect(exitDoorX, groundY - 170, 55, 170);
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(exitDoorX, groundY - 170, 55, 170);
+
+      ctx.fillStyle = '#10b981';
+      ctx.fillRect(exitDoorX - 10, groundY - 200, 75, 24);
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('EXIT 🏃', exitDoorX + 27, groundY - 184);
+
+      // Crawling student
+      const crawlSpan = w - 240;
+      const crawlX = 85 + ((frame * 1.6) % crawlSpan);
+      const crawlY = groundY - 20;
+
+      const gait = (frame * 0.12) % (Math.PI * 2);
+      const spineUndulate = Math.sin(gait) * 3;
+
+      ctx.save();
+      ctx.translate(crawlX, crawlY);
+
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-15, -20);
+      ctx.lineTo(-30 + Math.cos(gait + Math.PI) * 12, 0);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.moveTo(-15, -20);
+      ctx.lineTo(-30 + Math.cos(gait) * 12, 0);
+      ctx.stroke();
+
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.roundRect(-25, -34 + spineUndulate, 65, 24, 8);
+      ctx.fill();
+
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(25, -25);
+      ctx.lineTo(35 + Math.sin(gait + Math.PI) * 16, 0);
+      ctx.stroke();
+
+      ctx.fillStyle = '#fed7aa';
+      ctx.beginPath();
+      ctx.arc(46, -26 + spineUndulate, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.arc(46, -30 + spineUndulate, 14, Math.PI * 1.1, Math.PI * 2.2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(25, -22);
+      ctx.lineTo(46, -18 + spineUndulate);
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.7)';
+      ctx.beginPath();
+      ctx.arc(58, -20 + spineUndulate, 5 + Math.sin(frame * 0.15) * 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#10b981';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.fillText('➡', 75, -18);
+
+      ctx.restore();
+    }
+
+    // =============================================================
+    // SCENE 3: STOP, DROP & ROLL (Complete Sequence: Running -> Stopping -> Dropping -> Rolling!)
+    // =============================================================
+    else if (currentAction === 3) {
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, w, groundY);
+
+      const s3Cycle = (actionTimer % 960);
+      const centerX = w * 0.5;
+
+      // -------------------------------------------------------------
+      // SUB-PHASE 1: PANIC RUNNING (Frames 0 to 220)
+      // -------------------------------------------------------------
+      if (s3Cycle < 220) {
+        drawPill(ctx, currentLang === 'zh'
+          ? '⚠️ 慌亂奔跑 (RUNNING) - 錯誤示範！奔跑會灌注氧氣助長火勢！'
+          : '⚠️ PANIC RUNNING - DANGER! RUNNING FEEDS OXYGEN TO FLAMES!', centerX, 30, '#ef4444', '#ffffff', 13, 24, 8);
+
+        // Character running from left to center
+        const runT = s3Cycle / 220;
+        const pX = w * 0.2 + runT * (centerX - w * 0.2);
+        const pY = groundY;
+
+        const runGait = (s3Cycle * 0.25);
+        const legAngle = Math.sin(runGait) * 0.55;
+        const armAngle = Math.cos(runGait) * 0.55;
+
+        // Running Legs (scissoring)
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 11;
+        ctx.lineCap = 'round';
+        // Left Leg
+        ctx.beginPath();
+        ctx.moveTo(pX, pY - 80);
+        ctx.lineTo(pX - Math.sin(legAngle) * 32, pY - 40);
+        ctx.lineTo(pX - Math.sin(legAngle) * 45, pY - 5);
+        ctx.stroke();
+        // Right Leg
+        ctx.beginPath();
+        ctx.moveTo(pX, pY - 80);
+        ctx.lineTo(pX + Math.sin(legAngle) * 32, pY - 40);
+        ctx.lineTo(pX + Math.sin(legAngle) * 45, pY - 5);
+        ctx.stroke();
+
+        // Leaning Torso (running forward tilt)
+        ctx.save();
+        ctx.translate(pX, pY - 80);
+        ctx.rotate(0.18); // Forward lean
+
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.roundRect(-18, -85, 36, 85, 6);
+        ctx.fill();
+
+        // Head looking forward in terror
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(8, -105, 17, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(8, -112, 17, Math.PI * 1.1, Math.PI * 2.2);
+        ctx.fill();
+
+        // Pumping Arms in panic
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        ctx.moveTo(0, -75);
+        ctx.lineTo(Math.sin(armAngle) * 30 + 10, -50);
+        ctx.stroke();
+
+        // ENCHANTED FIRE ON BACK (Wind-blown horizontally to the left!)
+        drawEnchantedFire(ctx, -18, -45, 35, 65, 1.3, -35, frame);
+
+        ctx.restore();
+
+        drawPill(ctx, currentLang === 'zh'
+          ? '奔跑產生的風勢如鼓風爐，火焰會迅速向上吞噬臉部！'
+          : 'Wind from running feeds flames like a bellows. Stop moving immediately!', centerX, groundY - 14, 'rgba(15,23,42,0.85)', '#fca5a5', 11, 16, 5);
+      }
+
+      // -------------------------------------------------------------
+      // SUB-PHASE 2: STOP! (Frames 220 to 420)
+      // -------------------------------------------------------------
+      else if (s3Cycle < 420) {
+        drawPill(ctx, currentLang === 'zh'
+          ? '🛑 步驟 1：停 (STOP) - 立即停住腳步！絕對不要奔跑！'
+          : '🛑 STEP 1: STOP - STOP MOVING IMMEDIATELY! NEVER RUN!', centerX, 30, '#dc2626', '#ffffff', 14, 24, 9);
+
+        const pX = centerX;
+        const pY = groundY;
+
+        // Legs upright
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(pX - 14, pY - 85, 11, 85);
+        ctx.fillRect(pX + 3, pY - 85, 11, 85);
+
+        // Torso upright
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(pX - 18, pY - 170, 36, 85);
+
+        // Head
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(pX, pY - 192, 17, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(pX, pY - 200, 18, Math.PI, Math.PI * 2);
+        ctx.fill();
+
+        // Arms at sides
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        ctx.moveTo(pX - 16, pY - 160);
+        ctx.lineTo(pX - 22, pY - 105);
+        ctx.moveTo(pX + 16, pY - 160);
+        ctx.lineTo(pX + 22, pY - 105);
+        ctx.stroke();
+
+        // ENCHANTED FIRE ON CLOTHES (Rising vertically, no wind tilt)
+        drawEnchantedFire(ctx, pX - 18, pY - 120, 36, 68, 1.1, -6, frame);
+
+        drawPill(ctx, currentLang === 'zh'
+          ? '立即站定切斷對流風勢！準備順勢躺下！'
+          : 'Standing still halts convective airflow. Prepare to drop to the floor!', centerX, groundY - 14, 'rgba(15,23,42,0.85)', '#fca5a5', 11, 16, 5);
+      }
+
+      // -------------------------------------------------------------
+      // SUB-PHASE 3: SMOOTH DROPPING TRANSITION (Frames 420 to 580)
+      // -------------------------------------------------------------
+      else if (s3Cycle < 580) {
+        drawPill(ctx, currentLang === 'zh'
+          ? '🧎 步驟 2：躺 (DROP) - 順勢趴躺地面，雙手緊摀臉部！'
+          : '🧎 STEP 2: DROP - DROP DOWN TO FLOOR, COVER FACE WITH HANDS!', centerX, 30, '#f59e0b', '#000000', 14, 24, 9);
+
+        // Smooth interpolation from standing to lying on floor
+        const dropT = (s3Cycle - 420) / 160;
+        const easeT = dropT * dropT * (3 - 2 * dropT); // Smooth step
+
+        const hipY = (groundY - 85) + easeT * 65;
+        const torsoAngle = easeT * (Math.PI / 2); // Rotates from vertical (0) to horizontal (90 deg)
+        const pX = centerX;
+
+        ctx.save();
+        ctx.translate(pX, hipY);
+
+        // Legs bending down to floor
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 12;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-45 * easeT, 10 * easeT);
+        ctx.lineTo(-80 * easeT, 15 * easeT);
+        ctx.stroke();
+
+        // Torso rotating towards floor
+        ctx.rotate(torsoAngle);
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.roundRect(-16, -75, 32, 75, 8);
+        ctx.fill();
+
+        // Head
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(0, -92, 16, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hands moving up to cover face!
+        ctx.fillStyle = '#fde047';
+        const handCoverY = -75 + (1 - easeT) * 35;
+        ctx.beginPath();
+        ctx.roundRect(-10, -100, 20, 18, 5);
+        ctx.fill();
+
+        // Fire on back lowering into floor contact
+        drawEnchantedFire(ctx, -18, -40, 30, 48 * (1 - easeT * 0.4), 1.0, 0, frame);
+
+        ctx.restore();
+
+        drawPill(ctx, currentLang === 'zh'
+          ? '雙手緊摀口鼻與雙眼，保護呼吸道不被高溫熱氣灼傷！'
+          : 'Cup hands firmly over mouth, nose, and eyes to protect airway!', centerX, groundY - 14, 'rgba(15,23,42,0.85)', '#fef08a', 11, 16, 5);
+      }
+
+      // -------------------------------------------------------------
+      // SUB-PHASE 4: ROLLING & SMOTHERING (Frames 580 to 900)
+      // -------------------------------------------------------------
+      else if (s3Cycle < 900) {
+        drawPill(ctx, currentLang === 'zh'
+          ? '🔄 步驟 3：滾 (ROLL) - 來回翻滾壓滅火苗！完全熄滅！'
+          : '🔄 STEP 3: ROLL - ROLL BACK & FORTH TO SMOTHER ALL FLAMES!', centerX, 30, '#10b981', '#ffffff', 14, 24, 9);
+
+        // Continuous 360-degree cylindrical rolling human figure
+        const rollCycle = (s3Cycle - 580) * 0.08;
+        const rollX = centerX + Math.sin(rollCycle * 0.5) * 85;
+        const rollY = groundY - 22;
+        const rollAngle = rollCycle * 1.5;
+
+        ctx.save();
+        ctx.translate(rollX, rollY);
+        ctx.rotate(rollAngle);
+
+        // Cylindrical Torso
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.roundRect(-28, -14, 56, 28, 10);
+        ctx.fill();
+
+        // Head with covered face
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(36, 0, 14, 0, Math.PI * 2);
+        ctx.fill();
+        // Arms wrapped tightly over face
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(26, -10, 16, 20);
+
+        // Legs wrapped together extending left
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.roundRect(-70, -10, 44, 20, 6);
+        ctx.fill();
+
+        ctx.restore();
+
+        // Smothering flame sparks & steam puffs at contact point
+        const rollProgress = Math.min(1.0, (s3Cycle - 580) / 280);
+        const remainingFire = Math.max(0, 1.0 - rollProgress);
+
+        if (remainingFire > 0.05 && Math.random() < 0.65) {
+          fireExtinguishPuffs.push({
+            x: rollX + (Math.random() - 0.5) * 40,
+            y: groundY - 8,
+            radius: Math.random() * 12 + 6,
+            life: 1.0
+          });
+        }
+
+        // Draw puff particles
+        for (let p = fireExtinguishPuffs.length - 1; p >= 0; p--) {
+          const puff = fireExtinguishPuffs[p];
+          puff.y -= 0.8;
+          puff.radius *= 1.04;
+          puff.life -= 0.04;
+          if (puff.life <= 0) {
+            fireExtinguishPuffs.splice(p, 1);
+            continue;
+          }
+          ctx.fillStyle = `rgba(226, 232, 240, ${puff.life * 0.7})`;
+          ctx.beginPath();
+          ctx.arc(puff.x, puff.y, puff.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Dynamically measured status pill - positioned well above student to prevent overlap
+        if (remainingFire > 0.05) {
+          drawPill(ctx, `🔥 ${currentLang === 'zh' ? '翻滾阻絕空氣中' : 'Smothering Flames'} (${Math.round(remainingFire * 100)}%)`, centerX, groundY - 145, 'rgba(15, 23, 42, 0.9)', '#f59e0b', 12, 22, 8, '#f59e0b');
+        } else {
+          drawPill(ctx, `✅ ${currentLang === 'zh' ? '火焰完全壓熄！口鼻安全！' : 'FLAMES COMPLETELY EXTINGUISHED!'}`, centerX, groundY - 145, '#065f46', '#a7f3d0', 12, 24, 8, '#10b981');
+        }
+      }
+
+      // -------------------------------------------------------------
+      // SUB-PHASE 5: VICTORY & LOOP (Frames 900 to 960)
+      // -------------------------------------------------------------
+      else {
+        drawPill(ctx, currentLang === 'zh'
+          ? '✅ 示範成功：火焰完全撲滅！保護口鼻無嗆傷！'
+          : '✅ SUCCESS: FLAMES EXTINGUISHED! AIRWAY PROTECTED!', centerX, 30, '#065f46', '#a7f3d0', 14, 24, 9);
+
+        // Person resting safely on floor
+        const bodyY = groundY - 24;
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(centerX - 95, bodyY + 4, 65, 18);
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(centerX - 35, bodyY - 2, 65, 24);
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(centerX + 42, bodyY + 8, 16, 0, Math.PI * 2);
+        ctx.fill();
+
+        drawPill(ctx, currentLang === 'zh'
+          ? '✅ 衣服著火：停、躺、滾完整動作示範完畢'
+          : '✅ Stop, Drop, and Roll demonstration complete', centerX, groundY - 85, 'rgba(15,23,42,0.9)', '#10b981', 12, 22, 8, '#10b981');
+      }
+    }
+
+    // =============================================================
+    // SCENE 4: SHELTER-IN-PLACE & SIGNAL (關門塞縫、開窗呼救)
+    // =============================================================
+    else if (currentAction === 4) {
+      const roomX = w * 0.22;
+      const roomW = w * 0.58;
+      const roomY = 50;
+      const roomH = groundY - roomY;
+
+      // Outer Hallway (Left of room): Real Enchanted Roaring Fire!
+      ctx.fillStyle = '#1c0a0a';
+      ctx.fillRect(0, 0, roomX, groundY);
+
+      // Roaring hallway fire flames leaping against the door
+      drawEnchantedFire(ctx, roomX * 0.35, groundY - 30, 70, 160, 1.4, 15, frame);
+      drawEnchantedFire(ctx, roomX * 0.65, groundY - 50, 50, 120, 1.2, 8, frame + 30);
+
+      drawPill(ctx, currentLang === 'zh' ? '⚠️ 走廊已是火海濃煙 (DO NOT EXIT)' : '⚠️ HALLWAY BLOCKED BY SMOKE', roomX * 0.5, 30, 'rgba(239,68,68,0.9)', '#ffffff', 10, 14, 6);
+
+      // Safe Room Interior
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(roomX, roomY, roomW, roomH);
+
+      // Heavy Fire Door
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(roomX, roomY, 18, roomH);
+      ctx.strokeStyle = '#475569';
+      ctx.strokeRect(roomX, roomY, 18, roomH);
+
+      // Wet towel rolls at door crack
+      const towelX = roomX + 16;
+      const towelY = groundY - 20;
+
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.roundRect(towelX, towelY, 48, 18, 9);
+      ctx.roundRect(towelX + 18, towelY - 14, 42, 16, 8);
+      ctx.fill();
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = '#bae6fd';
+      ctx.beginPath();
+      ctx.arc(towelX + 15, towelY + 8, 2.5, 0, Math.PI * 2);
+      ctx.arc(towelX + 35, towelY + 6, 2, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(currentLang === 'zh' ? '💧 濕毛巾/衣物塞緊門縫 (Sealed)' : '💧 Wet Towels Seal Crack', towelX + 54, towelY + 8);
+
+      // Central AC Off Notice - Dynamically measured pill (NO OVERFLOW!)
+      drawPill(ctx, currentLang === 'zh'
+        ? '🚫 關閉中央冷氣空調 (AC OFF)'
+        : '🚫 CENTRAL AC OFF (NO SMOKE)', roomX + roomW * 0.5, roomY + 22, '#ef4444', '#ffffff', 10, 16, 6);
+
+      // Large Window on the Right
+      const winX = roomX + roomW - 65;
+      const winY = roomY + 45;
+      const winW = 85;
+      const winH = 145;
+
+      ctx.fillStyle = '#020617';
+      ctx.fillRect(winX, winY, winW, winH);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(winX + 25, winY + 20, 2, 2);
+      ctx.fillRect(winX + 55, winY + 40, 2, 2);
+      ctx.fillRect(winX + 38, winY + 85, 2, 2);
+
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(winX, winY, winW, winH);
+
+      // Evacuee at window
+      const personWinX = winX - 10;
+      const personWinY = winY + 80;
+
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.roundRect(personWinX - 22, personWinY - 30, 36, 60, 6);
+      ctx.fill();
+
+      ctx.fillStyle = '#fed7aa';
+      ctx.beginPath();
+      ctx.arc(personWinX + 4, personWinY - 42, 14, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Arm 1: Waving Bright Neon Yellow Cloth
+      const waveAngle = Math.sin(frame * 0.14) * 0.45;
+      ctx.save();
+      ctx.translate(personWinX + 16, personWinY - 35);
+      ctx.rotate(waveAngle);
+
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(25, -15);
+      ctx.stroke();
+
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.moveTo(25, -15);
+      ctx.lineTo(55, -30 + Math.sin(frame * 0.25) * 8);
+      ctx.lineTo(50, 0 + Math.sin(frame * 0.25 + 1) * 8);
+      ctx.lineTo(25, -5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // Arm 2: Holding Flashlight with Sweeping Cone of Light
+      const beamAngle = -0.2 + Math.sin(frame * 0.08) * 0.2;
+      ctx.save();
+      ctx.translate(personWinX + 12, personWinY - 10);
+      ctx.rotate(beamAngle);
+
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(0, -4, 18, 8);
+
+      const beamGrad = ctx.createRadialGradient(18, 0, 5, 140, 0, 160);
+      beamGrad.addColorStop(0, 'rgba(254, 240, 138, 0.85)');
+      beamGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+      ctx.fillStyle = beamGrad;
+      ctx.beginPath();
+      ctx.moveTo(18, 0);
+      ctx.lineTo(160, -45);
+      ctx.lineTo(160, 45);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // Emergency light strobes reflecting from ground
+      const strobe = Math.sin(frame * 0.25) > 0;
+      ctx.fillStyle = strobe ? 'rgba(239, 68, 68, 0.4)' : 'rgba(56, 189, 248, 0.4)';
+      ctx.fillRect(winX + winW - 5, groundY - 30, 20, 14);
+
+      drawPill(ctx, currentLang === 'zh'
+        ? '🪟 步驟 4：開窗呼救 - 揮舞鮮豔布條與手電筒！切勿冒險跳樓！'
+        : '🪟 STEP 4: SIGNAL AT WINDOW WITH BRIGHT CLOTH & FLASHLIGHT! NEVER JUMP!', w * 0.5, 30, '#0284c7', '#ffffff', 13, 24, 8);
+    }
+
+    // Auto-advance timer logic
+    if (isPlaying) {
+      actionTimer += playbackSpeed;
+      const progressPercent = Math.min(100, (actionTimer / actionDuration) * 100);
+      const progressBar = document.getElementById('survivalProgressBar');
+      if (progressBar) progressBar.style.width = `${progressPercent}%`;
+
+      if (actionTimer >= actionDuration) {
+        let nextAction = currentAction + 1;
+        if (nextAction > 4) nextAction = 1;
+        setAction(nextAction, false);
+      }
+    } else {
+      const progressBar = document.getElementById('survivalProgressBar');
+      if (progressBar) progressBar.style.width = '100%';
+    }
+
+    requestAnimationFrame(render);
+  }
+
+  updatePlayPauseUI();
+  render();
+}
+
+/* ==========================================================================
+   4. P.A.S.S. EXTINGUISHER MOTION SIMULATOR (Section 3)
+   ========================================================================== */
+function initPassMotionSimulator() {
+  const canvas = document.getElementById('passCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let currentStep = 1;
+  let isPlaying = true;
+  const fireParticles = [];
+  const foamParticles = [];
+  let fireIntensity = 1.0;
+  let frame = 0;
+
+  function setStep(step) {
+    currentStep = step;
+    document.querySelectorAll('.pass-step-btn[data-step]').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.step) === step);
+    });
+
+    const badgeEl = document.getElementById('passStepBadge');
+    const textEl = document.getElementById('passStepText');
+    const t = i18nData[currentLang];
+    const info = t.s3_stepsInfo[step];
+
+    if (badgeEl && info) badgeEl.textContent = info.badge;
+    if (textEl && info) textEl.textContent = info.text;
+
+    fireIntensity = step === 4 ? 0.2 : 1.0;
+  }
+
+  document.querySelectorAll('.pass-step-btn[data-step]').forEach(btn => {
+    btn.addEventListener('click', () => setStep(parseInt(btn.dataset.step)));
+  });
+
+  const playPauseBtn = document.getElementById('passPlayPauseBtn');
+  if (playPauseBtn) {
+    playPauseBtn.addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      const t = i18nData[currentLang];
+      playPauseBtn.textContent = isPlaying ? t.s3_pause : t.s3_play;
+    });
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const w = canvas.width;
+    const h = canvas.height;
+    frame++;
+
+    // Ground plane
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, h - 50, w, 50);
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.beginPath();
+    ctx.moveTo(0, h - 50);
+    ctx.lineTo(w, h - 50);
+    ctx.stroke();
+
+    // 1. Fire Target (Right side)
+    const fireX = w * 0.75;
+    const fireY = h - 55;
+
+    ctx.fillStyle = '#3e1e07';
+    ctx.fillRect(fireX - 45, fireY + 8, 90, 16);
+
+    if (Math.random() < 0.7 * fireIntensity) {
+      fireParticles.push({
+        x: fireX + (Math.random() - 0.5) * 70,
+        y: fireY,
+        vx: (Math.random() - 0.5) * 2,
+        vy: -Math.random() * 4 - 2.5,
+        radius: Math.random() * 20 + 10,
+        life: 1.0,
+        color: Math.random() > 0.45 ? 'rgba(239, 68, 68,' : 'rgba(245, 158, 11,'
+      });
+    }
+
+    for (let i = fireParticles.length - 1; i >= 0; i--) {
+      const p = fireParticles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.radius *= 0.96;
+      p.life -= 0.025;
+
+      if (p.life <= 0 || p.radius < 2) {
+        fireParticles.splice(i, 1);
+        continue;
+      }
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `${p.color} ${p.life * 0.85})`;
+      ctx.fill();
+    }
+
+    // 2. Extinguisher (Left side)
+    const extX = w * 0.25;
+    const extY = h - 180;
+
+    ctx.save();
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath();
+    ctx.roundRect(extX - 28, extY, 56, 120, [16, 16, 8, 8]);
+    ctx.fill();
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(extX - 22, extY + 35, 44, 45);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('ABC', extX, extY + 54);
+    ctx.fillText('FIRE', extX, extY + 68);
+
+    ctx.fillStyle = '#475569';
+    ctx.fillRect(extX - 10, extY - 20, 20, 20);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.beginPath();
+    ctx.arc(extX - 14, extY - 10, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#10b981';
+    ctx.beginPath();
+    ctx.arc(extX - 14, extY - 10, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#64748b';
+    ctx.beginPath();
+    ctx.moveTo(extX, extY - 16);
+    if (currentStep >= 3) {
+      ctx.lineTo(extX + 32, extY - 12);
+    } else {
+      ctx.lineTo(extX + 32, extY - 30);
+    }
+    ctx.stroke();
+
+    if (currentStep === 1) {
+      const pinGlow = Math.sin(frame * 0.1) * 0.5 + 0.5;
+      ctx.fillStyle = `rgba(245, 158, 11, ${0.4 + pinGlow * 0.6})`;
+      ctx.beginPath();
+      ctx.arc(extX + 6, extY - 16, 9, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText(currentLang === 'zh' ? '⚡ 拉插銷' : '⚡ PULL PIN', extX + 16, extY - 36);
+    }
+
+    let nozzleX = extX + 45;
+    let nozzleY = extY + 40;
+
+    if (currentStep === 2 || currentStep === 3 || currentStep === 4) {
+      nozzleX = extX + 100;
+      nozzleY = fireY - 10;
+      if (currentStep === 4) {
+        const sweep = Math.sin(frame * 0.08) * 45;
+        nozzleX += sweep;
+      }
+    }
+
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.moveTo(extX - 6, extY - 12);
+    ctx.quadraticCurveTo(extX - 25, extY + 50, nozzleX, nozzleY);
+    ctx.stroke();
+
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.arc(nozzleX, nozzleY, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (currentStep >= 3 && isPlaying) {
+      for (let s = 0; s < 5; s++) {
+        foamParticles.push({
+          x: nozzleX,
+          y: nozzleY,
+          vx: (fireX - nozzleX) * 0.028 + (Math.random() - 0.5) * 2.5,
+          vy: (fireY - nozzleY) * 0.028 + (Math.random() - 0.5) * 2.5,
+          radius: Math.random() * 9 + 4,
+          life: 1.0
+        });
+      }
+    }
+
+    for (let f = foamParticles.length - 1; f >= 0; f--) {
+      const foam = foamParticles[f];
+      foam.x += foam.vx;
+      foam.y += foam.vy;
+      foam.radius *= 1.03;
+      foam.life -= 0.03;
+
+      if (foam.life <= 0) {
+        foamParticles.splice(f, 1);
+        continue;
+      }
+
+      ctx.beginPath();
+      ctx.arc(foam.x, foam.y, foam.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(241, 245, 249, ${foam.life * 0.9})`;
+      ctx.fill();
+    }
+
+    ctx.restore();
+
+    if (isPlaying && frame % 180 === 0) {
+      let next = currentStep + 1;
+      if (next > 4) next = 1;
+      setStep(next);
+    }
+
+    requestAnimationFrame(render);
+  }
+
+  render();
+}
+
+/* ==========================================================================
+   5. ACCURATE DORMITORY EVACUATION CANVAS (Section 4)
+   ========================================================================== */
+function initDormEvacuationCanvas() {
+  const canvas = document.getElementById('dormPlanCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = 480;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const evacuees = [
+    { x: 75, y: 85, targetX: 234, targetY: 28, speed: 1.1, label: "X01" },
+    { x: 110, y: 85, targetX: 234, targetY: 28, speed: 1.3, label: "X02" },
+    { x: 180, y: 85, targetX: 234, targetY: 28, speed: 1.2, label: "X04" },
+    { x: 450, y: 85, targetX: 234, targetY: 28, speed: 1.2, label: "X08" },
+    { x: 450, y: 200, targetX: 370, targetY: 417, speed: 1.4, label: "X13" },
+    { x: 450, y: 320, targetX: 370, targetY: 417, speed: 1.3, label: "X17" },
+    { x: 315, y: 370, targetX: 370, targetY: 417, speed: 1.2, label: "X22" },
+    { x: 235, y: 370, targetX: 370, targetY: 417, speed: 1.1, label: "X24" },
+    { x: 115, y: 370, targetX: 370, targetY: 417, speed: 1.0, label: "X27" }
+  ];
+
+  let frame = 0;
+
+  function drawDormPlan() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    frame++;
+
+    const w = canvas.width;
+    const h = canvas.height;
+    const scaleX = w / 600;
+    const scaleY = h / 480;
+
+    ctx.save();
+    ctx.scale(scaleX, scaleY);
+
+    ctx.fillStyle = '#0a0f1d';
+    ctx.fillRect(0, 0, 600, 480);
+
+    // Hollow central courtyard
+    ctx.fillStyle = '#060913';
+    ctx.fillRect(100, 105, 340, 245);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(100, 105, 340, 245);
+
+    ctx.fillStyle = '#475569';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(currentLang === 'zh' ? '中庭天井 (中央中空無建物)' : 'OPEN CENTRAL COURTYARD (VOID ATRIUM)', 270, 222);
+    ctx.font = '9px sans-serif';
+    ctx.fillStyle = '#334155';
+    ctx.fillText('NOTHING IN THE MIDDLE / LIGHTWELL VOID', 270, 238);
+
+    // Corridors
+    ctx.fillStyle = 'rgba(30, 41, 59, 0.7)';
+    ctx.fillRect(55, 65, 430, 40);
+    ctx.fillRect(55, 65, 45, 325);
+    ctx.fillRect(55, 350, 430, 45);
+    ctx.fillRect(440, 65, 45, 325);
+
+    function drawRoom(x, y, rw, rh, label) {
+      ctx.fillStyle = '#1e293b';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 1;
+      ctx.fillRect(x, y, rw, rh);
+      ctx.strokeRect(x, y, rw, rh);
+
+      ctx.fillStyle = '#f1f5f9';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, x + rw / 2, y + rh / 2 + 3);
+    }
+
+    function drawStairs(x, y, rw, rh, label) {
+      ctx.fillStyle = '#065f46';
+      ctx.fillRect(x, y, rw, rh);
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x, y, rw, rh);
+
+      const steps = 5;
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.6)';
+      ctx.lineWidth = 1.5;
+      for (let s = 1; s < steps; s++) {
+        const stepY = y + (rh / steps) * s;
+        ctx.beginPath();
+        ctx.moveTo(x + 4, stepY);
+        ctx.lineTo(x + rw - 4, stepY);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = '#a7f3d0';
+      ctx.font = 'bold 8.5px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, x + rw / 2, y + rh / 2 + 3);
+    }
+
+    function drawLift(x, y, rw, rh, label) {
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(x, y, rw, rh);
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x, y, rw, rh);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 8px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, x + rw / 2, y + rh / 2 + 3);
+    }
+
+    // Top row
+    drawRoom(55, 15, 36, 50, 'X01');
+    drawRoom(91, 15, 36, 50, 'X02');
+    drawRoom(127, 15, 36, 50, 'X03');
+    drawRoom(163, 15, 38, 50, 'X04');
+    drawStairs(203, 15, 62, 26, currentLang === 'zh' ? '北側樓梯' : 'NORTH STAIRS');
+    drawLift(203, 42, 62, 23, currentLang === 'zh' ? '電梯(禁搭)' : 'LIFT (NO)');
+
+    // Left column
+    const leftRooms = ['X44', 'X43', 'X41', 'X39', 'X37', 'X35', 'X33', 'X31', 'X30', 'X29'];
+    leftRooms.forEach((r, idx) => {
+      drawRoom(15, 65 + idx * 32, 40, 32, r);
+    });
+
+    // Right column
+    const rightRooms = ['X08', 'X09', 'X10', 'X11', 'X12', 'X13', 'X14', 'X16', 'X17', 'X18'];
+    rightRooms.forEach((r, idx) => {
+      drawRoom(485, 65 + idx * 32, 40, 32, r);
+    });
+
+    // Bottom row
+    const bottomRooms = ['X27', 'X26', 'X25', 'X24', 'X23', 'X22'];
+    bottomRooms.forEach((r, idx) => {
+      drawRoom(95 + idx * 40, 395, 40, 45, r);
+    });
+    drawStairs(338, 395, 65, 45, currentLang === 'zh' ? '南側樓梯' : 'SOUTH STAIRS');
+
+    // 1F Exits Callouts
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(275, 17, 105, 22);
+    ctx.strokeStyle = '#fca5a5';
+    ctx.strokeRect(275, 17, 105, 22);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 8.5px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(currentLang === 'zh' ? '⬆ 1F車棚門(經樓梯)' : '⬆ 1F PARKING EXIT', 327, 31);
+
+    const northPulse = Math.sin(frame * 0.1) * 3;
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath();
+    ctx.moveTo(234, 10 - northPulse);
+    ctx.lineTo(228, 16 - northPulse);
+    ctx.lineTo(240, 16 - northPulse);
+    ctx.fill();
+
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(410, 406, 95, 22);
+    ctx.strokeStyle = '#fca5a5';
+    ctx.strokeRect(410, 406, 95, 22);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 8.5px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(currentLang === 'zh' ? '⬇ 1F前門大廳(經樓梯)' : '⬇ 1F MAIN EXIT', 457, 420);
+
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+    ctx.fillRect(485, 161, 40, 32);
+    ctx.fillStyle = '#fff';
+    ctx.font = '12px sans-serif';
+    ctx.fillText('🔥', 505, 182);
+
+    evacuees.forEach(e => {
+      const dx = e.targetX - e.x;
+      const dy = e.targetY - e.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist > 3) {
+        e.x += (dx / dist) * e.speed;
+        e.y += (dy / dist) * e.speed;
+      } else {
+        if (e.label === 'X01') { e.x = 75; e.y = 85; }
+        else if (e.label === 'X02') { e.x = 110; e.y = 85; }
+        else if (e.label === 'X04') { e.x = 180; e.y = 85; }
+        else if (e.label === 'X08') { e.x = 450; e.y = 85; }
+        else if (e.label === 'X13') { e.x = 450; e.y = 200; }
+        else if (e.label === 'X17') { e.x = 450; e.y = 320; }
+        else if (e.label === 'X22') { e.x = 315; e.y = 370; }
+        else if (e.label === 'X24') { e.x = 235; e.y = 370; }
+        else { e.x = 115; e.y = 370; }
+      }
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, 7, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+
+    ctx.restore();
+    requestAnimationFrame(drawDormPlan);
+  }
+
+  drawDormPlan();
+}
+
+/* ==========================================================================
+   6. CAMPUS ZONE FILTERS (Section 5)
+   ========================================================================= */
+function initZoneFilters() {
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const zoneTiles = document.querySelectorAll('.zone-tile');
+
+  filterBtns.forEach((btn, idx) => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const filter = btn.dataset.filter;
+      zoneTiles.forEach(tile => {
+        if (filter === 'all' || tile.dataset.category === filter) {
+          tile.style.display = 'block';
+        } else {
+          tile.style.display = 'none';
+        }
+      });
+    });
+  });
+}
+
+/* ==========================================================================
+   7. DORM ROOM AUDIT (Section 6)
+   ========================================================================= */
+function initAuditGauge() {
+  const checkboxes = document.querySelectorAll('.audit-check-label input[type="checkbox"]');
+  const gauge = document.getElementById('auditCircularGauge');
+  const pctText = document.getElementById('auditGaugePct');
+  const statusBadge = document.getElementById('auditStatusBadge');
+
+  function updateAudit() {
+    const total = checkboxes.length;
+    let checked = 0;
+    checkboxes.forEach(cb => {
+      if (cb.checked) checked++;
+    });
+
+    const pct = Math.round((checked / total) * 100);
+    if (pctText) pctText.textContent = `${pct}%`;
+
+    const t = i18nData[currentLang];
+    let color = '#ef4444';
+    let status = t.s6_statusHigh;
+
+    if (pct >= 85) {
+      color = '#10b981';
+      status = t.s6_statusSafe;
+    } else if (pct >= 50) {
+      color = '#f59e0b';
+      status = t.s6_statusMod;
+    }
+
+    if (gauge) {
+      gauge.style.background = `conic-gradient(${color} 0% ${pct}%, rgba(255,255,255,0.08) ${pct}% 100%)`;
+    }
+    if (statusBadge) {
+      statusBadge.textContent = status;
+      statusBadge.style.color = color;
+    }
+  }
+
+  window.updateAuditGaugeFunc = updateAudit;
+  checkboxes.forEach(cb => cb.addEventListener('change', updateAudit));
+  updateAudit();
+}
+
+/* ==========================================================================
+   8. DECISION DRILLS (Section 7)
+   ========================================================================= */
+const scenarioBilingualData = {
+  zh: [
+    {
+      badge: "情境演練 1 • 宿舍凌晨 3:00 火警警報",
+      question: "當你在四樓寢室熟睡時，宿舍火警警報器突然大作，第一時間應採取何種行動？",
+      options: [
+        { text: "立刻收拾筆電、教科書與貴重個人衣物塞入背包。", correct: false },
+        { text: "以手背觸摸房門與金屬門把確認溫度，攜帶寢室鑰匙與手機立即開門避難。", correct: true },
+        { text: "認為一定是有人泡麵或烤麵包誤觸警報，繼續躺在床上睡覺。", correct: false },
+        { text: "趕快跑到走廊搭乘電梯直達一樓大廳。", correct: false }
+      ],
+      feedback: "火災時分秒必爭，切勿因收拾物品延誤逃生！務必以手背感應門溫（若發燙表示門外已有火勢，應就地避難塞門縫），攜帶鑰匙可在走廊受阻時安全退回房內。"
+    },
+    {
+      badge: "情境演練 2 • 公共廚房鍋具油鍋起火",
+      question: "宿舍公共廚房瓦斯爐上的平底鍋油溫過高引燃起火，火焰跳竄，應如何處置？",
+      options: [
+        { text: "端起水槽旁的水杯直接朝油鍋澆水滅火。", correct: false },
+        { text: "迅速從側面滑入金屬鍋蓋蓋住油鍋隔絕空氣，關閉瓦斯並靜置冷卻。", correct: true },
+        { text: "慌張端起起火的油鍋打算端到水槽倒水。", correct: false },
+        { text: "拿抹布持續在鍋上搧風試圖吹滅火焰。", correct: false }
+      ],
+      feedback: "油鍋起火絕對禁止澆水！水分遇熱油會瞬間汽化膨脹千倍，將燃燒熱油炸散形成巨大火球。應順勢蓋上金屬鍋蓋並關火冷卻。"
+    },
+    {
+      badge: "情境演練 3 • 安全逃生梯內湧出濃煙",
+      question: "推開北側安全梯（X04旁）防火門時，發現樓梯間內已充斥向上竄升之黑灰色濃煙，應如何決策？",
+      options: [
+        { text: "深吸一口氣，閉上眼睛低頭盲目往下衝。", correct: false },
+        { text: "立刻關閉防火門阻隔濃煙竄入走廊，轉身改由次要逃生動線（南側安全梯）撤離。", correct: true },
+        { text: "跑往頂樓等待直升機前來救援。", correct: false },
+        { text: "停在梯間平台原地等候20分鐘。", correct: false }
+      ],
+      feedback: "濃煙含有致命一氧化碳與毒氣，是火災頭號殺手！樓梯間受濃煙污染時，切勿往下衝，應立即關門阻煙，並改走備用逃生路徑。"
+    }
+  ],
+
+  en: [
+    {
+      badge: "Scenario 1 • Dorm 3:00 AM Night Alarm",
+      question: "You are awakened by the building fire alarm at 3:00 AM in your 4th-floor dorm room. What is your first priority?",
+      options: [
+        { text: "Pack your laptop, textbooks, and phone charger into your backpack.", correct: false },
+        { text: "Feel the dorm door with the back of your hand for heat, grab your room key, and evacuate.", correct: true },
+        { text: "Assume it's a false alarm caused by burnt popcorn and stay in bed.", correct: false },
+        { text: "Run to the hallway elevator to descend to the ground floor.", correct: false }
+      ],
+      feedback: "Never delay evacuation for possessions! Always check door temperature with the back of your hand. Take your room key so you can retreat and shelter in place if hallways are blocked."
+    },
+    {
+      badge: "Scenario 2 • Communal Kitchen Stovetop Oil Fire",
+      question: "A cooking pot catches fire on the communal stove and oil begins spattering. How do you respond?",
+      options: [
+        { text: "Pour tap water from the sink over the flaming pan.", correct: false },
+        { text: "Slide a metal pot lid over the flames, turn off the stove, and leave it covered to smother.", correct: true },
+        { text: "Carry the flaming pot quickly towards the hallway.", correct: false },
+        { text: "Blow forcefully on the fire to blow out the flames.", correct: false }
+      ],
+      feedback: "Never throw water on burning oil! Water explodes into steam, aerosolizing burning oil into a deadly fireball. Slide a metal lid over the pan to cut off oxygen."
+    },
+    {
+      badge: "Scenario 3 • Smoke in Stairwell",
+      question: "You open the door to the North Stairwell (beside X04) and see thick smoke rising up the shaft. What is the correct protocol?",
+      options: [
+        { text: "Hold your breath and run down blindly through the smoke.", correct: false },
+        { text: "Immediately close the stairwell door to block smoke, turn back, and proceed to the secondary emergency exit (South Stairs).", correct: true },
+        { text: "Run up to the roof and call friends.", correct: false },
+        { text: "Wait on the landing for 20 minutes.", correct: false }
+      ],
+      feedback: "Smoke contains lethal carbon monoxide and hydrogen cyanide. If an exit stair is compromised, close the door to prevent smoke spread and use your secondary exit."
+    }
+  ]
+};
+
+const drillUserChoices = {};
+
+function initDrills() {
+  const container = document.getElementById('drillsContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const list = scenarioBilingualData[currentLang] || scenarioBilingualData['zh'];
+
+  list.forEach((s, sIdx) => {
+    const box = document.createElement('div');
+    box.className = 'drill-box';
+
+    const badge = document.createElement('span');
+    badge.className = 'drill-badge';
+    badge.textContent = s.badge;
+    box.appendChild(badge);
+
+    const title = document.createElement('h4');
+    title.textContent = s.question;
+    box.appendChild(title);
+
+    const optList = document.createElement('div');
+    optList.className = 'drill-options';
+
+    const feedback = document.createElement('div');
+    feedback.className = 'drill-feedback';
+
+    s.options.forEach((opt, optIdx) => {
+      const btn = document.createElement('button');
+      btn.className = 'drill-opt-btn';
+      btn.textContent = opt.text;
+
+      function selectOption() {
+        drillUserChoices[sIdx] = optIdx;
+        optList.querySelectorAll('.drill-opt-btn').forEach(b => b.disabled = true);
+        if (opt.correct) {
+          btn.classList.add('correct');
+          feedback.style.display = 'block';
+          feedback.style.backgroundColor = 'rgba(16, 185, 129, 0.15)';
+          feedback.style.border = '1px solid #10b981';
+          feedback.style.color = '#a7f3d0';
+          feedback.innerHTML = `<strong>${currentLang === 'zh' ? '✅ 正確處置 (Correct):' : '✅ Correct Action:'}</strong> ${s.feedback}`;
+        } else {
+          btn.classList.add('incorrect');
+          feedback.style.display = 'block';
+          feedback.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
+          feedback.style.border = '1px solid #ef4444';
+          feedback.style.color = '#fca5a5';
+          feedback.innerHTML = `<strong>${currentLang === 'zh' ? '❌ 危險處置 (Hazardous):' : '❌ Hazardous Choice:'}</strong> ${s.feedback}`;
+        }
+      }
+
+      btn.addEventListener('click', selectOption);
+
+      if (drillUserChoices[sIdx] === optIdx) {
+        selectOption();
+      }
+
+      optList.appendChild(btn);
+    });
+
+    box.appendChild(optList);
+    box.appendChild(feedback);
+    container.appendChild(box);
+  });
+}
+
+/* ==========================================================================
+   9. WEB AUDIO SIREN DRILL + ANNOUNCEMENT
+   ========================================================================== */
+function initEmergencyAlarm() {
+  const alarmButtons = document.querySelectorAll('.alarm-toggle-btn');
+  let audioCtx = null;
+  let oscillator = null;
+  let gainNode = null;
+  let isSounding = false;
+  let lfoInterval = null;
+
+  function toggleAlarm() {
+    const t = i18nData[currentLang];
+
+    if (!isSounding) {
+      try {
+        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioCtxClass();
+
+        oscillator = audioCtx.createOscillator();
+        gainNode = audioCtx.createGain();
+
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(650, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.start();
+
+        let freq = 650;
+        let up = true;
+        lfoInterval = setInterval(() => {
+          freq = up ? freq + 40 : freq - 40;
+          if (freq >= 1050) up = false;
+          if (freq <= 600) up = true;
+          if (oscillator && audioCtx) {
+            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          }
+        }, 30);
+
+        if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(t.voiceAnnouncement);
+          utterance.lang = currentLang === 'zh' ? 'zh-TW' : 'en-US';
+          utterance.rate = 1.0;
+          window.speechSynthesis.speak(utterance);
+        }
+
+        isSounding = true;
+        alarmButtons.forEach(b => {
+          b.innerHTML = `<span>⏹️</span> <span id="alarmBtnLabel">${t.alarmBtnSilence}</span>`;
+        });
+        document.body.style.boxShadow = 'inset 0 0 50px rgba(239, 68, 68, 0.4)';
+      } catch (err) {
+        console.warn('AudioContext error', err);
+      }
+    } else {
+      if (oscillator) {
+        oscillator.stop();
+        oscillator.disconnect();
+      }
+      if (lfoInterval) clearInterval(lfoInterval);
+      if (audioCtx) audioCtx.close();
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+
+      isSounding = false;
+      alarmButtons.forEach(b => {
+        b.innerHTML = `<span>🚨</span> <span id="alarmBtnLabel">${t.alarmBtn}</span>`;
+      });
+      document.body.style.boxShadow = 'none';
+    }
+  }
+
+  alarmButtons.forEach(b => b.addEventListener('click', toggleAlarm));
+}
+
+/* ==========================================================================
+   10. AMBIENT INTERACTIVE PARTICLE BACKGROUND
+   ========================================================================== */
+function initAmbientParticles() {
+  const canvas = document.getElementById('ambientBgCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  let width = (canvas.width = window.innerWidth);
+  let height = (canvas.height = window.innerHeight);
+
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+
+  let mouseX = width / 2;
+  let mouseY = height / 2;
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  const particleCount = 55;
+  const particles = [];
+
+  for (let i = 0; i < particleCount; i++) {
+    particles.push({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.45,
+      vy: -Math.random() * 0.65 - 0.2,
+      radius: Math.random() * 2.5 + 0.8,
+      baseAlpha: Math.random() * 0.45 + 0.2,
+      pulseSpeed: Math.random() * 0.02 + 0.01,
+      color: Math.random() > 0.4 ? '239, 68, 68' : '245, 158, 11'
+    });
+  }
+
+  let frame = 0;
+  function animate() {
+    ctx.clearRect(0, 0, width, height);
+    frame++;
+
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+
+      const dx = mouseX - p.x;
+      const dy = mouseY - p.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 150) {
+        p.x -= (dx / dist) * 0.9;
+        p.y -= (dy / dist) * 0.9;
+      }
+
+      if (p.y < -10) {
+        p.y = height + 10;
+        p.x = Math.random() * width;
+      }
+      if (p.x < -10) p.x = width + 10;
+      if (p.x > width + 10) p.x = -10;
+
+      const alpha = p.baseAlpha + Math.sin(frame * p.pulseSpeed) * 0.15;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color}, ${Math.max(0, Math.min(1, alpha))})`;
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = `rgba(${p.color}, 0.55)`;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+}

@@ -1,0 +1,19 @@
+# Documentation / presentation export files (excluded per request)
+docs/
+*.docx
+*.pptx
+
+# Large binaries (>100MB exceeds GitHub limits)
+bin/*.exe
+bin/
+*.exe
+
+# Python temporary files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS metadata
+Thumbs.db
+Desktop.ini
+.DS_Store

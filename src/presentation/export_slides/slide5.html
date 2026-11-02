@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Slide 5 - What Did I Check?</title>
+  <link rel="stylesheet" href="slide_theme.css">
+  <style>
+    .telemetry-dashboard {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      margin: 30px 0 20px;
+      flex: 1;
+    }
+    .pillar-col {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 20px;
+      padding: 30px 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+      position: relative;
+    }
+    .pillar-col.ui { border-top: 5px solid #06b6d4; }
+    .pillar-col.science { border-top: 5px solid #ef4444; }
+    .pillar-col.map { border-top: 5px solid #10b981; }
+
+    .pillar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .pillar-tag {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .pillar-col.ui .pillar-tag { color: #38bdf8; }
+    .pillar-col.science .pillar-tag { color: #f87171; }
+    .pillar-col.map .pillar-tag { color: #34d399; }
+
+    .pillar-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .diff-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 4px;
+    }
+    .diff-card {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border-left: 3px solid #10b981;
+    }
+    .diff-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+    .diff-fix {
+      font-size: 13.5px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+    .diff-fix strong { color: #cbd5e1; }
+    .diff-fix code {
+      font-family: var(--font-mono);
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #fde68a;
+    }
+  </style>
+</head>
+<body>
+  <div class="glow-orb orb-red"></div>
+  <div class="glow-orb orb-amber"></div>
+  <div class="bg-grid"></div>
+
+  <div class="slide-frame">
+    <div class="header-area">
+      <div class="tag-badge"><span class="dot"></span> 04 • RIGOROUS VERIFICATION & AUDIT</div>
+      <div class="main-title">What Did I Check? QA & Safety Telemetry</div>
+      <div class="main-desc">Zero tolerance for life-safety misinformation or layout collapse. All 8 blockers discovered by OpenCode were audited, resolved, and signed off.</div>
+    </div>
+
+    <div class="telemetry-dashboard">
+      <!-- Pillar 1 -->
+      <div class="pillar-col ui">
+        <div class="pillar-header">
+          <span class="pillar-tag">VIEWPORT & UI</span>
+          <span style="color:#34d399; font-weight:800; font-size:12px; font-family:var(--font-mono);">PASS ✓</span>
+        </div>
+        <div class="pillar-title">Responsive Layout Integrity</div>
+
+        <div class="diff-list">
+          <div class="diff-card">
+            <div class="diff-title">800×654 Flex Squeeze Resolved</div>
+            <div class="diff-fix">Badge squeezed instruction text into 1 char/line. Added <code>flex-wrap: wrap</code> and <code>flex: 1 1 240px</code>.</div>
+          </div>
+          <div class="diff-card">
+            <div class="diff-title">P.A.S.S. Dynamic Re-translation</div>
+            <div class="diff-fix">Language switch left extinguisher steps in Chinese. Now re-applies <code>t.s3_stepsInfo[curPassStep]</code> live.</div>
+          </div>
+          <div class="diff-card">
+            <div class="diff-title">Nav Auto-Scroll & Bottom Dock</div>
+            <div class="diff-fix">Tabs smoothly center via <code>scrollIntoView</code>; dock overlap eliminated on small viewports.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pillar 2 -->
+      <div class="pillar-col science">
+        <div class="pillar-header">
+          <span class="pillar-tag">LIFE-SAFETY SCIENCE</span>
+          <span style="color:#34d399; font-weight:800; font-size:12px; font-family:var(--font-mono);">PASS ✓</span>
+        </div>
+        <div class="pillar-title">Factual Guidance Accuracy</div>
+
+        <div class="diff-list">
+          <div class="diff-card">
+            <div class="diff-title">112 Cellular Network Grounding</div>
+            <div class="diff-fix">Eliminated unsafe "works with zero signal" claim. Clarified: 112 requires active cell tower coverage (no SIM needed).</div>
+          </div>
+          <div class="diff-card">
+            <div class="diff-title">Thermal Ceiling Layer (>500°C)</div>
+            <div class="diff-fix">Standardized toxic smoke layer claim; corrected door handle heat gauge to illustrative demonstration data.</div>
+          </div>
+          <div class="diff-card">
+            <div class="diff-title">Sprinkler Clearance Correction</div>
+            <div class="diff-fix">Corrected NFPA sprinkler head clearance to exact standard: <strong>約45公分（18英吋）</strong>.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pillar 3 -->
+      <div class="pillar-col map">
+        <div class="pillar-header">
+          <span class="pillar-tag">ARCHITECTURAL EGRESS</span>
+          <span style="color:#34d399; font-weight:800; font-size:12px; font-family:var(--font-mono);">PASS ✓</span>
+        </div>
+        <div class="pillar-title">Real Floorplan Precision</div>
+
+        <div class="diff-list">
+          <div class="diff-card">
+            <div class="diff-title">Evacuees Rerouted From Elevators</div>
+            <div class="diff-fix">Corrected student animation path that walked into the lift; re-targeted directly to <strong>North Stairs (234, 28)</strong>.</div>
+          </div>
+          <div class="diff-card">
+            <div class="diff-title">North Stairs vs "East Stairs" Fix</div>
+            <div class="diff-fix">Resolved contradiction across spec and Drill 3 to North Stairs beside X04 (above Lift) with South Stairs as backup.</div>
+          </div>
+          <div class="diff-card">
+            <div class="diff-title">Ying-Xi 4F Physical Map Fidelity</div>
+            <div class="diff-fix">Confirmed odd room numbers on west wing (X31-X43) and omission of X15 reflect verified architectural truth.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-stamp">
+      <div class="brand">🔥 CAMPUS FIRE DEFENSE SYSTEM</div>
+      <div>SLIDE 05 / 06 • QA & AUDIT TELEMETRY</div>
+    </div>
+  </div>
+</body>
+</html>

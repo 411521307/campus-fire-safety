@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Slide 2 - The 80% Recall Collapse</title>
+  <link rel="stylesheet" href="slide_theme.css">
+  <style>
+    .split-comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-top: 30px;
+      margin-bottom: 20px;
+      flex: 1;
+    }
+    .comp-col {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 24px;
+      padding: 38px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.45);
+      position: relative;
+      overflow: hidden;
+    }
+    .comp-col.problem {
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      border-top: 5px solid #ef4444;
+    }
+    .comp-col.solution {
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-top: 5px solid #10b981;
+    }
+
+    .comp-badge {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 8px;
+      width: fit-content;
+    }
+    .comp-col.problem .comp-badge { background: rgba(239, 68, 68, 0.18); color: #fca5a5; }
+    .comp-col.solution .comp-badge { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; }
+
+    .comp-title {
+      font-size: 30px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+    .stat-callout {
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .big-num {
+      font-size: 56px;
+      font-weight: 900;
+      font-family: var(--font-mono);
+      line-height: 1;
+    }
+    .comp-col.problem .big-num { color: #ef4444; text-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+    .comp-col.solution .big-num { color: #10b981; text-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+
+    .stat-text {
+      font-size: 16px;
+      color: #cbd5e1;
+      line-height: 1.45;
+    }
+
+    .point-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .point-item {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      font-size: 16px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+    .point-item strong { color: #f8fafc; }
+    .point-icon {
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="glow-orb orb-red"></div>
+  <div class="glow-orb orb-amber"></div>
+  <div class="bg-grid"></div>
+
+  <div class="slide-frame">
+    <div class="header-area">
+      <div class="tag-badge"><span class="dot"></span> 01 • THE PROBLEM & GENESIS</div>
+      <div class="main-title">Why Did I Make This? The 80% Recall Collapse</div>
+      <div class="main-desc">Under midnight fire alarm sirens and thick smoke, human recall of static paper flyers collapses. We replaced passive noticeboards with active neuromuscular reflex training.</div>
+    </div>
+
+    <div class="split-comparison">
+      <!-- Problem Side -->
+      <div class="comp-col problem">
+        <div class="comp-badge">❌ THE OUTDATED REALITY</div>
+        <div class="comp-title">Passive Paper Noticeboards Fail</div>
+
+        <div class="stat-callout">
+          <div class="big-num">-80%</div>
+          <div class="stat-text"><strong>Memory Collapse Under Panic:</strong> When adrenaline surges at 3 AM, residents forget passive text and make lethal decisions.</div>
+        </div>
+
+        <div class="point-cards">
+          <div class="point-item">
+            <span class="point-icon">🛗</span>
+            <div><strong>The Elevator Chimney Trap:</strong> Panicked students instinctively run toward elevator shafts—which draw toxic carbon monoxide straight up.</div>
+          </div>
+          <div class="point-item">
+            <span class="point-icon">🍳</span>
+            <div><strong>Water on Grease Fires:</strong> When communal kitchen oil ignites, residents grab cups of water, causing an explosive oil fireball.</div>
+          </div>
+          <div class="point-item">
+            <span class="point-icon">🚪</span>
+            <div><strong>Palm Burn Flexor Spasms:</strong> Grabbing hot metal handles with palms causes reflexive flexor spasms, trapping burned hands on hot metal.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Solution Side -->
+      <div class="comp-col solution">
+        <div class="comp-badge">⚡ THE INTERACTIVE SOLUTION</div>
+        <div class="comp-title">Subconscious Kinetic Conditioning</div>
+
+        <div class="stat-callout">
+          <div class="big-num">100%</div>
+          <div class="stat-text"><strong>Tactile Muscle Memory:</strong> Interactive simulations convert complex safety protocols into instinctive neuromuscular reflexes.</div>
+        </div>
+
+        <div class="point-cards">
+          <div class="point-item">
+            <span class="point-icon">🖐️</span>
+            <div><strong>Dorsal Back-of-Hand Check:</strong> Feel door handles with the back of hand—instinctive recoil prevents flexor grasping burns.</div>
+          </div>
+          <div class="point-item">
+            <span class="point-icon">💨</span>
+            <div><strong>30-60cm Crawling Gait:</strong> Crawl low on knees beneath the 500°C lethal ceiling smoke layer where air is cool and breathable.</div>
+          </div>
+          <div class="point-item">
+            <span class="point-icon">🔄</span>
+            <div><strong>Full 360° Stop-Drop-and-Roll:</strong> Cover airways, drop flat, and roll back-and-forth to smother clothing flames immediately.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-stamp">
+      <div class="brand">🔥 CAMPUS FIRE DEFENSE SYSTEM</div>
+      <div>SLIDE 02 / 06 • PROBLEM & GENESIS</div>
+    </div>
+  </div>
+</body>
+</html>

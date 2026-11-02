@@ -1,0 +1,171 @@
+/* ==========================================================================
+   CANVA & PPTX EXPORT SLIDE THEME (1920x1080 Widescreen)
+   Exact match to the Fire Safety Dark Mode Cyber-Aesthetic
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+
+:root {
+  --bg-deep: #070b14;
+  --bg-card: rgba(15, 23, 42, 0.88);
+  --border-card: rgba(255, 255, 255, 0.12);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+
+  --accent-red: #ef4444;
+  --accent-amber: #f59e0b;
+  --accent-cyan: #06b6d4;
+  --accent-emerald: #10b981;
+
+  --text-white: #ffffff;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --font-main: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Background Blueprint Grid */
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Glowing Ambient Orbs */
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(140px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+.orb-red {
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, var(--accent-red), transparent 70%);
+  top: -150px;
+  right: -100px;
+}
+
+.orb-amber {
+  width: 650px;
+  height: 650px;
+  background: radial-gradient(circle, var(--accent-amber), transparent 70%);
+  bottom: -150px;
+  left: -100px;
+}
+
+.orb-cyan {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, var(--accent-cyan), transparent 70%);
+  top: 40%;
+  left: 30%;
+  opacity: 0.2;
+}
+
+/* Main Container */
+.slide-frame {
+  position: relative;
+  z-index: 10;
+  width: 1920px;
+  height: 1080px;
+  padding: 80px 100px 70px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Header Area */
+.header-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--accent-amber);
+  text-transform: uppercase;
+}
+
+.tag-badge .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-amber);
+  box-shadow: 0 0 10px var(--accent-amber);
+}
+
+.main-title {
+  font-size: 46px;
+  font-weight: 800;
+  color: var(--text-white);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.main-desc {
+  font-size: 20px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 1400px;
+}
+
+/* Gradient Text */
+.gradient-fire {
+  background: linear-gradient(135deg, #ef4444 0%, #f59e0b 50%, #fbbf24 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Footer Stamp */
+.footer-stamp {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 15px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.footer-stamp .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-weight: 700;
+}

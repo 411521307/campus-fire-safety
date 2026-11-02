@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Campus & Residence Hall Fire Defense System - Interactive fire safety, survival protocols, P.A.S.S. simulator, dormitory evacuation map, and Taiwan emergency hotlines.">
+  <title>🔥 Campus & Dormitory Fire Safety System</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ==========================================================================
+       AMBIENT DYNAMIC BACKGROUND & DIRECTIONAL SWEEP SYSTEM
+       ========================================================================== -->
+  <canvas id="ambientBgCanvas"></canvas>
+  <div class="blueprint-grid-overlay"></div>
+  <div class="aurora-orb orb-1"></div>
+  <div class="aurora-orb orb-2"></div>
+  <div class="aurora-orb orb-3"></div>
+  <div class="page-wipe-sweep" id="pageWipeSweep"></div>
+
+  <!-- ==========================================================================
+       TOP NAVIGATION BAR (Clean, single-line, no awkward text wrapping)
+       ========================================================================== -->
+  <header>
+    <div class="nav-container">
+      <a href="#" class="brand" role="button" aria-label="Reload Home Page" onclick="location.reload();">
+        <div class="brand-icon">🔥</div>
+        <span>CAMPUS FIRE SAFE</span>
+      </a>
+
+      <!-- Compact 8-section single-line tabs -->
+      <div class="nav-tabs-wrapper">
+        <ul class="nav-tabs">
+          <li><button class="nav-tab-btn active"><span>🏠</span> Home</button></li>
+          <li><button class="nav-tab-btn"><span>🚨</span> Survival</button></li>
+          <li><button class="nav-tab-btn"><span>🧯</span> P.A.S.S.</button></li>
+          <li><button class="nav-tab-btn"><span>🗺️</span> Evacuation</button></li>
+          <li><button class="nav-tab-btn"><span>🏢</span> Campus</button></li>
+          <li><button class="nav-tab-btn"><span>✅</span> Audit</button></li>
+          <li><button class="nav-tab-btn"><span>🧠</span> Drills</button></li>
+          <li><button class="nav-tab-btn"><span>📞</span> Hotlines</button></li>
+        </ul>
+      </div>
+
+      <div class="nav-actions">
+        <button class="lang-toggle-btn" id="langToggleBtn" title="Switch Language / 切換語言">
+          <span>🌐</span> <span id="langBtnLabel">繁體中文</span>
+        </button>
+        <button class="alarm-toggle-btn">
+          <span>🚨</span> <span id="alarmBtnLabel">警報演習 (Alarm)</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       8-SECTION SLIDER VIEWPORT & SLIDES (Block-by-Block Transition Animation)
+       ========================================================================== -->
+  <main class="slider-wrapper">
+    <div class="slider-track" id="sliderTrack">
+
+      <!-- --------------------------------------------------------------------
+           SECTION 1: FRONTPAGE / WELCOME
+           -------------------------------------------------------------------- -->
+      <section class="slide-section active" id="slide-1">
+        <div class="slide-content">
+          <div class="hero-card anim-block anim-d1">
+            <span class="hero-badge anim-block anim-d1">⚡ University Life-Safety Network</span>
+            <h1 class="hero-heading anim-block anim-d2">Campus & Residence Hall Fire Defense System</h1>
+            <p class="hero-subtitle anim-block anim-d3">
+              Interactive fire prevention, evacuation simulation, extinguisher training, and Taiwan emergency protocols designed for dorm residents, students, and faculty.
+            </p>
+
+            <!-- Quick Jump Grid -->
+            <div class="hero-quick-grid anim-block anim-d4">
+              <div class="quick-feature-box" data-slide="1">
+                <span style="font-size:1.5rem;">🚨</span>
+                <h4>Survival Actions</h4>
+                <p>Door heat tests, low smoke crawl posture, and escape priorities.</p>
+              </div>
+              <div class="quick-feature-box" data-slide="2">
+                <span style="font-size:1.5rem;">🧯</span>
+                <h4>P.A.S.S. Simulator</h4>
+                <p>Interactive 4-step extinguisher motion training with particle physics.</p>
+              </div>
+              <div class="quick-feature-box" data-slide="3">
+                <span style="font-size:1.5rem;">🗺️</span>
+                <h4>Dorm Evacuation Map</h4>
+                <p>Architectural hollow-courtyard floorplan with live evacuation flow.</p>
+              </div>
+              <div class="quick-feature-box" data-slide="4">
+                <span style="font-size:1.5rem;">🏢</span>
+                <h4>Campus Zones</h4>
+                <p>Specific fire rules for dorm rooms, kitchens, labs, and stairwells.</p>
+              </div>
+              <div class="quick-feature-box" data-slide="5">
+                <span style="font-size:1.5rem;">✅</span>
+                <h4>Dorm Room Audit</h4>
+                <p>Interactive compliance checklist with real-time risk gauge.</p>
+              </div>
+              <div class="quick-feature-box" data-slide="6">
+                <span style="font-size:1.5rem;">🧠</span>
+                <h4>Decision Drills</h4>
+                <p>Scenario simulations for 3 AM alarms and kitchen grease fires.</p>
+              </div>
+              <div class="quick-feature-box" data-slide="7">
+                <span style="font-size:1.5rem;">📞</span>
+                <h4>Taiwan Hotlines</h4>
+                <p>119, 110, 112, 1999, 1925, 165, 113 official emergency contacts.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- --------------------------------------------------------------------
+           SECTION 2: FIRE SURVIVAL PROTOCOLS (ANIMATED DEMONSTRATION) - NEW!
+           -------------------------------------------------------------------- -->
+      <section class="slide-section" id="slide-2">
+        <div class="slide-content">
+          <div class="section-header anim-block anim-d1">
+            <div>
+              <h2 class="section-title">🚨 Fire Survival Actions: What To Do In Case of Fire</h2>
+              <p class="section-desc">Interactive animated demonstration of life-critical reactions: door heat checks, low smoke crawling, and emergency survival.</p>
+            </div>
+            <span class="page-indicator-pill">SECTION 02 / 08</span>
+          </div>
+
+          <div class="survival-panel">
+            <!-- Dedicated Instruction Card with Pacing Controls -->
+            <div class="survival-info-card anim-block anim-d2">
+              <div class="step-indicator-title">
+                <span class="step-badge" id="survivalStepBadge" style="background:var(--accent-warn); color:#000;">ACTION 1: CHECK DOOR HANDLE HEAT</span>
+                <span class="step-instruction-text" id="survivalStepText">Use the back of your hand to feel the metal door handle and door surface before opening. If hot, DO NOT open!</span>
+              </div>
+              <div class="survival-header-controls">
+                <div class="survival-progress-container" title="Auto-advance timer / 自動輪播進度">
+                  <div class="survival-progress-bar" id="survivalProgressBar"></div>
+                </div>
+                <div class="survival-ctrl-btns">
+                  <button class="survival-ctrl-btn" id="survivalPrevBtn" title="Previous Action / 上一個動作">⏮</button>
+                  <button class="survival-ctrl-btn" id="survivalPlayPauseBtn" title="Play or Pause / 播放或暫停">⏸</button>
+                  <button class="survival-ctrl-btn" id="survivalNextBtn" title="Next Action / 下一個動作">⏭</button>
+                  <button class="survival-speed-btn" id="survivalSpeedBtn" title="Playback Speed / 示範速度">⚡ 1x</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Canvas Stage -->
+            <div class="survival-canvas-stage anim-block anim-d3">
+              <canvas id="survivalCanvas"></canvas>
+            </div>
+
+            <!-- Toolbar Controls -->
+            <div class="survival-toolbar anim-block anim-d4">
+              <div class="survival-steps-nav">
+                <button class="survival-step-btn active" data-action="1">1. 🚪 觸摸門把門板 (Door Heat)</button>
+                <button class="survival-step-btn" data-action="2">2. 💨 濃煙低姿爬行 (Crawl Low)</button>
+                <button class="survival-step-btn" data-action="3">3. 🔥 著火停躺滾 (Stop-Drop-Roll)</button>
+                <button class="survival-step-btn" data-action="4">4. 🪟 就地阻煙待救 (Shelter & Signal)</button>
+              </div>
+              <div class="survival-status-hint" id="survivalStatusHint" style="font-size:0.84rem; color:var(--text-secondary);">
+                💡 緩速示範循環中（每動態停留 16 秒）。點擊任一動作可停駐觀看細節。
+              </div>
+            </div>
+
+            <!-- 4 Visual Rule Mini Cards -->
+            <div class="survival-grid-cards anim-block anim-d5">
+              <div class="survival-rule-item">
+                <h4>🚪 手背觸摸門把門板</h4>
+                <p>以手背感受金屬把手與門板上方溫度。若發燙表示門外已是火海，萬不可開門！若門涼，先開一條門縫確認無煙再逃生。</p>
+              </div>
+              <div class="survival-rule-item">
+                <h4>💨 壓低身軀沿牆爬行</h4>
+                <p>高溫有毒濃煙（一氧化碳）向上浮升至天花板。離地面30至60公分處溫度較低且濃煙最稀薄，雙膝跪地低頭爬行。</p>
+              </div>
+              <div class="survival-rule-item">
+                <h4>🚪 隨手關門阻隔火勢</h4>
+                <p>逃出寢室或通過常閉式防火門時，隨手將門關上！此舉能切斷氧氣供應，若為防火門更能爭取30分鐘至1小時的寶貴逃生時間。</p>
+              </div>
+              <div class="survival-rule-item">
+                <h4>🪟 門縫塞毛巾於窗邊呼救</h4>
+                <p>若逃生通道受阻，立刻退回房內關門，用濕毛巾或衣物塞緊門縫阻止濃煙滲入，打開窗戶並揮動鮮豔衣物或手電筒求救。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- --------------------------------------------------------------------
+           SECTION 3: FIRE EXTINGUISHER SIM (UNBLOCKED STAGE)
+           -------------------------------------------------------------------- -->
+      <section class="slide-section" id="slide-3">
+        <div class="slide-content">
+          <div class="section-header anim-block anim-d1">
+            <div>
+              <h2 class="section-title">🧯 Interactive P.A.S.S. Extinguisher Simulator</h2>
+              <p class="section-desc">Interactive motion demonstration of the 4-step extinguisher technique against burning fuel.</p>
+            </div>
+            <span class="page-indicator-pill">SECTION 03 / 08</span>
+          </div>
+
+          <div class="extinguisher-panel">
+            <div class="extinguisher-info-card anim-block anim-d2">
+              <div class="step-indicator-title">
+                <span class="step-badge" id="passStepBadge">STEP 1: PULL THE PIN</span>
+                <span class="step-instruction-text" id="passStepText">Pull the metal safety ring pin to break the plastic tamper seal and unlock the handle.</span>
+              </div>
+              <button class="pass-step-btn" id="passPlayPauseBtn" style="background:rgba(255,255,255,0.1); color:#fff;">
+                ⏸ Pause Demo
+              </button>
+            </div>
+
+            <div class="extinguisher-canvas-stage anim-block anim-d3">
+              <canvas id="passCanvas"></canvas>
+            </div>
+
+            <div class="extinguisher-toolbar anim-block anim-d4">
+              <div class="extinguisher-steps-nav">
+                <button class="pass-step-btn active" data-step="1">1. 🧷 Pull Pin</button>
+                <button class="pass-step-btn" data-step="2">2. 🎯 Aim Low</button>
+                <button class="pass-step-btn" data-step="3">3. ✊ Squeeze Lever</button>
+                <button class="pass-step-btn" data-step="4">4. ↔️ Sweep Across</button>
+              </div>
+              <div style="font-size:0.84rem; color:var(--text-secondary);">
+                ⚠️ Rule of Thumb: Only fight fires smaller than a wastebasket. Always keep an unobstructed exit behind you!
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- --------------------------------------------------------------------
+           SECTION 4: DORMITORY EMERGENCY EVACUATION MAP
+           -------------------------------------------------------------------- -->
+      <section class="slide-section" id="slide-4">
+        <div class="slide-content">
+          <div class="section-header anim-block anim-d1">
+            <div>
+              <h2 class="section-title">🗺️ Dormitory Emergency Evacuation Map</h2>
+              <p class="section-desc">Hollow-square perimeter layout with room naming (X01-X44) and closest stairwell exits.</p>
+            </div>
+            <span class="page-indicator-pill">SECTION 04 / 08</span>
+          </div>
+
+          <div class="floorplan-wrapper">
+            <div class="floorplan-display anim-block anim-d2">
+              <canvas id="dormPlanCanvas"></canvas>
+              <div class="floorplan-legend-bar">
+                <div class="legend-chip"><span class="chip-color" style="background:#10b981;"></span> 安全樓梯 (Exit Stairs)</div>
+                <div class="legend-chip"><span class="chip-color" style="background:#ef4444;"></span> 1F 門口指引 (1F Exits via Stairs)</div>
+                <div class="legend-chip"><span class="chip-color" style="background:#38bdf8;"></span> 疏散學生 (Evacuating Students)</div>
+                <div class="legend-chip"><span class="chip-color" style="background:#060913; border:1px solid rgba(255,255,255,0.2);"></span> 中庭天井 (Void Courtyard)</div>
+              </div>
+            </div>
+
+            <div class="sidebar-notes anim-block anim-d3">
+              <div class="dorm-info-card" style="border-left: 4px solid var(--accent-safe);">
+                <h4>🚪 核心疏散出口配置 (Key Exits)</h4>
+                <ul>
+                  <li><strong>北側樓梯 (North Stairs):</strong> 緊鄰 X04 寢室右側，通往 1F 車棚門出口。</li>
+                  <li><strong>南側樓梯 (South Stairs):</strong> 緊鄰 X22 寢室右側，通往 1F 前門大門與草坪。</li>
+                  <li><strong>電梯配置 (Lift):</strong> 位於 X04 右側樓梯正下方，火警時嚴禁搭乘。</li>
+                  <li><strong>高樓層連續配置:</strong> 本樓層右側各寢室（X08-X18）無間斷，出口位於一樓。</li>
+                </ul>
+              </div>
+
+              <div class="dorm-info-card" style="border-left: 4px solid var(--accent-fire);">
+                <h4>🚫 絕對禁止使用電梯 (No Elevators)</h4>
+                <p>電梯井在火災時會產生煙囪效應抽吸濃煙與毒氣，切勿搭乘電梯，一律步行由兩側安全梯疏散！</p>
+              </div>
+
+              <div class="dorm-info-card" style="border-left: 4px solid var(--accent-warn);">
+                <h4>🔑 隨身攜帶寢室鑰匙 (Take Room Key)</h4>
+                <p>若走廊已被濃煙吞沒無法通行，立刻退回寢室內關門防煙，並於窗邊揮動衣物呼救等待救援。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- --------------------------------------------------------------------
+           SECTION 5: CAMPUS & DORM HAZARD ZONES
+           -------------------------------------------------------------------- -->
+      <section class="slide-section" id="slide-5">
+        <div class="slide-content">
+          <div class="section-header anim-block anim-d1">
+            <div>
+              <h2 class="section-title">🏢 Campus & Residence Hall Safety Protocols</h2>
+              <p class="section-desc">Hazard prevention and electrical codes tailored for each specific zone on campus.</p>
+            </div>
+            <span class="page-indicator-pill">SECTION 05 / 08</span>
+          </div>
+
+          <div class="zone-filter-pills anim-block anim-d2">
+            <button class="filter-btn active" data-filter="all">All Campus Zones</button>
+            <button class="filter-btn" data-filter="dorm">🛌 Dorm Rooms</button>
+            <button class="filter-btn" data-filter="kitchen">🍳 Communal Kitchens</button>
+            <button class="filter-btn" data-filter="lab">🔬 AI & Science Labs</button>
+            <button class="filter-btn" data-filter="hallway">🚪 Corridors & Fire Doors</button>
+          </div>
+
+          <div class="zones-grid anim-block anim-d3">
+            <div class="zone-tile" data-category="dorm">
+              <span class="zone-tag" style="background:rgba(239,68,68,0.2); color:#fca5a5;">Dormitory Rooms</span>
+              <h3>🛌 寢室生活用電與明火管制</h3>
+              <ul>
+                <li>嚴禁於寢室內點燃蠟燭、薰香、精油燈或瓦斯爐。</li>
+                <li>高耗電加熱電器（電磁爐、熱水壺、電暖器）禁止於寢室插座使用。</li>
+                <li>吹風機、離子夾等美髮器具使用完畢後務必立即拔除插頭。</li>
+                <li>嚴禁將行動電源、電動滑板車鋰電池置於床鋪上徹夜充電。</li>
+              </ul>
+            </div>
+
+            <div class="zone-tile" data-category="kitchen">
+              <span class="zone-tag" style="background:rgba(245,158,11,0.2); color:#fde68a;">Kitchen & Lounges</span>
+              <h3>🍳 公共廚房與烹飪安全</h3>
+              <ul>
+                <li>人離火熄：烹煮食材、熱湯或微波食物時，切勿擅自離開現場。</li>
+                <li>油鍋起火切勿澆水：迅速蓋上鍋蓋切斷空氣，並關閉瓦斯/爐具開關。</li>
+                <li>定期清理微波爐內部油漬與烤麵包機底盤麵包屑，避免積熱自燃。</li>
+                <li>洗衣間烘衣機每次使用前後，務必清除棉絮濾網上的易燃棉屑。</li>
+              </ul>
+            </div>
+
+            <div class="zone-tile" data-category="lab">
+              <span class="zone-tag" style="background:rgba(6,182,212,0.2); color:#a5f3fc;">Tech & Science Labs</span>
+              <h3>🔬 AI電腦機房與實驗室規範</h3>
+              <ul>
+                <li>伺服器機櫃與高瓦數GPU工作站周圍保持通風良好，嚴禁堆置紙箱。</li>
+                <li>嚴禁延長線「章魚腳」串接（延長線接延長線）導致電線走火。</li>
+                <li>化學溶劑（異丙醇、去漬油）應存放於專用黃色防爆櫃內。</li>
+                <li>精密電子設備區域應配置二氧化碳 (CO2) 或潔淨氣體滅火器。</li>
+              </ul>
+            </div>
+
+            <div class="zone-tile" data-category="hallway">
+              <span class="zone-tag" style="background:rgba(16,185,129,0.2); color:#a7f3d0;">Egress & Corridors</span>
+              <h3>🚪 走廊通道與常閉式防火門</h3>
+              <ul>
+                <li>走廊及避難逃生樓梯間嚴禁堆放鞋架、行李箱、垃圾桶或腳踏車。</li>
+                <li>常閉式防火門嚴禁以木塞、滅火器蓄意卡門敞開，以免火勢濃煙竄升。</li>
+                <li>走廊上方緊急出口指示燈與緊急照明燈應隨時保持通電待命狀態。</li>
+                <li>熟悉主要逃生梯與次要備用逃生梯的精確步行路線。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- --------------------------------------------------------------------
+           SECTION 6: DORM ROOM SAFETY AUDIT
+           -------------------------------------------------------------------- -->
+      <section class="slide-section" id="slide-6">
+        <div class="slide-content">
+          <div class="section-header anim-block anim-d1">
+            <div>
+              <h2 class="section-title">✅ Interactive Dorm Room Safety Audit</h2>
+              <p class="section-desc">Evaluate your dormitory room compliance against campus fire safety regulations.</p>
+            </div>
+            <span class="page-indicator-pill">SECTION 06 / 08</span>
+          </div>
+
+          <div class="audit-layout">
+            <div class="gauge-box anim-block anim-d2">
+              <div class="circular-gauge" id="auditCircularGauge">
+                <div class="circular-gauge-inner">
+                  <span id="auditGaugePct" style="font-size:1.8rem; font-weight:800; color:#fff;">0%</span>
+                  <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Compliance</span>
+                </div>
+              </div>
+              <div>
+                <h4 style="font-size:1rem; margin-bottom:0.25rem;">評估狀態 (Status)</h4>
+                <span id="auditStatusBadge" style="font-weight:800; font-size:0.88rem; color:#ef4444;">HIGH RISK (高風險)</span>
+              </div>
+            </div>
+
+            <div class="audit-checklist-group anim-block anim-d3">
+              <label class="audit-check-label">
+                <input type="checkbox">
+                <div class="audit-check-text">
+                  <strong>偵煙器與自動灑水頭周圍保持淨空</strong>
+                  <span>天花板灑水頭周圍約45公分（18英吋）內無任何懸掛衣物、布簾或障礙物遮蔽。</span>
+                </div>
+              </label>
+
+              <label class="audit-check-label">
+                <input type="checkbox">
+                <div class="audit-check-text">
+                  <strong>無違規使用高功率家電或串接延長線</strong>
+                  <span>使用具備過載自動斷電保護之安規延長線，且直接插於牆面插座，無串接情形。</span>
+                </div>
+              </label>
+
+              <label class="audit-check-label">
+                <input type="checkbox">
+                <div class="audit-check-text">
+                  <strong>寢室內零違禁明火與香氛物品</strong>
+                  <span>房內絕無蠟燭、線香、打火機充氣瓶、高熱鹵素燈或卡式爐。</span>
+                </div>
+              </label>
+
+              <label class="audit-check-label">
+                <input type="checkbox">
+                <div class="audit-check-text">
+                  <strong>通往寢室大門之走道通暢無阻</strong>
+                  <span>房門能完全敞開90度以上，門後無堆放髒衣籃、鞋盒或阻礙逃生之雜物。</span>
+                </div>
+              </label>
+
+              <label class="audit-check-label">
+                <input type="checkbox">
+                <div class="audit-check-text">
+                  <strong>室友均清楚北側/南側安全梯走向</strong>
+                  <span>全體室友均親自走過最近的安全梯（X04旁北梯、X22旁南梯）。</span>
+                </div>
+              </label>
+
+              <label class="audit-check-label">
+                <input type="checkbox">
+                <div class="audit-check-text">
+                  <strong>牢記戶外指定集結避難場所</strong>
+                  <span>火警警報響起時，全員知曉應前往戶外指定草坪集結點進行點名。</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- --------------------------------------------------------------------
+           SECTION 7: DECISION DRILLS (SCENARIOS)
+           -------------------------------------------------------------------- -->
+      <section class="slide-section" id="slide-7">
+        <div class="slide-content">
+          <div class="section-header anim-block anim-d1">
+            <div>
+              <h2 class="section-title">🧠 Emergency Decision Drills</h2>
+              <p class="section-desc">Sharpen your crisis reaction instinct under simulated university dormitory emergencies.</p>
+            </div>
+            <span class="page-indicator-pill">SECTION 07 / 08</span>
+          </div>
+
+          <div class="drills-grid anim-block anim-d2" id="drillsContainer"></div>
+        </div>
+      </section>
+
+      <!-- --------------------------------------------------------------------
+           SECTION 8: TAIWAN EMERGENCY HOTLINES ONLY
+           -------------------------------------------------------------------- -->
+      <section class="slide-section" id="slide-8">
+        <div class="slide-content">
+          <div class="section-header anim-block anim-d1">
+            <div>
+              <h2 class="section-title">📞 台灣緊急與服務專線 (Taiwan Emergency & Public Service Hotlines)</h2>
+              <p class="section-desc">Official emergency and public service hotlines in Taiwan. Click any card to dial immediately.</p>
+            </div>
+            <span class="page-indicator-pill">SECTION 08 / 08</span>
+          </div>
+
+          <div class="hotlines-grid anim-block anim-d2">
+            <!-- 119 -->
+            <a href="tel:119" class="hotline-card">
+              <div class="hotline-num-badge">119</div>
+              <div class="hotline-info">
+                <h3>Fire & Ambulance</h3>
+                <div class="zh-title">消防報案、火災搶救、緊急救護車</div>
+                <p>24小時全年無休，發生火災、人員受傷或化學災害時第一時間直撥。</p>
+              </div>
+            </a>
+
+            <!-- 110 -->
+            <a href="tel:110" class="hotline-card">
+              <div class="hotline-num-badge blue">110</div>
+              <div class="hotline-info">
+                <h3>Police Emergency</h3>
+                <div class="zh-title">警察局報案專線 (犯罪、危急治安)</div>
+                <p>校園暴力、可疑人員入侵、縱火事件或重大治安威脅緊急求助直撥。</p>
+              </div>
+            </a>
+
+            <!-- 112 -->
+            <a href="tel:112" class="hotline-card">
+              <div class="hotline-num-badge green">112</div>
+              <div class="hotline-info">
+                <h3>Global Mobile Emergency</h3>
+                <div class="zh-title">行動電話全球緊急救助專線</div>
+                <p>手機無SIM卡、或使用其他電信業者基地台時仍可撥通（須有行動基地台訊號涵蓋），由語音導引轉接119或110。</p>
+              </div>
+            </a>
+
+            <!-- 1999 -->
+            <a href="tel:1999" class="hotline-card">
+              <div class="hotline-num-badge amber">1999</div>
+              <div class="hotline-info">
+                <h3>Citizen Hotline</h3>
+                <div class="zh-title">各縣市政府便民服務與重大災情通報 (非24小時全國緊急專線)</div>
+                <p>各直轄市與縣市政府通話專線，提供市政諮詢、公用設施損壞通報。</p>
+              </div>
+            </a>
+
+            <!-- 1925 -->
+            <a href="tel:1925" class="hotline-card">
+              <div class="hotline-num-badge green">1925</div>
+              <div class="hotline-info">
+                <h3>Mental Health Hotline</h3>
+                <div class="zh-title">衛福部安心專線 (依舊愛我)</div>
+                <p>24小時免付費心理諮詢與自傷危機干預輔導，給予即時心理支持。</p>
+              </div>
+            </a>
+
+            <!-- 165 -->
+            <a href="tel:165" class="hotline-card">
+              <div class="hotline-num-badge blue">165</div>
+              <div class="hotline-info">
+                <h3>Anti-Fraud Hotline</h3>
+                <div class="zh-title">內政部警政署反詐騙諮詢專線</div>
+                <p>遇疑似詐騙電話、假冒檢警、交友匯款或網購詐欺查證與通報。</p>
+              </div>
+            </a>
+
+            <!-- 113 -->
+            <a href="tel:113" class="hotline-card">
+              <div class="hotline-num-badge amber">113</div>
+              <div class="hotline-info">
+                <h3>Protection Hotline</h3>
+                <div class="zh-title">婦幼保護與家庭暴力防治專線</div>
+                <p>遭遇家庭暴力、性騷擾、性侵害、兒少保護等緊急求助與諮詢。</p>
+              </div>
+            </a>
+          </div>
+
+          <div class="taiwan-flag-note anim-block anim-d3">
+            <span style="font-size:1.8rem;">🇹🇼</span>
+            <div>
+              <strong style="color:#fff;">在台灣遭遇緊急狀況之通報原則：</strong>
+              <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.2rem;">
+                火警直撥 <strong>119</strong>，若遇手機收訊不良請改撥 <strong>112</strong>。通話時請冷靜清楚說明：(1) 所在學校校名 (2) 宿舍樓棟名稱 (3) 樓層與寢室房號 (4) 現場所見火勢與煙霧狀況。
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ==========================================================================
+       FLOATING BOTTOM SLIDE CONTROLS (Next, Prev, Dots, Page Count)
+       ========================================================================== -->
+  <div class="slide-bottom-bar">
+    <button class="slide-nav-arrow" id="slidePrevBtn" aria-label="Previous Slide (Left Arrow)" title="Previous Section (Left Arrow)">◀</button>
+    <div class="slide-dots">
+      <button class="slide-dot active" aria-label="Slide 1: Home" title="01. Home"></button>
+      <button class="slide-dot" aria-label="Slide 2: Survival Protocols" title="02. Fire Survival Protocols"></button>
+      <button class="slide-dot" aria-label="Slide 3: P.A.S.S. Simulator" title="03. P.A.S.S. Simulator"></button>
+      <button class="slide-dot" aria-label="Slide 4: Dorm Evacuation Map" title="04. Dorm Evacuation Map"></button>
+      <button class="slide-dot" aria-label="Slide 5: Campus Zones" title="05. Campus Zones"></button>
+      <button class="slide-dot" aria-label="Slide 6: Dorm Audit" title="06. Dorm Audit"></button>
+      <button class="slide-dot" aria-label="Slide 7: Decision Drills" title="07. Decision Drills"></button>
+      <button class="slide-dot" aria-label="Slide 8: Taiwan Hotlines" title="08. Taiwan Hotlines"></button>
+    </div>
+    <span id="currentSlideIndicator" style="font-size:0.82rem; font-weight:700; color:var(--text-secondary);">Page 1 / 8</span>
+    <button class="slide-nav-arrow" id="slideNextBtn" aria-label="Next Slide (Right Arrow)" title="Next Section (Right Arrow)">▶</button>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

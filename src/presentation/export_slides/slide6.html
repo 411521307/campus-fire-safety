@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Slide 6 - What Is Next?</title>
+  <link rel="stylesheet" href="slide_theme.css">
+  <style>
+    .roadmap-track {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      margin: 32px 0 20px;
+      flex: 1;
+    }
+    .phase-card {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 20px;
+      padding: 30px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+      border-top: 5px solid;
+      position: relative;
+    }
+    .phase-card.p1 { border-top-color: #06b6d4; }
+    .phase-card.p2 { border-top-color: #10b981; }
+    .phase-card.p3 { border-top-color: #f59e0b; }
+    .phase-card.p4 { border-top-color: #ef4444; }
+
+    .phase-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .phase-num {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+    }
+    .phase-card.p1 .phase-num { color: #38bdf8; }
+    .phase-card.p2 .phase-num { color: #34d399; }
+    .phase-card.p3 .phase-num { color: #fbbf24; }
+    .phase-card.p4 .phase-num { color: #f87171; }
+
+    .status-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+    }
+
+    .phase-icon {
+      font-size: 32px;
+      margin-bottom: 2px;
+    }
+    .phase-title {
+      font-size: 21px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.25;
+    }
+    .phase-desc {
+      font-size: 14.5px;
+      color: #94a3b8;
+      line-height: 1.55;
+    }
+    .phase-desc strong { color: #cbd5e1; }
+
+    .vision-callout {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(245, 158, 11, 0.15));
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 16px;
+      padding: 18px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .vision-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .vision-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+    .vision-text {
+      font-size: 14.5px;
+      color: #cbd5e1;
+    }
+    .vision-btn {
+      background: var(--accent-red);
+      color: #fff;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="glow-orb orb-red"></div>
+  <div class="glow-orb orb-amber"></div>
+  <div class="bg-grid"></div>
+
+  <div class="slide-frame">
+    <div class="header-area">
+      <div class="tag-badge"><span class="dot"></span> 05 • ROADMAP & FUTURE EXPANSION</div>
+      <div class="main-title">What Is Next? The Future Roadmap</div>
+      <div class="main-desc">Scaling from a verified presentation simulator into a campus-wide, interconnected life-safety telemetry platform.</div>
+    </div>
+
+    <div class="roadmap-track">
+      <!-- Phase 1 -->
+      <div class="phase-card p1">
+        <div class="phase-header">
+          <span class="phase-num">PHASE 01</span>
+          <span class="status-badge">NEXT SPRINT</span>
+        </div>
+        <div class="phase-icon">📱</div>
+        <div class="phase-title">PWA & Offline Blackout Cache</div>
+        <div class="phase-desc">
+          Package the web app into an installable <strong>Progressive Web App</strong> with Service Worker caching. Allows offline floorplans & hotlines even during grid power failures.
+        </div>
+      </div>
+
+      <!-- Phase 2 -->
+      <div class="phase-card p2">
+        <div class="phase-header">
+          <span class="phase-num">PHASE 02</span>
+          <span class="status-badge">IN DESIGN</span>
+        </div>
+        <div class="phase-icon">🥽</div>
+        <div class="phase-title">3D WebGL Virtual Reality Escape</div>
+        <div class="phase-desc">
+          Upgrade the 2D floorplan into a first-person <strong>Three.js / WebGL simulation</strong>. Students navigate simulated smoke ceiling layers and locate emergency stairs in 3D.
+        </div>
+      </div>
+
+      <!-- Phase 3 -->
+      <div class="phase-card p3">
+        <div class="phase-header">
+          <span class="phase-num">PHASE 03</span>
+          <span class="status-badge">ARCHITECTURE</span>
+        </div>
+        <div class="phase-icon">📡</div>
+        <div class="phase-title">Campus IoT Smoke Detector Mesh</div>
+        <div class="phase-desc">
+          Connect campus smoke detectors via <strong>WebSockets / MQTT</strong> telemetry. Active alarms dynamically highlight red danger zones and compute optimal dynamic escape routes.
+        </div>
+      </div>
+
+      <!-- Phase 4 -->
+      <div class="phase-card p4">
+        <div class="phase-header">
+          <span class="phase-num">PHASE 04</span>
+          <span class="status-badge">COMMUNITY</span>
+        </div>
+        <div class="phase-icon">🏆</div>
+        <div class="phase-title">Gamified Inter-Dorm Drill Cup</div>
+        <div class="phase-desc">
+          Turn safety compliance into an annual <strong>inter-residence competition</strong>. Floors completing audits and drills unlock certified campus life-safety badges.
+        </div>
+      </div>
+    </div>
+
+    <div class="vision-callout">
+      <div class="vision-left">
+        <div class="vision-title">🚀 Production Ready for University Rollout</div>
+        <div class="vision-text">The Campus Fire Defense System combines modern web engineering with empirical life-safety science to save lives.</div>
+      </div>
+      <div class="vision-btn">APPROVED FOR DEPLOYMENT</div>
+    </div>
+
+    <div class="footer-stamp">
+      <div class="brand">🔥 CAMPUS FIRE DEFENSE SYSTEM</div>
+      <div>SLIDE 06 / 06 • FUTURE ROADMAP</div>
+    </div>
+  </div>
+</body>
+</html>

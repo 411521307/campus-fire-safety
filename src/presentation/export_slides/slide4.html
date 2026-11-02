@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Slide 4 - What AI Did I Use?</title>
+  <link rel="stylesheet" href="slide_theme.css">
+  <style>
+    .architecture-workbench {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin: 28px 0 20px;
+      flex: 1;
+    }
+    .stations-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      align-items: center;
+      gap: 20px;
+    }
+    .connector-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: #f59e0b;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .connector-arrow {
+      font-size: 36px;
+      text-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
+    }
+    .station-card {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 20px;
+      padding: 30px 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+      border-top: 4px solid;
+    }
+    .station-card.amber { border-top-color: #f59e0b; }
+    .station-card.cyan { border-top-color: #06b6d4; }
+    .station-card.emerald { border-top-color: #10b981; }
+
+    .station-badge {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .s-role {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .station-card.amber .s-role { color: #fbbf24; }
+    .station-card.cyan .s-role { color: #38bdf8; }
+    .station-card.emerald .s-role { color: #34d399; }
+
+    .s-model {
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 3px 10px;
+      border-radius: 9999px;
+      color: #ffffff;
+    }
+    .s-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+    .s-desc {
+      font-size: 15px;
+      color: #94a3b8;
+      line-height: 1.55;
+    }
+    .s-specs {
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+
+    /* Feedback loop bottom bar */
+    .loop-banner {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 16px;
+      padding: 18px 26px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .loop-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      color: #cbd5e1;
+    }
+    .step-pill {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .step-pill.draft { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .step-pill.code { background: rgba(6, 182, 212, 0.2); color: #38bdf8; }
+    .step-pill.revise { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    .step-pill.pass { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+  </style>
+</head>
+<body>
+  <div class="glow-orb orb-red"></div>
+  <div class="glow-orb orb-amber"></div>
+  <div class="bg-grid"></div>
+
+  <div class="slide-frame">
+    <div class="header-area">
+      <div class="tag-badge"><span class="dot"></span> 03 • COLLABORATIVE AGENT ARCHITECTURE</div>
+      <div class="main-title">What AI Did I Use? The 3-Role AI Lab</div>
+      <div class="main-desc">Engineered through a self-correcting Tri-Agent Engineering Pipeline where AI roles challenge, audit, and refine each other's output.</div>
+    </div>
+
+    <div class="architecture-workbench">
+      <div class="stations-row">
+        <!-- Station 1 -->
+        <div class="station-card amber">
+          <div class="station-badge">
+            <span class="s-role">STATION 1 • ARCHITECT</span>
+            <span class="s-model">Google Antigravity</span>
+          </div>
+          <div class="s-title">The System Leader</div>
+          <div class="s-desc">Authored comprehensive task specs (`TASK-002`), architectural blueprints, user journey requirements, Modern Web Guidance rules, and final sign-off acceptance criteria.</div>
+          <div class="s-specs">
+            <span>• Spec Design: tasks/active/TASK-002.md</span>
+            <span>• Governance: Modern Web Guidance</span>
+          </div>
+        </div>
+
+        <div class="connector-node">
+          <span class="connector-arrow">➔</span>
+          <span>DISPATCH</span>
+        </div>
+
+        <!-- Station 2 -->
+        <div class="station-card cyan">
+          <div class="station-badge">
+            <span class="s-role">STATION 2 • IMPLEMENTER</span>
+            <span class="s-model">ChatGPT / Codex</span>
+          </div>
+          <div class="s-title">The Programmer</div>
+          <div class="s-desc">Engineered clean, modular HTML5/CSS3/JavaScript code. Built custom 2D canvas particle loops, Web Audio siren oscillator synthesis, and dynamic i18n state management.</div>
+          <div class="s-specs">
+            <span>• Codebase: src/fire_safety/app.js</span>
+            <span>• Engine: Vanilla Canvas 2D + Web Audio</span>
+          </div>
+        </div>
+
+        <div class="connector-node">
+          <span class="connector-arrow">➔</span>
+          <span>AUDIT</span>
+        </div>
+
+        <!-- Station 3 -->
+        <div class="station-card emerald">
+          <div class="station-badge">
+            <span class="s-role">STATION 3 • AUDITOR</span>
+            <span class="s-model">OpenCode CLI</span>
+          </div>
+          <div class="s-title">The Double Checker</div>
+          <div class="s-desc">Conducted automated headless audits on the generated codebase: syntax checks, rendering viewports at 800×654 and 1296×886, console logs, and empirical life-safety facts.</div>
+          <div class="s-specs">
+            <span>• Runner: scripts/review.ps1 (v2.2.5)</span>
+            <span>• Checks: Lighthouse, Console, Facts</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Closed-Loop Governance Banner -->
+      <div class="loop-banner">
+        <div class="loop-step">
+          <span class="step-pill draft">1. SPEC</span>
+          <span>Leader drafts criteria</span>
+        </div>
+        <span style="color:#64748b;">➔</span>
+        <div class="loop-step">
+          <span class="step-pill code">2. BUILD</span>
+          <span>Coder builds modules</span>
+        </div>
+        <span style="color:#64748b;">➔</span>
+        <div class="loop-step">
+          <span class="step-pill revise">3. REVISE</span>
+          <span>OpenCode finds 8 blockers</span>
+        </div>
+        <span style="color:#64748b;">➔</span>
+        <div class="loop-step">
+          <span class="step-pill pass">4. PASS</span>
+          <span>All resolved & APPROVED</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-stamp">
+      <div class="brand">🔥 CAMPUS FIRE DEFENSE SYSTEM</div>
+      <div>SLIDE 04 / 06 • AI ENGINEERING ARCHITECTURE</div>
+    </div>
+  </div>
+</body>
+</html>

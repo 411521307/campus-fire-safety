@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Fire Safety System — Project Presentation</title>
+  <meta name="description" content="Presentation deck for the Campus & Dormitory Fire Safety Interactive System — Why, Who, AI Collaboration, QA Auditing, and Future Roadmap.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="slides.css">
+</head>
+<body>
+
+  <!-- Ambient glowing aura background -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="blueprint-overlay"></div>
+
+  <!-- Top Navigation Header -->
+  <header class="deck-header">
+    <div class="deck-brand">
+      <span class="brand-icon">🔥</span>
+      <div>
+        <div class="brand-title">CAMPUS FIRE SAFE</div>
+        <div class="brand-sub">Project Pitch & Technical Briefing</div>
+      </div>
+    </div>
+    <div class="deck-controls">
+      <button class="control-btn" id="btnPrev" title="Previous Slide (← / ↑)">← Prev</button>
+      <span class="slide-counter" id="slideCounter">Slide 1 / 6</span>
+      <button class="control-btn" id="btnNext" title="Next Slide (→ / ↓ / Space)">Next →</button>
+      <button class="control-btn accent" id="btnPrint" title="Export or Print as PDF">🖨️ PDF / Print</button>
+      <button class="control-btn" id="btnFullscreen" title="Toggle Fullscreen (F)">⛶ Fullscreen</button>
+    </div>
+  </header>
+
+  <!-- Progress Bar -->
+  <div class="deck-progress">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <!-- Slides Track -->
+  <main class="deck-stage">
+
+    <!-- SLIDE 1: Title & Hero -->
+    <section class="slide active" id="slide-1" data-slide="1">
+      <div class="slide-content hero-layout">
+        <div class="hero-badge">⚡ University Life-Safety & AI Engineering Project</div>
+        <h1 class="hero-title">Campus & Residence Hall <span class="text-gradient">Fire Defense</span> System</h1>
+        <p class="hero-subtitle">
+          Transforming passive dormitory fire posters into an engaging, interactive, and bilingual web simulation deck. Built with multi-role AI agent collaboration and verified through automated double-checking.
+        </p>
+
+        <div class="quick-facts-grid">
+          <div class="fact-card">
+            <div class="fact-icon">🎯</div>
+            <div class="fact-label">Core Mission</div>
+            <div class="fact-val">Active Survival Education</div>
+          </div>
+          <div class="fact-card">
+            <div class="fact-icon">👥</div>
+            <div class="fact-label">Primary Users</div>
+            <div class="fact-val">Dorm Students & Labs</div>
+          </div>
+          <div class="fact-card">
+            <div class="fact-icon">🤖</div>
+            <div class="fact-label">AI Workflow</div>
+            <div class="fact-val">Leader + Coder + Auditor</div>
+          </div>
+          <div class="fact-card">
+            <div class="fact-icon">🛡️</div>
+            <div class="fact-label">Audit Rigor</div>
+            <div class="fact-val">100% Verified Taiwan Protocols</div>
+          </div>
+        </div>
+
+        <div class="slide-prompt-hint">Press <kbd>→</kbd> or click <strong>Next</strong> to begin the presentation</div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: Why I Made This? -->
+    <section class="slide" id="slide-2" data-slide="2">
+      <div class="slide-content">
+        <div class="section-tag">01 • THE PROBLEM & GENESIS</div>
+        <h2 class="slide-heading">Why Did I Make This?</h2>
+        <p class="slide-description">
+          Traditional dormitory fire safety exists primarily as static, ignored paper flyers taped onto noticeboards or dense PDF drills that students glance at once and immediately forget.
+        </p>
+
+        <div class="card-grid two-by-two">
+          <div class="feature-card alert">
+            <div class="card-header">
+              <span class="card-icon">📄</span>
+              <h3>The Passive Safety Trap</h3>
+            </div>
+            <p>
+              Under real emergencies (3:00 AM alarm, pitch-black corridors, suffocating smoke), human recall of static text drops by <strong>over 80%</strong>. Students panic and make fatal mistakes like rushing into elevator shafts or throwing water onto grease fires.
+            </p>
+          </div>
+
+          <div class="feature-card success">
+            <div class="card-header">
+              <span class="card-icon">🎮</span>
+              <h3>Interactive Muscle Memory</h3>
+            </div>
+            <p>
+              By translating key procedures into tactile animations—such as feeling door handle heat with the back of the hand, low-smoke 30-60cm crawling, and full 360° Stop-Drop-and-Roll—the human brain forms vivid <strong>visual-spatial instincts</strong> before a real fire strikes.
+            </p>
+          </div>
+
+          <div class="feature-card cyan">
+            <div class="card-header">
+              <span class="card-icon">🗺️</span>
+              <h3>Architectural Ground Truth</h3>
+            </div>
+            <p>
+              Generic evacuation maps confuse residents. We faithfully replicated the real hollow-courtyard floorplan of <strong>Ying-Xi Dormitory 4F</strong>, clarifying that the void lightwell cannot be crossed and routing students away from elevator shafts to true stair exits.
+            </p>
+          </div>
+
+          <div class="feature-card amber">
+            <div class="card-header">
+              <span class="card-icon">🇹🇼</span>
+              <h3>Localized Emergency Readiness</h3>
+            </div>
+            <p>
+              Generic templates teach foreign emergency numbers (911). Our system grounds every protocol directly in <strong>Taiwan's emergency infrastructure</strong> (119 fire/ambulance, 110 police, and 112 global cellular SOS).
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: Who Is It For? -->
+    <section class="slide" id="slide-3" data-slide="3">
+      <div class="slide-content">
+        <div class="section-tag">02 • TARGET AUDIENCE & STAKEHOLDERS</div>
+        <h2 class="slide-heading">Who Is It Designed For?</h2>
+        <p class="slide-description">
+          Tailored specifically for modern university ecosystems where diverse residents, international students, and high-tech lab equipment coexist.
+        </p>
+
+        <div class="card-grid three-col">
+          <div class="profile-card">
+            <div class="profile-avatar red">🛌</div>
+            <h3>Dormitory Residents & Freshmen</h3>
+            <div class="profile-badge">Primary Users</div>
+            <ul class="profile-points">
+              <li>Living away from home for the first time with high electronic appliance usage.</li>
+              <li>Need intuitive drills on electrical loads (curling irons, chargers, multi-plugs).</li>
+              <li>Must know exact escape routes to North and South stairs without panic.</li>
+            </ul>
+          </div>
+
+          <div class="profile-card">
+            <div class="profile-avatar cyan">🌐</div>
+            <h3>International Students & Scholars</h3>
+            <div class="profile-badge">Inclusive Access</div>
+            <ul class="profile-points">
+              <li>Often face severe language barriers when standard announcements are Chinese-only.</li>
+              <li>One-click seamless toggle between <strong>繁體中文 (Traditional Chinese)</strong> and <strong>English</strong>.</li>
+              <li>Bilingual speech synthesis announcements and localized Taiwan emergency guidance.</li>
+            </ul>
+          </div>
+
+          <div class="profile-card">
+            <div class="profile-avatar amber">🔬</div>
+            <h3>AI Labs, Science Depts & Kitchens</h3>
+            <div class="profile-badge">Specialized Safety</div>
+            <ul class="profile-points">
+              <li>High-wattage GPU server clusters, solvent storage, and communal kitchen stovetops.</li>
+              <li>Dedicated zone checklists for grease fires, chemical storage, and fire doors.</li>
+              <li>Interactive risk compliance audit gauge for room and laboratory safety checks.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: What AI Did I Use? -->
+    <section class="slide" id="slide-4" data-slide="4">
+      <div class="slide-content">
+        <div class="section-tag">03 • COLLABORATIVE AGENT ARCHITECTURE</div>
+        <h2 class="slide-heading">What AI Did I Use? The 3-Role AI Lab</h2>
+        <p class="slide-description">
+          Rather than relying on a single prompt, the system was engineered through a disciplined, self-correcting <strong>Tri-Agent Collaboration Pipeline</strong>.
+        </p>
+
+        <div class="pipeline-container">
+          <!-- Role 1 -->
+          <div class="role-box leader">
+            <div class="role-header">
+              <span class="role-tag">ROLE 1 • ARCHITECT</span>
+              <span class="role-model">Google Antigravity</span>
+            </div>
+            <h3>The System Leader</h3>
+            <p>Authored comprehensive task specifications (`TASK-002`), architectural blueprints, user journey requirements, Modern Web Guidance rules, and final sign-off acceptance criteria.</p>
+            <div class="role-tech">Prompt Design • Modern Web Standards • Synthesis</div>
+          </div>
+
+          <div class="pipeline-arrow">➔</div>
+
+          <!-- Role 2 -->
+          <div class="role-box coder">
+            <div class="role-header">
+              <span class="role-tag">ROLE 2 • IMPLEMENTER</span>
+              <span class="role-model">ChatGPT / Codex</span>
+            </div>
+            <h3>The Programmer</h3>
+            <p>Engineered clean, modular HTML5/CSS3/JavaScript code. Built the interactive canvas physics engines, particle fire emitters, bilingual state machines, and Web Audio siren synthesis.</p>
+            <div class="role-tech">Canvas 2D • Web Audio • Dynamic i18n • Flex/Grid</div>
+          </div>
+
+          <div class="pipeline-arrow">➔</div>
+
+          <!-- Role 3 -->
+          <div class="role-box checker">
+            <div class="role-header">
+              <span class="role-tag">ROLE 3 • AUDITOR</span>
+              <span class="role-model">OpenCode CLI</span>
+            </div>
+            <h3>The Double Checker</h3>
+            <p>Executed headless CLI static analysis, headless Chromium tests at 800×654 and 1296×886, console inspection, Lighthouse audits, and strict verification against life-safety facts.</p>
+            <div class="role-tech">Static Analysis • Automated Regression • Live Headless QA</div>
+          </div>
+        </div>
+
+        <div class="methodology-note">
+          <strong>Key Takeaway:</strong> The AI team does not blindly trust code generation. OpenCode issued a strict <code>REVISE</code> verdict, uncovering 8 blockers that the Leader and Programmer then systematically resolved.
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: What I Checked? -->
+    <section class="slide" id="slide-5" data-slide="5">
+      <div class="slide-content">
+        <div class="section-tag">04 • RIGOROUS VERIFICATION & AUDIT</div>
+        <h2 class="slide-heading">What Did I Check? QA & Safety Audit</h2>
+        <p class="slide-description">
+          In safety-critical applications, misinformation can endanger lives. Here is what was audited and verified:
+        </p>
+
+        <div class="audit-grid">
+          <div class="audit-item pass">
+            <div class="audit-status">✅ RESOLVED</div>
+            <h4>Responsive Layout Collapse (800×654)</h4>
+            <p>Fixed flex squeezing where instruction badges compressed text into 1-character columns. Implemented <code>flex-wrap: wrap</code> and fluid flex basis.</p>
+          </div>
+
+          <div class="audit-item pass">
+            <div class="audit-status">✅ RESOLVED</div>
+            <h4>P.A.S.S. Dynamic Language Re-translation</h4>
+            <p>Resolved stale Chinese text on active extinguisher steps by re-evaluating active step data and button states dynamically within <code>applyLanguage()</code>.</p>
+          </div>
+
+          <div class="audit-item pass">
+            <div class="audit-status">✅ RESOLVED</div>
+            <h4>Factual Safety Advice on 112 SOS</h4>
+            <p>Eliminated unsafe "works with zero signal" claim. Corrected advice: 112 does not require a SIM card or active carrier, but <em>does</em> require cellular tower coverage.</p>
+          </div>
+
+          <div class="audit-item pass">
+            <div class="audit-status">✅ RESOLVED</div>
+            <h4>Elevator Egress Pathing Correction</h4>
+            <p>Evacuee simulation previously walked into the lift box. Re-targeted coordinates directly into North Stairs (234, 28) and South Stairs (370, 417).</p>
+          </div>
+
+          <div class="audit-item pass">
+            <div class="audit-status">✅ RESOLVED</div>
+            <h4>Architectural Floorplan Fidelity</h4>
+            <p>Verified physical Ying-Xi 4F photo: confirmed odd numbering on west wing (X31–X43) and omission of X15 on east wing are authentic building features.</p>
+          </div>
+
+          <div class="audit-item pass">
+            <div class="audit-status">✅ RESOLVED</div>
+            <h4>Visual Overlap & Pacing Synchronization</h4>
+            <p>Shifted Stop-Drop-Roll status pills above the character head; widened pill margins so AC notices never clip; synchronized timing to 16 seconds.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 6: What Is Next? -->
+    <section class="slide" id="slide-6" data-slide="6">
+      <div class="slide-content">
+        <div class="section-tag">05 • ROADMAP & FUTURE EXPANSION</div>
+        <h2 class="slide-heading">What Is Next? The Future Roadmap</h2>
+        <p class="slide-description">
+          Building upon this solid interactive foundation to create a campus-wide connected life-safety ecosystem.
+        </p>
+
+        <div class="card-grid two-by-two">
+          <div class="roadmap-card">
+            <div class="roadmap-phase">PHASE 1</div>
+            <h3>📱 PWA & Offline Mobile Deployment</h3>
+            <p>
+              Package the deck into a Progressive Web App (PWA) with Service Worker caching. Allows students to access interactive evacuation maps and offline hotlines even during grid power outages.
+            </p>
+          </div>
+
+          <div class="roadmap-card">
+            <div class="roadmap-phase">PHASE 2</div>
+            <h3>🥽 3D WebGL / Three.js Virtual Walkthrough</h3>
+            <p>
+              Elevate the 2D floorplan into an interactive 3D first-person dormitory escape simulator. Students can practice navigating low smoke and locating fire doors in real-time 3D.
+            </p>
+          </div>
+
+          <div class="roadmap-card">
+            <div class="roadmap-phase">PHASE 3</div>
+            <h3>📡 IoT Smart Smoke Detector Integration</h3>
+            <p>
+              Connect campus IoT sensor networks (MQTT / WebSockets) to the floorplan map. In real drills, zones with triggered sensors will dynamically turn red and route safe paths in real time.
+            </p>
+          </div>
+
+          <div class="roadmap-card">
+            <div class="roadmap-phase">PHASE 4</div>
+            <h3>🏆 Gamified Dorm Leaderboard & Quizzes</h3>
+            <p>
+              Turn dormitory safety audits into an annual inter-floor competition. Floors that complete fire audits and pass scenario drills receive safety awards and recognition.
+            </p>
+          </div>
+        </div>
+
+        <div class="conclusion-box">
+          <div class="conclusion-title">🚀 Ready for Campus Implementation</div>
+          <p>
+            The Campus Fire Defense System bridges the gap between official safety regulations and real student engagement. Life safety starts with actionable, memorable training!
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Slide Dots & Bottom Navigation -->
+  <footer class="deck-footer">
+    <div class="slide-dots" id="slideDots">
+      <button class="dot-btn active" data-target="1" aria-label="Go to Slide 1"></button>
+      <button class="dot-btn" data-target="2" aria-label="Go to Slide 2"></button>
+      <button class="dot-btn" data-target="3" aria-label="Go to Slide 3"></button>
+      <button class="dot-btn" data-target="4" aria-label="Go to Slide 4"></button>
+      <button class="dot-btn" data-target="5" aria-label="Go to Slide 5"></button>
+      <button class="dot-btn" data-target="6" aria-label="Go to Slide 6"></button>
+    </div>
+    <div class="footer-shortcuts">
+      <span>Use <kbd>←</kbd> <kbd>→</kbd> or <kbd>Space</kbd> to navigate</span>
+      <span>•</span>
+      <a href="../fire_safety/index.html" class="live-demo-link" target="_blank">🔗 Open Live Safety System</a>
+    </div>
+  </footer>
+
+  <script src="slides.js"></script>
+</body>
+</html>
