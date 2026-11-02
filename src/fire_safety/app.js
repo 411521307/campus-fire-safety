@@ -998,170 +998,439 @@ function initSurvivalSimulator() {
     ctx.fillRect(0, groundY, w, 6);
 
     // =============================================================
-    // SCENE 1: DOOR HEAT CHECK (手背測門把與門板 - No confusing 1A/1B)
+    // SCENE 1: DOOR HEAT CHECK - CINEMATIC 4-ACT EXPERIENCE
+    // Act 1: Palm Mistake -> Act 2: Zoom in & Inferno Behind Door -> Act 3: Slam & Zoom Out -> Act 4: Back-of-Hand Protocol
     // =============================================================
     if (currentAction === 1) {
-      ctx.fillStyle = '#111827';
+      ctx.fillStyle = '#0f172a';
       ctx.fillRect(0, 0, w, groundY);
 
-      const doorX = w * 0.42;
-      const doorW = 150;
+      // Cycle calculation: 900 frames total (~15 seconds at 60fps)
+      const cycle = (actionTimer % 900);
+
+      let zoom = 1.0;
+      let doorOpenAngle = 0; // 0 (closed) to 1 (fully cracked open)
+      let isPalmAct = false;
+      let isInfernoAct = false;
+      let isBackOfHandAct = false;
+
+      if (cycle < 240) {
+        // Act 1: Fatal Palm Mistake (0 - 240)
+        isPalmAct = true;
+        zoom = 1.0;
+      } else if (cycle < 500) {
+        // Act 2: Zoom in & Inferno behind door (240 - 500)
+        isInfernoAct = true;
+        const zoomProg = Math.min(1.0, (cycle - 240) / 45);
+        const easeZ = 0.5 - 0.5 * Math.cos(zoomProg * Math.PI);
+        zoom = 1.0 + easeZ * 0.65; // Cinematic 1.65x zoom
+
+        if (cycle > 275) {
+          const openProg = Math.min(1.0, (cycle - 275) / 45);
+          doorOpenAngle = 0.5 - 0.5 * Math.cos(openProg * Math.PI);
+        }
+      } else if (cycle < 640) {
+        // Act 3: Slam shut & zoom back out (500 - 640)
+        const shutProg = Math.min(1.0, (cycle - 500) / 22);
+        doorOpenAngle = Math.max(0, 1.0 - shutProg);
+
+        const zoomOutProg = Math.min(1.0, (cycle - 522) / 48);
+        const easeZO = 0.5 - 0.5 * Math.cos(zoomOutProg * Math.PI);
+        zoom = 1.65 - easeZO * 0.65;
+      } else {
+        // Act 4: Correct Back-of-Hand Protocol (640 - 900)
+        isBackOfHandAct = true;
+        zoom = 1.0;
+      }
+
+      // Door placement
+      const doorX = w * 0.26;
+      const doorW = 160;
       const doorH = groundY - 45;
       const doorY = 45;
 
-      // Outer drywall trim
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(doorX - 25, doorY - 15, doorW + 50, doorH + 15);
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-      ctx.strokeRect(doorX - 25, doorY - 15, doorW + 50, doorH + 15);
+      // Ergonomic handle position on right latch side
+      const knobX = doorX + doorW - 28;
+      const knobY = doorY + doorH * 0.52;
 
-      // Heavy fire door body
+      // ==============================================================
+      // CINEMATIC CAMERA ZOOM TRANSFORM
+      // ==============================================================
+      ctx.save();
+      if (zoom !== 1.0) {
+        const focusX = knobX + 10;
+        const focusY = knobY;
+        ctx.translate(focusX, focusY);
+        ctx.scale(zoom, zoom);
+        ctx.translate(-focusX, -focusY);
+      }
+
+      // Outer drywall frame
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(doorX - 22, doorY - 14, doorW + 44, doorH + 14);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.strokeRect(doorX - 22, doorY - 14, doorW + 44, doorH + 14);
+
+      // INNER HALLWAY INFERNO (Visible when door cracks open)
+      if (doorOpenAngle > 0.01) {
+        const crackW = doorOpenAngle * 95;
+        const crackX = doorX + doorW - crackW;
+
+        // Dark burning hallway cavity
+        ctx.fillStyle = '#160404';
+        ctx.fillRect(crackX - 10, doorY, crackW + 20, doorH);
+
+        // Blinding backdraft glow
+        const flameGlow = ctx.createLinearGradient(crackX, doorY, crackX + crackW, doorY);
+        flameGlow.addColorStop(0, 'rgba(20, 4, 4, 0.95)');
+        flameGlow.addColorStop(0.3, 'rgba(220, 38, 38, 0.9)');
+        flameGlow.addColorStop(0.7, 'rgba(249, 115, 22, 0.95)');
+        flameGlow.addColorStop(1, 'rgba(254, 240, 138, 0.98)');
+        ctx.fillStyle = flameGlow;
+        ctx.fillRect(crackX, doorY, crackW, doorH);
+
+        // Leaping Fire Particles
+        drawEnchantedFire(ctx, crackX + crackW * 0.55, groundY, 48, 195, 1.35, 10, frame, false);
+
+        // Toxic smoke clouds billowing through the door crack
+        for (let s = 0; s < 12; s++) {
+          const spCycle = (frame * 0.03 + s * 0.3) % 1.0;
+          const sx = crackX + crackW + spCycle * 55;
+          const sy = doorY + 25 - spCycle * 40 + Math.sin(s * 1.5) * 12;
+          const sr = 8 + spCycle * 18;
+          ctx.fillStyle = `rgba(15, 23, 42, ${(1 - spCycle) * 0.65})`;
+          ctx.beginPath();
+          ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Warning heat ripples
+        const ripple = (frame * 0.12) % 1;
+        ctx.strokeStyle = `rgba(239, 68, 68, ${0.85 - ripple * 0.85})`;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(crackX + crackW, knobY, 20 + ripple * 60, -Math.PI * 0.5, Math.PI * 0.5);
+        ctx.stroke();
+      }
+
+      // SWINGING DOOR BODY (Hinges on left frame doorX + 6, swings from right latch)
+      const doorCrackW = doorOpenAngle * 95;
+      const swingW = doorW - doorCrackW * 0.28;
+
+      ctx.save();
+      // Door face
       ctx.fillStyle = '#1c2438';
-      ctx.fillRect(doorX, doorY, doorW, doorH);
+      ctx.fillRect(doorX, doorY, swingW, doorH);
+
+      // 3D edge thickness visible on right edge when open
+      if (doorOpenAngle > 0.04) {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(doorX + swingW, doorY, 8, doorH);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(doorX + swingW + 6, doorY, 2, doorH);
+      }
 
       // Door panels
       ctx.strokeStyle = 'rgba(255,255,255,0.06)';
       ctx.lineWidth = 1.5;
-      ctx.strokeRect(doorX + 16, doorY + 20, doorW - 32, (doorH - 60) / 2);
-      ctx.strokeRect(doorX + 16, doorY + 30 + (doorH - 60) / 2, doorW - 32, (doorH - 60) / 2);
+      ctx.strokeRect(doorX + 16, doorY + 20, swingW - 32, (doorH - 60) / 2);
+      ctx.strokeRect(doorX + 16, doorY + 30 + (doorH - 60) / 2, swingW - 32, (doorH - 60) / 2);
 
-      // Hinges & Door closer
+      // Hinges on left frame
       ctx.fillStyle = '#475569';
-      ctx.fillRect(doorX + 8, doorY + 4, 38, 8);
-      ctx.fillRect(doorX + doorW - 6, doorY + 35, 6, 20);
-      ctx.fillRect(doorX + doorW - 6, doorY + doorH - 55, 6, 20);
+      ctx.fillRect(doorX, doorY + 35, 6, 20);
+      ctx.fillRect(doorX, doorY + doorH - 55, 6, 20);
 
-      // Metallic Lever Door Handle
-      const knobX = doorX + 28;
-      const knobY = doorY + doorH * 0.52;
+      // Lever Door Handle on right latch edge
+      const currentKnobX = doorX + swingW - 26;
+      const currentKnobY = knobY;
+      const isHandleHot = isPalmAct ? (cycle > 50) : (isBackOfHandAct ? (cycle > 710) : false);
 
-      // Single clean continuous action: approaches, touches handle with back of hand, handle heats up, hand recoils!
-      const subCycle = (actionTimer % 720) / 720;
-      const isHandleHot = subCycle >= 0.4 && subCycle < 0.78;
-      const isRecoiling = subCycle >= 0.55 && subCycle < 0.78;
-
-      // Lever Handle rendering
-      ctx.save();
       ctx.fillStyle = isHandleHot ? '#ef4444' : '#cbd5e1';
-      ctx.shadowColor = isHandleHot ? 'rgba(239, 68, 68, 0.85)' : 'transparent';
+      ctx.shadowColor = isHandleHot ? 'rgba(239, 68, 68, 0.9)' : 'transparent';
       ctx.shadowBlur = isHandleHot ? 16 : 0;
-      ctx.fillRect(knobX - 10, knobY - 26, 20, 52);
-      ctx.fillRect(knobX - 2, knobY - 5, 34, 10);
+      ctx.fillRect(currentKnobX - 10, currentKnobY - 26, 20, 52);
+      ctx.fillRect(currentKnobX - 2, currentKnobY - 5, 34, 10);
       ctx.beginPath();
-      ctx.arc(knobX + 32, knobY, 5, 0, Math.PI * 2);
+      ctx.arc(currentKnobX + 32, currentKnobY, 5, 0, Math.PI * 2);
       ctx.fill();
+      ctx.shadowBlur = 0;
       ctx.restore();
 
-      // Thermal ripples when hot
-      if (isHandleHot) {
+      // Thermal ripples on handle
+      if (isHandleHot && doorOpenAngle < 0.1) {
         const pulse = (frame * 0.1) % 1;
-        ctx.strokeStyle = `rgba(239, 68, 68, ${1 - pulse})`;
+        ctx.strokeStyle = `rgba(239, 68, 68, ${0.9 - pulse * 0.9})`;
         ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.arc(knobX + 16, knobY, 15 + pulse * 45, 0, Math.PI * 2);
+        ctx.arc(currentKnobX + 16, currentKnobY, 15 + pulse * 45, 0, Math.PI * 2);
         ctx.stroke();
-
-        drawPill(ctx, currentLang === 'zh' ? '🌡️ 極度高溫（示範數據）切勿開門！' : '🌡️ EXTREMELY HOT! DO NOT OPEN!', knobX - 25, knobY - 50, '#dc2626', '#ffffff', 11, 20, 6);
       }
 
-      // Evacuee on right
-      const personX = doorX + doorW + 110;
+      // ==============================================================
+      // PROPORTIONATE NATURAL HUMAN CHARACTER
+      // ==============================================================
+      const pBaseX = doorX + doorW + 35;
       const personY = groundY;
 
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(personX - 16, personY - 95, 12, 95);
-      ctx.fillRect(personX + 4, personY - 95, 12, 95);
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(personX - 20, personY - 10, 18, 10);
-      ctx.fillRect(personX, personY - 10, 18, 10);
+      let pOffsetX = 0;
+      let pOffsetY = 0;
+      if (isPalmAct) {
+        pOffsetX = cycle < 50 ? (cycle / 50) * 8 : 8;
+      } else if (isInfernoAct) {
+        pOffsetX = -36; // jumps backward in alarm!
+        pOffsetY = 4;
+      } else if (isBackOfHandAct) {
+        const reachCycle = (cycle - 640);
+        pOffsetX = reachCycle < 60 ? (reachCycle / 60) * 6 : (reachCycle > 150 ? -20 : 6);
+      }
 
-      ctx.fillStyle = '#0284c7';
+      const pX = pBaseX - pOffsetX;
+      const curY = personY + pOffsetY;
+
+      // Legs
+      ctx.fillStyle = '#1e293b';
       ctx.beginPath();
-      ctx.roundRect(personX - 20, personY - 180, 40, 90, 8);
+      ctx.roundRect(pX - 15, curY - 95, 13, 95, 3);
+      ctx.roundRect(pX + 2, curY - 95, 13, 95, 3);
       ctx.fill();
 
+      // Shoes
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.roundRect(pX - 20, curY - 12, 20, 12, [4, 6, 2, 2]);
+      ctx.roundRect(pX - 2, curY - 12, 20, 12, [4, 6, 2, 2]);
+      ctx.fill();
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(pX - 20, curY - 3, 20, 3);
+      ctx.fillRect(pX - 2, curY - 3, 20, 3);
+
+      // Torso with natural shoulder slope and fitted shirt
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.moveTo(pX - 18, curY - 170);
+      ctx.lineTo(pX + 18, curY - 170);
+      ctx.lineTo(pX + 14, curY - 95);
+      ctx.lineTo(pX - 14, curY - 95);
+      ctx.closePath();
+      ctx.fill();
+
+      // Shirt collar & neck
+      ctx.fillStyle = '#fed7aa';
+      ctx.fillRect(pX - 6, curY - 182, 12, 14);
+      ctx.fillStyle = '#0369a1';
+      ctx.fillRect(pX - 10, curY - 172, 20, 4);
+
+      // Head & Hair facing the door (to the left)
       ctx.fillStyle = '#fed7aa';
       ctx.beginPath();
-      ctx.arc(personX - 4, personY - 205, 18, 0, Math.PI * 2);
+      ctx.arc(pX - 1, curY - 195, 15, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = '#1e293b';
       ctx.beginPath();
-      ctx.arc(personX - 4, personY - 212, 19, Math.PI, Math.PI * 2);
+      ctx.arc(pX + 2, curY - 198, 16, Math.PI * 0.85, Math.PI * 2.15);
+      ctx.fill();
+      // Ear
+      ctx.fillStyle = '#fdba74';
+      ctx.beginPath();
+      ctx.arc(pX + 4, curY - 195, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      // Eye
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(pX - 7, curY - 196, 2, 0, Math.PI * 2);
       ctx.fill();
 
-      let targetHandX = knobX + 38;
-      let targetHandY = knobY;
+      // ==============================================================
+      // PROPORTIONATE 2-SEGMENT ARM WITH NATURAL ELBOW DROP
+      // ==============================================================
+      const shoulderX = pX - 12;
+      const shoulderY = curY - 165;
 
-      if (isRecoiling) {
-        targetHandX = personX - 40;
-        targetHandY = knobY + 20;
+      let targetHandX, targetHandY, elbowX, elbowY;
+
+      if (isInfernoAct) {
+        // Shocked defensive pose: hand raised shielding face
+        targetHandX = pX - 22;
+        targetHandY = curY - 185;
+        elbowX = pX - 35;
+        elbowY = curY - 150;
+      } else if (isBackOfHandAct) {
+        const reachCycle = (cycle - 640);
+        if (reachCycle > 150) {
+          // Safe recoil: hand springs back from heat!
+          targetHandX = pX - 22;
+          targetHandY = currentKnobY + 15;
+          elbowX = pX - 18;
+          elbowY = shoulderY + 25;
+        } else {
+          // Reaching back of hand smoothly to metal handle
+          targetHandX = currentKnobX + 26;
+          targetHandY = currentKnobY;
+          elbowX = shoulderX - 18;
+          elbowY = shoulderY + 28;
+        }
+      } else {
+        // Act 1 Palm: Reaching hand forward to handle
+        targetHandX = currentKnobX + 26;
+        targetHandY = currentKnobY;
+        elbowX = shoulderX - 18;
+        elbowY = shoulderY + 28;
       }
 
-      const shoulderX = personX - 12;
-      const shoulderY = personY - 165;
-      const elbowX = (shoulderX + targetHandX) / 2 + 15;
-      const elbowY = (shoulderY + targetHandY) / 2 - 10;
-
+      // Upper arm + Forearm
       ctx.strokeStyle = '#0284c7';
-      ctx.lineWidth = 14;
+      ctx.lineWidth = 11;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.beginPath();
       ctx.moveTo(shoulderX, shoulderY);
       ctx.lineTo(elbowX, elbowY);
-      ctx.lineTo(targetHandX + 16, targetHandY);
+      ctx.lineTo(targetHandX + 8, targetHandY);
       ctx.stroke();
 
-      // Hand with distinct back-of-hand anatomy
+      // HAND RENDERING: Palm vs Back of Hand
       ctx.save();
       ctx.translate(targetHandX, targetHandY);
-      ctx.fillStyle = '#fed7aa';
-      ctx.beginPath();
-      ctx.roundRect(-2, -12, 20, 24, [4, 8, 8, 4]);
-      ctx.fill();
-      ctx.fillStyle = '#fdba74';
-      ctx.fillRect(8, -10, 8, 20);
-      ctx.fillStyle = '#fef08a';
-      ctx.fillRect(0, -9, 4, 4);
-      ctx.fillRect(0, -3, 4, 4);
-      ctx.fillRect(0, 3, 4, 4);
-      ctx.fillRect(0, 9, 4, 4);
+
+      if (isPalmAct) {
+        // PALM CONTACT: Front palm flat on handle, fingers grasping
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.roundRect(-4, -10, 16, 20, [3, 5, 5, 3]);
+        ctx.fill();
+        ctx.fillStyle = isHandleHot ? '#ef4444' : '#fdba74';
+        ctx.fillRect(6, -9, 7, 4);
+        ctx.fillRect(6, -4, 8, 4);
+        ctx.fillRect(6, 1, 8, 4);
+        ctx.fillRect(6, 6, 7, 4);
+        ctx.fillStyle = '#fed7aa';
+        ctx.fillRect(-2, -14, 6, 5);
+
+        if (cycle > 50) {
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(-6, -16, 22, 28);
+          drawPill(ctx, currentLang === 'zh' ? '❌ 掌心死握痙攣' : '❌ Grip Spasm', 2, -26, '#dc2626', '#ffffff', 10, 10, 4);
+        }
+      } else if (isBackOfHandAct) {
+        // BACK OF HAND (DORSAL) VIEW: Knuckles facing viewer
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.roundRect(-6, -10, 18, 20, [5, 3, 3, 5]);
+        ctx.fill();
+        // 4 knuckles visible on dorsal surface
+        ctx.fillStyle = '#fdba74';
+        ctx.beginPath();
+        ctx.arc(-2, -6, 2.2, 0, Math.PI * 2);
+        ctx.arc(-2, -1.5, 2.2, 0, Math.PI * 2);
+        ctx.arc(-2, 3, 2.2, 0, Math.PI * 2);
+        ctx.arc(-2, 7.5, 2.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(8, -7, 2.5, 3);
+        ctx.fillRect(9, -2.5, 2.5, 3);
+        ctx.fillRect(9, 2, 2.5, 3);
+        ctx.fillRect(8, 6.5, 2.5, 3);
+
+        const reachCycle = (cycle - 640);
+        if (reachCycle > 150) {
+          drawPill(ctx, currentLang === 'zh' ? '✅ 自然後彈縮回' : '✅ Recoils Safely', 2, -26, '#10b981', '#ffffff', 10, 10, 4);
+        }
+      } else {
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(0, 0, 8, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.restore();
 
-      // Clean single action banner - NO PART 1A / 1B!
-      if (isHandleHot) {
+      ctx.restore(); // END CAMERA ZOOM
+
+      // ==============================================================
+      // CRYSTAL-SHARP HUD OVERLAYS (Outside Zoom, Perfect Legibility)
+      // ==============================================================
+      if (isPalmAct) {
         drawPill(ctx, currentLang === 'zh'
-          ? '🚨 門把發燙！門外已是火海，萬不可開門！手背遇熱立刻縮回！'
-          : '🚨 DOOR IS SCORCHING HOT! DO NOT OPEN! RECOIL SAFELY!', w * 0.5, 30, '#ef4444', '#ffffff', 14, 24, 9);
-      } else {
+          ? '❌ 致命錯誤：絕對不可直接用「掌心」碰門！'
+          : '❌ FATAL MISTAKE: NEVER TOUCH DOOR WITH YOUR PALM!', w * 0.5, 30, '#ef4444', '#ffffff', 14, 24, 8);
+      } else if (isInfernoAct) {
         drawPill(ctx, currentLang === 'zh'
-          ? '🚪 以「手背」觸摸金屬門把與門板 (Touch Handle with BACK OF HAND)'
-          : '🚪 FEEL METAL HANDLE WITH BACK OF HAND (DORSAL SIDE)', w * 0.5, 30, '#0284c7', '#ffffff', 14, 24, 9);
+          ? '🔥 門外已是烈焰火海！盲目開門會引發閃燃，瞬間奪命！'
+          : '🔥 HALLWAY IS A RAGING INFERNO! OPENING CAUSES LETHAL FLASHOVER!', w * 0.5, 30, '#dc2626', '#ffffff', 14, 24, 8);
+      } else if (cycle >= 500 && cycle < 640) {
+        drawPill(ctx, currentLang === 'zh'
+          ? '🛑 立即緊閉房門！常閉式防火門能阻隔濃煙 30~60 分鐘！'
+          : '🛑 SLAM DOOR SHUT! Fire doors seal out lethal smoke for 30–60 minutes!', w * 0.5, 30, '#0284c7', '#ffffff', 14, 24, 8);
+      } else if (isBackOfHandAct) {
+        drawPill(ctx, currentLang === 'zh'
+          ? '✅ 正確做法：以「手背」感受門把與門板上方溫度！'
+          : '✅ CORRECT PROTOCOL: FEEL DOOR & HANDLE WITH BACK OF HAND!', w * 0.5, 30, '#10b981', '#ffffff', 14, 24, 8);
       }
 
-      // Life saving Callout Box
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-      ctx.strokeStyle = '#f59e0b';
+      // Educational Callout Card placed cleanly on the right side
+      const cardX = w * 0.65;
+      const cardY = groundY - 125;
+      const cardW = w * 0.31;
+      const cardH = 115;
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+      ctx.strokeStyle = isPalmAct ? '#ef4444' : (isInfernoAct ? '#f59e0b' : '#10b981');
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.roundRect(w * 0.08, groundY - 110, w * 0.32, 95, 8);
+      ctx.roundRect(cardX, cardY, cardW, cardH, 8);
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = '#f59e0b';
+      ctx.fillStyle = isPalmAct ? '#f87171' : (isInfernoAct ? '#fbbf24' : '#34d399');
       ctx.font = 'bold 11px sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(currentLang === 'zh' ? '💡 為什麼必須用「手背」？' : '💡 WHY USE BACK OF HAND?', w * 0.08 + 14, groundY - 88);
-      ctx.fillStyle = '#e2e8f0';
-      ctx.font = '10px sans-serif';
-      if (currentLang === 'zh') {
-        ctx.fillText('• 掌心觸高溫會引發肌肉痙攣（屈肌反射），', w * 0.08 + 14, groundY - 70);
-        ctx.fillText('  導致手掌死死握住發燙把手無法脫開！', w * 0.08 + 14, groundY - 54);
-        ctx.fillText('• 手背觸碰遇熱自然向後彈開，確保不燙傷。', w * 0.08 + 14, groundY - 38);
+
+      if (isPalmAct) {
+        ctx.fillText(currentLang === 'zh' ? '❌ 為什麼不能用「掌心」？' : '❌ WHY NEVER USE PALM?', cardX + 14, cardY + 22);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '10px sans-serif';
+        if (currentLang === 'zh') {
+          ctx.fillText('• 掌心觸高溫會引發肌肉攣縮（屈肌反射），', cardX + 14, cardY + 44);
+          ctx.fillText('  導致手掌死死握住發燙把手無法脫開！', cardX + 14, cardY + 62);
+          ctx.fillText('• 掌心重度燙傷將失去逃生與爬行能力。', cardX + 14, cardY + 80);
+          ctx.fillText('• 握住把手易誤開門，引火入室！', cardX + 14, cardY + 98);
+        } else {
+          ctx.fillText('• Heat triggers flexor spasms: your palm involuntarily', cardX + 14, cardY + 44);
+          ctx.fillText('  grips burning metal and cannot release!', cardX + 14, cardY + 62);
+          ctx.fillText('• Severe burns on palms destroy crawling mobility.', cardX + 14, cardY + 80);
+          ctx.fillText('• Gripping unlatches door, pulling inferno inside!', cardX + 14, cardY + 98);
+        }
+      } else if (isInfernoAct || (cycle >= 500 && cycle < 640)) {
+        ctx.fillText(currentLang === 'zh' ? '🔥 門外是火海時的致命陷阱' : '🔥 DEADLY TRAP BEHIND DOOR', cardX + 14, cardY + 22);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '10px sans-serif';
+        if (currentLang === 'zh') {
+          ctx.fillText('• 門外濃煙高達數百度，含大量一氧化碳。', cardX + 14, cardY + 44);
+          ctx.fillText('• 開門瞬間新鮮空氣灌入，極易引發閃燃！', cardX + 14, cardY + 62);
+          ctx.fillText('• 門燙千萬不可開門，立刻緊閉門縫！', cardX + 14, cardY + 80);
+          ctx.fillText('• 躲入有對外窗之房間等待救援。', cardX + 14, cardY + 98);
+        } else {
+          ctx.fillText('• Corridor smoke exceeds hundreds of degrees (lethal CO).', cardX + 14, cardY + 44);
+          ctx.fillText('• Inrushing fresh oxygen triggers explosive flashover!', cardX + 14, cardY + 62);
+          ctx.fillText('• If door is hot, NEVER OPEN! Seal seams immediately!', cardX + 14, cardY + 80);
+          ctx.fillText('• Retreat to room with window and wait for help.', cardX + 14, cardY + 98);
+        }
       } else {
-        ctx.fillText('• Palm contact triggers flexor spasms,', w * 0.08 + 14, groundY - 70);
-        ctx.fillText('  causing involuntary gripping of hot metal!', w * 0.08 + 14, groundY - 54);
-        ctx.fillText('• Back of hand recoils safely away.', w * 0.08 + 14, groundY - 38);
+        ctx.fillText(currentLang === 'zh' ? '✅ 為什麼必須用「手背」？' : '✅ WHY USE BACK OF HAND?', cardX + 14, cardY + 22);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '10px sans-serif';
+        if (currentLang === 'zh') {
+          ctx.fillText('• 手背神經敏銳，遇熱自然向後彈開（伸肌），', cardX + 14, cardY + 44);
+          ctx.fillText('  不會抓握把手，保護掌心完好。', cardX + 14, cardY + 62);
+          ctx.fillText('• 測溫順序：金屬門把 ➔ 門板上方 ➔ 門縫。', cardX + 14, cardY + 80);
+          ctx.fillText('• 若門涼：身體放低、單膝頂門、微開確認。', cardX + 14, cardY + 98);
+        } else {
+          ctx.fillText('• Back of hand recoils naturally (extensor reflex)', cardX + 14, cardY + 44);
+          ctx.fillText('  without grasping, preserving palm skin intact.', cardX + 14, cardY + 62);
+          ctx.fillText('• Test order: Metal handle ➔ Upper panel ➔ Seams.', cardX + 14, cardY + 80);
+          ctx.fillText('• If cool: Stay low, brace knee, open crack to check.', cardX + 14, cardY + 98);
+        }
       }
     }
 
