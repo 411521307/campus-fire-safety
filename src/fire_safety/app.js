@@ -1221,24 +1221,44 @@ function initSurvivalSimulator() {
       ctx.fillStyle = '#0369a1';
       ctx.fillRect(pX - 10, curY - 172, 20, 4);
 
-      // Head & Hair facing the door (to the left)
+      // Head & Hair facing the door (Clean modern cropped hairstyle)
+      const headX = pX - 1;
+      const headY = curY - 195;
+      const headR = 15;
+
+      // Base skin head
       ctx.fillStyle = '#fed7aa';
       ctx.beginPath();
-      ctx.arc(pX - 1, curY - 195, 15, 0, Math.PI * 2);
+      ctx.arc(headX, headY, headR, 0, Math.PI * 2);
       ctx.fill();
+
+      // Clean modern cropped hairstyle (facing left towards door)
       ctx.fillStyle = '#1e293b';
       ctx.beginPath();
-      ctx.arc(pX + 2, curY - 198, 16, Math.PI * 0.85, Math.PI * 2.15);
+      ctx.moveTo(headX + 5, headY + 8);
+      ctx.quadraticCurveTo(headX + headR + 2, headY + 2, headX + headR + 1, headY - 6);
+      ctx.quadraticCurveTo(headX + 4, headY - headR - 3, headX - 4, headY - headR - 2);
+      ctx.quadraticCurveTo(headX - headR - 2, headY - headR + 4, headX - headR + 1, headY - 2);
+      ctx.lineTo(headX - 6, headY - 4);
+      ctx.lineTo(headX + 2, headY - 2);
+      ctx.quadraticCurveTo(headX + 8, headY + 2, headX + 5, headY + 8);
+      ctx.closePath();
       ctx.fill();
-      // Ear
+
+      // Ear (properly placed below sideburn)
       ctx.fillStyle = '#fdba74';
       ctx.beginPath();
-      ctx.arc(pX + 4, curY - 195, 3.5, 0, Math.PI * 2);
+      ctx.arc(headX + 4, headY + 1, 3.2, 0, Math.PI * 2);
       ctx.fill();
-      // Eye
+      ctx.fillStyle = '#ea580c';
+      ctx.beginPath();
+      ctx.arc(headX + 4, headY + 1, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eye looking toward door
       ctx.fillStyle = '#0f172a';
       ctx.beginPath();
-      ctx.arc(pX - 7, curY - 196, 2, 0, Math.PI * 2);
+      ctx.arc(headX - 8, headY, 1.8, 0, Math.PI * 2);
       ctx.fill();
 
       // ==============================================================
