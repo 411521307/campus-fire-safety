@@ -770,7 +770,14 @@ function initSlideDeck() {
 
   const urlParams = new URLSearchParams(window.location.search || window.location.hash.replace(/^#/, ''));
   const initialSlide = urlParams.has('slide') ? parseInt(urlParams.get('slide')) : 0;
-  goToSlide(initialSlide);
+  if (initialSlide > 0) {
+    track.style.transition = 'none';
+    goToSlide(initialSlide);
+    void track.offsetWidth;
+    setTimeout(() => { track.style.transition = ''; }, 50);
+  } else {
+    goToSlide(0);
+  }
   if (urlParams.has('action')) {
     setTimeout(() => {
       const act = parseInt(urlParams.get('action'));
@@ -4121,6 +4128,12 @@ function initEscapeSimulator() {
   let isPlaying = true;
   let playbackSpeed = 1.0;
   let escapeTimer = 0;
+  try {
+    const escParams = new URLSearchParams(window.location.search || window.location.hash.replace(/^#/, ''));
+    if (escParams.has('escapeTimer')) {
+      escapeTimer = parseInt(escParams.get('escapeTimer')) || 0;
+    }
+  } catch(e) {}
   const escapeDuration = 1680; // ~28s at 60fps
   let frame = 0;
 
@@ -4271,6 +4284,24 @@ function initEscapeSimulator() {
       context.beginPath();
       context.ellipse(headX, headY + 6, 4, 6, 0, 0, Math.PI * 2);
       context.fill();
+    } else if (mouthType === 'sprint') {
+      context.fillStyle = '#0f172a';
+      context.beginPath();
+      context.arc(headX - 5, headY - 1, 2.2, 0, Math.PI * 2);
+      context.arc(headX + 5, headY - 1, 2.2, 0, Math.PI * 2);
+      context.fill();
+      context.strokeStyle = '#0f172a';
+      context.lineWidth = 1.8;
+      context.beginPath();
+      context.moveTo(headX - 8, headY - 6);
+      context.lineTo(headX - 2, headY - 3);
+      context.moveTo(headX + 2, headY - 3);
+      context.lineTo(headX + 8, headY - 6);
+      context.stroke();
+      context.fillStyle = '#7f1d1d';
+      context.beginPath();
+      context.roundRect(headX - 4, headY + 3, 8, 5, 2);
+      context.fill();
     } else if (mouthType === 'smile') {
       context.fillStyle = '#0f172a';
       context.beginPath();
@@ -4296,6 +4327,79 @@ function initEscapeSimulator() {
     context.restore();
   }
 
+  function drawRunningLeg(context, hipX, hipY, phi, isFront) {
+    const swing = Math.sin(phi);
+    const thighAngle = swing * 0.72 - 0.10;
+    const thighLen = 32;
+
+    const bend = Math.max(0.2, (0.55 - swing * 0.5) * 1.35);
+    const shinAngle = thighAngle - bend;
+    const shinLen = 29;
+
+    const kneeX = hipX - Math.sin(thighAngle) * thighLen;
+    const kneeY = hipY + Math.cos(thighAngle) * thighLen;
+
+    const footX = kneeX - Math.sin(shinAngle) * shinLen;
+    const footY = kneeY + Math.cos(shinAngle) * shinLen;
+
+    context.strokeStyle = isFront ? '#0f172a' : '#1e293b';
+    context.lineWidth = 11;
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    context.beginPath();
+    context.moveTo(hipX, hipY);
+    context.lineTo(kneeX, kneeY);
+    context.lineTo(footX, footY);
+    context.stroke();
+
+    context.save();
+    context.translate(footX, footY);
+    const footAngle = Math.sin(phi) * 0.35;
+    context.rotate(footAngle);
+
+    context.fillStyle = isFront ? '#0284c7' : '#0369a1';
+    context.beginPath();
+    context.roundRect(-8, -4, 20, 8.5, [3, 5, 2, 2]);
+    context.fill();
+
+    context.fillStyle = '#ffffff';
+    context.fillRect(-8, 3, 20, 3.5);
+
+    context.fillStyle = '#f97316';
+    context.fillRect(-8, -1, 4, 4);
+
+    context.restore();
+  }
+
+  function drawRunningArm(context, shoulderX, shoulderY, phi, isFront) {
+    const swing = Math.sin(phi);
+    const upperArmAngle = swing * 0.78;
+    const upperLen = 25;
+
+    const elbowX = shoulderX - Math.sin(upperArmAngle) * upperLen;
+    const elbowY = shoulderY + Math.cos(upperArmAngle) * upperLen;
+
+    const forearmAngle = upperArmAngle - 1.42;
+    const forearmLen = 23;
+    const wristX = elbowX - Math.sin(forearmAngle) * forearmLen;
+    const wristY = elbowY + Math.cos(forearmAngle) * forearmLen;
+
+    context.strokeStyle = isFront ? '#0284c7' : '#0369a1';
+    context.lineWidth = 9.5;
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    context.beginPath();
+    context.moveTo(shoulderX, shoulderY);
+    context.lineTo(elbowX, elbowY);
+    context.lineTo(wristX, wristY);
+    context.stroke();
+
+    context.fillStyle = isFront ? '#fed7aa' : '#fcd34d';
+    context.beginPath();
+    context.arc(wristX, wristY, 5.5, 0, Math.PI * 2);
+    context.fill();
+  }
+
   let lastAct = 0;
 
   window.updateEscapeSimulatorLanguage = function() {
@@ -4310,10 +4414,10 @@ function initEscapeSimulator() {
     const cycle = (escapeTimer % escapeDuration);
     const isZh = currentLang === 'zh';
 
-    const isAct1 = cycle < 450;
-    const isAct2 = cycle >= 450 && cycle < 720;
-    const isAct3 = cycle >= 720 && cycle < 1180;
-    const isAct4 = cycle >= 1180;
+    const isAct1 = cycle < 320;
+    const isAct2 = cycle >= 320 && cycle < 600;
+    const isAct3 = cycle >= 600 && cycle < 1060;
+    const isAct4 = cycle >= 1060;
 
     const currentActNum = isAct1 ? 1 : (isAct2 ? 2 : (isAct3 ? 3 : 4));
     if (currentActNum !== lastAct) {
@@ -4345,12 +4449,12 @@ function initEscapeSimulator() {
 
     let shakeX = 0;
     let shakeY = 0;
-    if (isAct2 && cycle > 640) {
-      const rumble = (cycle - 640) / 80 * 2.5;
+    if (isAct2 && cycle > 520) {
+      const rumble = (cycle - 520) / 80 * 2.5;
       shakeX = Math.sin(frame * 0.8) * rumble;
       shakeY = Math.cos(frame * 0.9) * rumble;
     } else if (isAct3) {
-      const collapseProg = (cycle - 720) / 460;
+      const collapseProg = (cycle - 600) / 460;
       const decay = Math.max(0, 1.0 - collapseProg * 0.85);
       const shakeMag = 7.5 * decay;
       shakeX = Math.sin(frame * 1.4) * shakeMag;
@@ -4411,7 +4515,7 @@ function initEscapeSimulator() {
 
     let collapseProgress = 0;
     if (isAct3) {
-      const cRaw = (cycle - 720) / 360;
+      const cRaw = (cycle - 600) / 360;
       collapseProgress = Math.min(1.0, cRaw * cRaw * (3 - 2 * cRaw));
     } else if (isAct4) {
       collapseProgress = 1.0;
@@ -4540,7 +4644,7 @@ function initEscapeSimulator() {
       }
 
       if (isAct3) {
-        const dustP = (cycle - 720) / 460;
+        const dustP = (cycle - 600) / 460;
         for (let d = 0; d < 12; d++) {
           const dustR = 30 + d * 8 + dustP * 65;
           const dustX = bldgX + bldgW * 0.5 + Math.sin(d * 1.8) * (bldgW * 0.55 * dustP + 40);
@@ -4568,7 +4672,7 @@ function initEscapeSimulator() {
     }
 
     if (isAct1) {
-      const runProg = cycle / 450;
+      const runProg = cycle / 320;
       const easeRun = runProg * (2 - runProg);
 
       const startX = w * 0.50;
@@ -4580,75 +4684,61 @@ function initEscapeSimulator() {
       const charY = startY + easeRun * (endY - startY);
       const charScale = 0.28 + easeRun * 0.72;
 
-      const runCadence = escapeTimer * 0.38;
-      const legAngle = Math.sin(runCadence) * 0.85;
-      const armAngle = Math.sin(runCadence + Math.PI) * 0.75;
-      const bounce = Math.abs(Math.sin(runCadence)) * 6 * charScale;
+      const runCadence = escapeTimer * 0.48;
+      const bounce = Math.abs(Math.sin(runCadence)) * 7 * charScale;
 
+      // Speed streak lines behind the runner for dynamic motion
+      ctx.save();
+      for (let sl = 0; sl < 3; sl++) {
+        const stProg = ((escapeTimer * 0.15 + sl * 0.33) % 1.0);
+        const stX = charX + (20 + sl * 15) * charScale;
+        const stY = charY - (25 + sl * 35) * charScale;
+        const stLen = (40 + sl * 20) * charScale;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${(1.0 - stProg) * 0.35})`;
+        ctx.lineWidth = 2 * charScale;
+        ctx.beginPath();
+        ctx.moveTo(stX, stY);
+        ctx.lineTo(stX + stLen, stY);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Footstep dust puffs
       for (let dp = 0; dp < 3; dp++) {
-        const puffProg = ((escapeTimer * 0.12 + dp * 0.33) % 1);
-        const puffX = charX + 18 * charScale + puffProg * 25 * charScale;
-        const puffY = charY - puffProg * 8 * charScale;
+        const puffProg = ((escapeTimer * 0.16 + dp * 0.33) % 1);
+        const puffX = charX + 22 * charScale + puffProg * 35 * charScale;
+        const puffY = charY - puffProg * 10 * charScale;
         ctx.fillStyle = `rgba(148, 163, 184, ${(1 - puffProg) * 0.45})`;
         ctx.beginPath();
-        ctx.arc(puffX, puffY, (3 + puffProg * 6) * charScale, 0, Math.PI * 2);
+        ctx.arc(puffX, puffY, (3 + puffProg * 7) * charScale, 0, Math.PI * 2);
         ctx.fill();
       }
 
       ctx.save();
       ctx.translate(charX, charY - bounce);
       ctx.scale(charScale, charScale);
-      ctx.rotate(-0.16);
+      ctx.rotate(-0.18); // Athletic forward sprint lean
 
-      ctx.strokeStyle = '#0f172a';
-      ctx.lineWidth = 11;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(-5, -60);
-      ctx.lineTo(-5 - Math.sin(legAngle) * 28, -30);
-      ctx.lineTo(-5 - Math.sin(legAngle) * 52, 0);
-      ctx.stroke();
+      // Back Arm (swings opposite back leg: phase = runCadence)
+      drawRunningArm(ctx, 0, -115, runCadence, false);
 
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 11;
-      ctx.beginPath();
-      ctx.moveTo(8, -60);
-      ctx.lineTo(8 + Math.sin(legAngle) * 28, -30);
-      ctx.lineTo(8 + Math.sin(legAngle) * 52, 0);
-      ctx.stroke();
+      // Back Leg (phase = runCadence + Math.PI)
+      drawRunningLeg(ctx, 4, -60, runCadence + Math.PI, false);
 
-      ctx.fillStyle = '#0284c7';
-      ctx.fillRect(-12 - Math.sin(legAngle) * 52, -4, 16, 7);
-      ctx.fillRect(2 + Math.sin(legAngle) * 52, -4, 16, 7);
-
+      // Torso
       ctx.fillStyle = '#0284c7';
       ctx.beginPath();
       ctx.roundRect(-16, -125, 32, 68, 8);
       ctx.fill();
 
-      ctx.strokeStyle = '#0284c7';
-      ctx.lineWidth = 9;
-      ctx.beginPath();
-      ctx.moveTo(0, -115);
-      ctx.lineTo(-Math.sin(armAngle) * 28, -95);
-      ctx.lineTo(-Math.sin(armAngle) * 45, -75);
-      ctx.stroke();
+      // Front Leg (phase = runCadence)
+      drawRunningLeg(ctx, -6, -60, runCadence, true);
 
-      ctx.strokeStyle = '#0369a1';
-      ctx.lineWidth = 9;
-      ctx.beginPath();
-      ctx.moveTo(0, -115);
-      ctx.lineTo(Math.sin(armAngle) * 28, -95);
-      ctx.lineTo(Math.sin(armAngle) * 45, -75);
-      ctx.stroke();
+      // Front Arm (phase = runCadence + Math.PI)
+      drawRunningArm(ctx, 0, -115, runCadence + Math.PI, true);
 
-      ctx.fillStyle = '#fed7aa';
-      ctx.beginPath();
-      ctx.arc(Math.sin(armAngle) * 45, -75, 5, 0, Math.PI * 2);
-      ctx.arc(-Math.sin(armAngle) * 45, -75, 5, 0, Math.PI * 2);
-      ctx.fill();
-
-      drawCharacterHeadLocal(ctx, 4, -142, 16, 'neutral');
+      // Head with determined sprint expression
+      drawCharacterHeadLocal(ctx, 4, -142, 16, 'sprint');
 
       ctx.restore();
 
@@ -4736,93 +4826,249 @@ function initEscapeSimulator() {
       }
 
     } else {
+      // Act 4: Smooth transition from Out of Breath to Thumbs Up!
       const charX = w * 0.40;
       const charY = h - 55;
+
+      const transDuration = 120; // 120 frames (~2.0s) of fluid kinematic interpolation
+      const trans = Math.min(1.0, (cycle - 1060) / transDuration);
 
       ctx.save();
       ctx.translate(charX, charY);
 
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(-16, -75, 12, 75);
-      ctx.fillRect(4, -75, 12, 75);
+      if (trans < 0.45) {
+        // Phase 1: Uncurling and standing up from hunched posture
+        const p1 = trans / 0.45;
+        const ease1 = p1 * p1 * (3 - 2 * p1); // Smooth cubic ease
 
-      ctx.fillStyle = '#0284c7';
-      ctx.fillRect(-20, -6, 18, 6);
-      ctx.fillRect(2, -6, 18, 6);
+        const hunch = 0.32 * (1.0 - ease1);
+        const heave = Math.sin(escapeTimer * 0.18) * 4.5 * (1.0 - ease1);
 
-      ctx.fillStyle = '#0284c7';
-      ctx.beginPath();
-      ctx.roundRect(-18, -145, 36, 72, 8);
-      ctx.fill();
+        // Legs unbending
+        const kneeBend = (1.0 - ease1);
+        const hipY = -65 - ease1 * 10;
 
-      ctx.strokeStyle = '#0284c7';
-      ctx.lineWidth = 10;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(-16, -135);
-      ctx.lineTo(-32, -105);
-      ctx.lineTo(-18, -90);
-      ctx.stroke();
+        // Left leg
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 12;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-16, hipY);
+        ctx.lineTo(-28 + kneeBend * 0 + (1 - kneeBend) * 18, -32 - ease1 * 5.5);
+        ctx.lineTo(-24 + (1 - kneeBend) * 14, 0);
+        ctx.stroke();
 
-      const thumbArmX = 16;
-      const thumbArmY = -135;
-      ctx.strokeStyle = '#0284c7';
-      ctx.lineWidth = 10;
-      ctx.beginPath();
-      ctx.moveTo(thumbArmX, thumbArmY);
-      ctx.lineTo(thumbArmX + 22, thumbArmY + 8);
-      ctx.lineTo(thumbArmX + 36, thumbArmY - 20);
-      ctx.stroke();
+        // Right leg
+        ctx.beginPath();
+        ctx.moveTo(14, hipY);
+        ctx.lineTo(6 + (1 - kneeBend) * 4, -32 - ease1 * 5.5);
+        ctx.lineTo(10, 0);
+        ctx.stroke();
 
-      const handX = thumbArmX + 36;
-      const handY = thumbArmY - 20;
+        // Shoes
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(-34 + ease1 * 14, -6, 18, 6);
+        ctx.fillRect(4 - ease1 * 2, -6, 18, 6);
 
-      ctx.fillStyle = '#fed7aa';
-      ctx.beginPath();
-      ctx.roundRect(handX - 7, handY - 8, 18, 18, 5);
-      ctx.fill();
+        // Torso uncurling
+        ctx.save();
+        ctx.translate(0, hipY);
+        ctx.rotate(-hunch);
 
-      ctx.beginPath();
-      ctx.roundRect(handX - 3, handY - 24, 9, 18, 4);
-      ctx.fill();
+        const torsoH = 65 + ease1 * 7;
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.roundRect(-16 - ease1 * 2, -torsoH + heave * 0.3, 32 + ease1 * 4, torsoH, 8);
+        ctx.fill();
 
-      ctx.strokeStyle = '#ea580c';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(handX - 5, handY - 1);
-      ctx.lineTo(handX + 8, handY - 1);
-      ctx.moveTo(handX - 5, handY + 4);
-      ctx.lineTo(handX + 8, handY + 4);
-      ctx.stroke();
+        // Left arm slides up to hip
+        const lElbowX = -10 - ease1 * 22;
+        const lElbowY = -55 - ease1 * 50;
+        const lHandX = -18;
+        const lHandY = -15 - ease1 * 75;
 
-      const starSpin = frame * 0.08;
-      ctx.save();
-      ctx.translate(handX + 2, handY - 28);
-      ctx.rotate(starSpin);
-      ctx.fillStyle = '#facc15';
-      ctx.beginPath();
-      for (let sp = 0; sp < 4; sp++) {
-        ctx.rotate(Math.PI / 2);
-        ctx.lineTo(0, -11);
-        ctx.lineTo(3.5, -3.5);
-        ctx.lineTo(11, 0);
-        ctx.lineTo(3.5, 3.5);
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 9.5;
+        ctx.beginPath();
+        ctx.moveTo(-14, -torsoH + 10);
+        ctx.lineTo(lElbowX, lElbowY);
+        ctx.lineTo(lHandX, lHandY);
+        ctx.stroke();
+
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(lHandX, lHandY, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Right arm releases from knee and lowers by side
+        const rElbowX = 14 + ease1 * 6;
+        const rElbowY = -45 - ease1 * 40;
+        const rHandX = -18 + ease1 * 40;
+        const rHandY = -15 - ease1 * 30;
+
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 9.5;
+        ctx.beginPath();
+        ctx.moveTo(14, -torsoH + 10);
+        ctx.lineTo(rElbowX, rElbowY);
+        ctx.lineTo(rHandX, rHandY);
+        ctx.stroke();
+
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(rHandX, rHandY, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Head
+        const headType = (p1 < 0.6) ? 'panting' : 'neutral';
+        drawCharacterHeadLocal(ctx, -6 + ease1 * 6, -torsoH - 13, 16, headType);
+
+        ctx.restore();
+
+      } else {
+        // Phase 2: Stood upright tall, smoothly raising right arm & extending thumbs-up!
+        const p2 = (trans - 0.45) / 0.55;
+        // Ease with smooth acceleration and gentle settle
+        const ease2 = Math.sin(p2 * Math.PI * 0.5);
+
+        // Standing straight legs
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(-16, -75, 12, 75);
+        ctx.fillRect(4, -75, 12, 75);
+
+        // Shoes
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(-20, -6, 18, 6);
+        ctx.fillRect(2, -6, 18, 6);
+
+        // Upright Torso
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.roundRect(-18, -145, 36, 72, 8);
+        ctx.fill();
+
+        // Left arm resting comfortably on left hip
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-16, -135);
+        ctx.lineTo(-32, -105);
+        ctx.lineTo(-18, -90);
+        ctx.stroke();
+
+        // Left hand on hip
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(-18, -90, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Right arm: smoothly sweeps up from waist to chest to thumbs-up
+        const shoulderX = 16;
+        const shoulderY = -135;
+
+        // Elbow bends and moves upward in an arc
+        const elbowX = shoulderX + 4 + ease2 * 18;
+        const elbowY = -85 - ease2 * 42;
+
+        // Hand travels upward in a wide, clear arc
+        const arcSpread = Math.sin(p2 * Math.PI) * 14;
+        const handX = shoulderX + 6 + ease2 * 30 + arcSpread;
+        const handY = -45 - ease2 * 110;
+
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(shoulderX, shoulderY);
+        ctx.lineTo(elbowX, elbowY);
+        ctx.lineTo(handX, handY);
+        ctx.stroke();
+
+        // Hand / Fist
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.roundRect(handX - 7, handY - 8, 17, 17, 5);
+        ctx.fill();
+
+        // Thumb extension: pops out at p2 >= 0.65
+        let thumbH = 0;
+        if (p2 >= 0.65) {
+          const thumbProg = (p2 - 0.65) / 0.35;
+          const thumbEase = thumbProg * thumbProg * (3 - 2 * thumbProg);
+          thumbH = 18 * thumbEase;
+
+          ctx.beginPath();
+          ctx.roundRect(handX - 3, handY - 6 - thumbH, 9, thumbH + 4, 4);
+          ctx.fill();
+
+          ctx.strokeStyle = '#ea580c';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(handX - 5, handY - 1);
+          ctx.lineTo(handX + 8, handY - 1);
+          ctx.moveTo(handX - 5, handY + 4);
+          ctx.lineTo(handX + 8, handY + 4);
+          ctx.stroke();
+        }
+
+        // Starburst sparkle flash when thumb locks into place (p2 between 0.90 and 1.0)
+        if (p2 >= 0.90 && p2 <= 1.0) {
+          const flashProg = (p2 - 0.90) / 0.10;
+          const flashR = flashProg * 22;
+          const flashAlpha = Math.max(0, 1.0 - flashProg);
+          ctx.strokeStyle = `rgba(250, 204, 21, ${flashAlpha})`;
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(handX + 2, handY - 26, flashR, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Golden spinning star above thumb (visible once thumb is up)
+        if (p2 >= 0.85) {
+          const starAlpha = Math.min(1.0, (p2 - 0.85) / 0.15);
+          const starSpin = frame * 0.08;
+          ctx.save();
+          ctx.globalAlpha = starAlpha;
+          ctx.translate(handX + 2, handY - 28);
+          ctx.rotate(starSpin);
+          ctx.fillStyle = '#facc15';
+          ctx.beginPath();
+          for (let sp = 0; sp < 4; sp++) {
+            ctx.rotate(Math.PI / 2);
+            ctx.lineTo(0, -11);
+            ctx.lineTo(3.5, -3.5);
+            ctx.lineTo(11, 0);
+            ctx.lineTo(3.5, 3.5);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Head with wink & smile once arm is up!
+        const headFace = (p2 >= 0.75) ? 'smile' : 'neutral';
+        drawCharacterHeadLocal(ctx, 0, -165, 17, headFace);
       }
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-
-      drawCharacterHeadLocal(ctx, 0, -165, 17, 'smile');
 
       ctx.restore();
 
-      drawPillLocal(ctx, isZh
-        ? '👍「平安脫困！記住逃生四守則，生命安全永遠第一！」'
-        : '👍 "Made it out alive! Remember survival protocols, safety comes first!"', w * 0.62, h * 0.42, '#ffffff', '#0f172a', 13, 22, 8, '#10b981');
+      // Speech bubble pops up smoothly when thumbs-up is formed
+      if (trans >= 0.70) {
+        const bubbleProg = Math.min(1.0, (trans - 0.70) / 0.30);
+        const bubbleEase = Math.sin(bubbleProg * Math.PI * 0.5);
 
-      drawPillLocal(ctx, isZh
-        ? '🏆 奇蹟生還！冷靜判斷、低姿爬行、關門塞縫，絕處逢生！'
-        : '🏆 MIRACLE ESCAPE! Stay calm, crawl low, shelter in place, and survive!', w * 0.5, 32, '#059669', '#ffffff', 13, 24, 8);
+        ctx.save();
+        ctx.globalAlpha = bubbleEase;
+        drawPillLocal(ctx, isZh
+          ? '👍「平安脫困！記住逃生四守則，生命安全永遠第一！」'
+          : '👍 "Made it out alive! Remember survival protocols, safety comes first!"', w * 0.62, h * 0.42, '#ffffff', '#0f172a', 13, 22, 8, '#10b981');
+
+        drawPillLocal(ctx, isZh
+          ? '🏆 奇蹟生還！冷靜判斷、低姿爬行、關門塞縫，絕處逢生！'
+          : '🏆 MIRACLE ESCAPE! Stay calm, crawl low, shelter in place, and survive!', w * 0.5, 32, '#059669', '#ffffff', 13, 24, 8);
+        ctx.restore();
+      }
     }
 
     ctx.restore();
