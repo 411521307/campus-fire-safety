@@ -917,7 +917,7 @@ function initSurvivalSimulator() {
     const hintEl = document.getElementById('survivalStatusHint');
     if (!hintEl) return;
     const isZh = currentLang === 'zh';
-    const sec = currentAction === 1 ? 24 : (currentAction === 2 ? 30 : (currentAction === 3 ? 28 : 16));
+    const sec = currentAction === 1 ? 24 : (currentAction === 2 ? 30 : (currentAction === 3 || currentAction === 4 ? 28 : 16));
     if (isPlaying) {
       hintEl.textContent = isZh
         ? `💡 自動輪播中（此動作完整示範 ${sec} 秒，速度 ${playbackSpeed}x）。點擊任一動作可停駐觀看細節。`
@@ -2539,191 +2539,490 @@ function initSurvivalSimulator() {
     // SCENE 4: SHELTER-IN-PLACE & SIGNAL (關門塞縫、開窗呼救)
     // =============================================================
     else if (currentAction === 4) {
+      // Cycle: 1680 frames (~28 seconds)
+      const cycle = (actionTimer % 1680);
+      const isZh = currentLang === 'zh';
+
+      const isAct1 = cycle < 340;
+      const isAct2 = cycle >= 340 && cycle < 720;
+      const isAct3 = cycle >= 720 && cycle < 1100;
+      const isAct4 = cycle >= 1100;
+
       const roomX = w * 0.22;
-      const roomW = w * 0.58;
-      const roomY = 50;
+      const roomW = w * 0.75;
+      const roomY = 45;
       const roomH = groundY - roomY;
 
-      // Outer Hallway (Left of room): Real Enchanted Roaring Fire!
-      ctx.fillStyle = '#1c0a0a';
-      ctx.fillRect(0, 0, roomX, groundY);
+      // -------------------------------------------------------------
+      // ACT 2: ZOOM IN ON HANDS WITH WET TOWEL
+      // -------------------------------------------------------------
+      if (isAct2) {
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(0, 0, w, h);
 
-      // Roaring hallway fire with wood base and translucent circular particles (matching reference aesthetic)
-      drawEnchantedFire(ctx, roomX * 0.48, groundY, 70, 200, 1.35, 8, frame, true);
+        const spotGrad = ctx.createRadialGradient(w * 0.5, h * 0.48, 50, w * 0.5, h * 0.48, 300);
+        spotGrad.addColorStop(0, 'rgba(30, 58, 138, 0.35)');
+        spotGrad.addColorStop(1, 'rgba(9, 13, 22, 0)');
+        ctx.fillStyle = spotGrad;
+        ctx.fillRect(0, 0, w, h);
 
-      drawPill(ctx, currentLang === 'zh' ? '⚠️ 走廊已是火海濃煙 (DO NOT EXIT)' : '⚠️ HALLWAY BLOCKED BY SMOKE', roomX * 0.5, 30, 'rgba(239,68,68,0.9)', '#ffffff', 10, 14, 6);
+        const lensX = w * 0.5;
+        const lensY = h * 0.48;
+        const lensR = 145;
 
-      // Safe Room Interior
-      ctx.fillStyle = '#111827';
-      ctx.fillRect(roomX, roomY, roomW, roomH);
-
-      // Heavy Fire Door
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(roomX, roomY, 18, roomH);
-      ctx.strokeStyle = '#475569';
-      ctx.strokeRect(roomX, roomY, 18, roomH);
-
-      // Rolled Damp Towels & Linens tightly sealing the bottom door crack
-      const towelBaseX = roomX - 4;
-      const towelBaseY = groundY - 14;
-      const towelW = 90;
-      const towelH = 14;
-
-      // Bottom main rolled towel (heavy folded fabric cylinder)
-      const towelGrad1 = ctx.createLinearGradient(towelBaseX, towelBaseY, towelBaseX, towelBaseY + towelH);
-      towelGrad1.addColorStop(0, '#1e40af'); // deep navy blue cloth
-      towelGrad1.addColorStop(0.5, '#3b82f6'); // mid-tone cloth
-      towelGrad1.addColorStop(1, '#1d4ed8'); // darker shadow
-      ctx.fillStyle = towelGrad1;
-      ctx.beginPath();
-      ctx.roundRect(towelBaseX, towelBaseY, towelW, towelH, 6);
-      ctx.fill();
-      ctx.strokeStyle = '#60a5fa';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      // Top folded rolled towel (overlapping to create a tight seal)
-      const towelGrad2 = ctx.createLinearGradient(towelBaseX + 6, towelBaseY - 10, towelBaseX + 6, towelBaseY + 2);
-      towelGrad2.addColorStop(0, '#2563eb');
-      towelGrad2.addColorStop(0.5, '#60a5fa');
-      towelGrad2.addColorStop(1, '#1e40af');
-      ctx.fillStyle = towelGrad2;
-      ctx.beginPath();
-      ctx.roundRect(towelBaseX + 8, towelBaseY - 10, towelW - 18, 12, 5);
-      ctx.fill();
-      ctx.strokeStyle = '#93c5fd';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      // Cloth fold seams across the roll
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.lineWidth = 1.2;
-      for (let s = 0; s < 3; s++) {
-        const foldX = towelBaseX + 22 + s * 22;
+        ctx.save();
         ctx.beginPath();
-        ctx.moveTo(foldX, towelBaseY + 2);
-        ctx.quadraticCurveTo(foldX + 4, towelBaseY + 7, foldX, towelBaseY + 12);
+        ctx.arc(lensX, lensY, lensR, 0, Math.PI * 2);
+        ctx.fillStyle = '#0f172a';
+        ctx.fill();
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3.5;
+        ctx.shadowColor = '#0284c7';
+        ctx.shadowBlur = 20;
         ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.clip();
+
+        // Lens Grid
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(lensX - lensR, lensY); ctx.lineTo(lensX + lensR, lensY);
+        ctx.moveTo(lensX, lensY - lensR); ctx.lineTo(lensX, lensY + lensR);
+        ctx.stroke();
+
+        // Rolled heavy damp cloth cylinder
+        const towelRollW = 160;
+        const towelRollH = 46;
+        const towelRollX = lensX - towelRollW / 2;
+        const towelRollY = lensY - towelRollH / 2 + Math.sin(frame * 0.1) * 3;
+
+        const clothGrad = ctx.createLinearGradient(towelRollX, towelRollY, towelRollX, towelRollY + towelRollH);
+        clothGrad.addColorStop(0, '#1d4ed8');
+        clothGrad.addColorStop(0.3, '#3b82f6');
+        clothGrad.addColorStop(0.7, '#2563eb');
+        clothGrad.addColorStop(1, '#1e3a8a');
+        ctx.fillStyle = clothGrad;
+        ctx.beginPath();
+        ctx.roundRect(towelRollX, towelRollY, towelRollW, towelRollH, 14);
+        ctx.fill();
+        ctx.strokeStyle = '#60a5fa';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Cloth woven folds & twists
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.lineWidth = 2.2;
+        for (let s = 0; s < 5; s++) {
+          const fx = towelRollX + 25 + s * 28;
+          ctx.beginPath();
+          ctx.moveTo(fx, towelRollY + 4);
+          ctx.quadraticCurveTo(fx + 8, towelRollY + towelRollH / 2, fx, towelRollY + towelRollH - 4);
+          ctx.stroke();
+        }
+
+        // Left Hand
+        const leftHandX = lensX - 55;
+        const leftHandY = towelRollY + towelRollH / 2;
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(leftHandX - 85, leftHandY - 18, 55, 36);
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.roundRect(leftHandX - 35, leftHandY - 24, 38, 48, 10);
+        ctx.fill();
+        ctx.strokeStyle = '#ea580c';
+        ctx.lineWidth = 1.8;
+        for (let f = 0; f < 3; f++) {
+          ctx.beginPath();
+          ctx.moveTo(leftHandX - 18, leftHandY - 14 + f * 12);
+          ctx.lineTo(leftHandX - 4, leftHandY - 14 + f * 12);
+          ctx.stroke();
+        }
+
+        // Right Hand
+        const rightHandX = lensX + 55;
+        const rightHandY = towelRollY + towelRollH / 2;
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(rightHandX + 30, rightHandY - 18, 55, 36);
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.roundRect(rightHandX - 4, rightHandY - 24, 38, 48, 10);
+        ctx.fill();
+        for (let f = 0; f < 3; f++) {
+          ctx.beginPath();
+          ctx.moveTo(rightHandX + 4, rightHandY - 14 + f * 12);
+          ctx.lineTo(rightHandX + 18, rightHandY - 14 + f * 12);
+          ctx.stroke();
+        }
+
+        // Animated Water Droplets
+        for (let d = 0; d < 4; d++) {
+          const dropProgress = ((frame * 0.08 + d * 0.25) % 1);
+          const dropX = lensX - 40 + d * 26;
+          const dropY = towelRollY + towelRollH + dropProgress * 65;
+          const dropAlpha = 1.0 - dropProgress;
+
+          ctx.fillStyle = `rgba(56, 189, 248, ${dropAlpha * 0.85})`;
+          ctx.beginPath();
+          ctx.ellipse(dropX, dropY, 3, 5, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+
+        // Close-up HUD labels
+        drawPill(ctx, isZh
+          ? '🔍 特寫：將毛巾浸濕、擰至微濕不滴水，緊實捲摺！'
+          : '🔍 Close-up: Dampen towels, wring till moist, and roll tightly!', w * 0.5, 35, '#0284c7', '#ffffff', 13, 24, 8);
+        drawPill(ctx, isZh
+          ? '💧 微濕毛巾能有效吸附高溫微粒與濃煙，若無水源，乾毛巾或衣物亦具封堵效果！'
+          : '💧 Moist towels block toxic smoke; if dry, clothing still blocks airflow!', w * 0.5, h - 35, 'rgba(15,23,42,0.92)', '#93c5fd', 11, 20, 6);
+      } else {
+        // ==============================================================
+        // SCENE FOR ACTS 1, 3, and 4
+        // ==============================================================
+
+        // Left Outer Hallway
+        const hallW = roomX;
+        ctx.fillStyle = '#180505';
+        ctx.fillRect(0, 0, hallW, groundY);
+
+        let fireHeight = 0;
+        if (isAct1) {
+          if (cycle < 60) fireHeight = 0;
+          else {
+            const grow = Math.min(1.0, (cycle - 60) / 120);
+            fireHeight = grow * 210;
+          }
+        } else {
+          fireHeight = 210;
+        }
+
+        if (fireHeight > 10) {
+          drawEnchantedFire(ctx, hallW * 0.35, groundY, 40, fireHeight * 0.85, 1.2, 4, frame * 1.1, true);
+          drawEnchantedFire(ctx, hallW * 0.65, groundY, 55, fireHeight, 1.45, -5, frame * 1.3, true);
+
+          drawPill(ctx, isZh ? '🔥 走廊已是猛烈火海！(切勿開門！)' : '🔥 Hallway Blocked by Fire!', hallW * 0.5, 30, 'rgba(239,68,68,0.95)', '#ffffff', 10, 12, 5);
+        } else {
+          drawPill(ctx, isZh ? '🚪 寢室走廊通道' : '🚪 Dormitory Hallway', hallW * 0.5, 30, 'rgba(30,41,59,0.85)', '#94a3b8', 10, 12, 5);
+        }
+
+        // Safe Room Interior
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(roomX, roomY, roomW, roomH);
+
+        // Floor
+        ctx.fillStyle = '#060911';
+        ctx.fillRect(0, groundY, w, h - groundY);
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, groundY);
+        ctx.lineTo(w, groundY);
+        ctx.stroke();
+
+        // Skirting board
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(roomX, groundY - 14, roomW, 14);
+
+        // HEAVY DORM FIRE DOOR (Closed tightly)
+        const doorThick = 20;
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(roomX, roomY, doorThick, roomH);
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(roomX, roomY, doorThick, roomH);
+
+        // Door handle & lock
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(roomX + doorThick - 6, groundY - 100, 12, 6);
+        ctx.fillRect(roomX + doorThick - 4, groundY - 116, 8, 8);
+
+        // Central AC Unit (Off notice)
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(roomX + roomW * 0.35, roomY + 12, 110, 24);
+        ctx.strokeStyle = '#334155';
+        ctx.strokeRect(roomX + roomW * 0.35, roomY + 12, 110, 24);
+        ctx.fillStyle = '#ef4444';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(isZh ? '🚫 中央空調已關閉 (AC OFF)' : '🚫 CENTRAL AC OFF', roomX + roomW * 0.35 + 55, roomY + 28);
+
+        // Large Window on the Far Right
+        const winX = w - 130;
+        const winY = roomY + 30;
+        const winW = 105;
+        const winH = 175;
+
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(winX, winY, winW, winH);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(winX + 25, winY + 25, 2, 2);
+        ctx.fillRect(winX + 65, winY + 45, 2, 2);
+        ctx.fillRect(winX + 85, winY + 80, 2, 2);
+
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 3.5;
+        ctx.strokeRect(winX, winY, winW, winH);
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(winX + winW / 2, winY); ctx.lineTo(winX + winW / 2, winY + winH);
+        ctx.moveTo(winX, winY + winH / 2); ctx.lineTo(winX + winW, winY + winH / 2);
+        ctx.stroke();
+
+        // ==============================================================
+        // ACT SPECIFIC BEHAVIOR
+        // ==============================================================
+
+        if (isAct1) {
+          drawPill(ctx, cycle < 60
+            ? (isZh ? '🏠 寢室原狀：聽聞走廊有異常爆裂聲響與警報！' : '🏠 Dorm: Smoke alarm sounds from hallway!')
+            : (isZh ? '🚪 走廊已全面起火！切勿隨意外出！立即緊閉房門阻絕火勢！' : '🚪 Hallway inferno! Keep door shut tight!'), w * 0.60, 30, cycle < 60 ? '#0284c7' : '#ef4444', '#ffffff', 12, 20, 8);
+
+          const pX = roomX + 65;
+          const pY = groundY;
+
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(pX - 14, pY - 85, 12, 85);
+          ctx.fillRect(pX + 2, pY - 85, 12, 85);
+
+          ctx.fillStyle = '#0284c7';
+          ctx.fillRect(pX - 18, pY - 165, 36, 80);
+
+          ctx.fillStyle = '#fed7aa';
+          ctx.beginPath();
+          ctx.arc(pX - 4, pY - 188, 16, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#1e293b';
+          ctx.beginPath();
+          ctx.arc(pX - 4, pY - 195, 17, Math.PI * 0.9, Math.PI * 2.1);
+          ctx.fill();
+
+          ctx.strokeStyle = '#0284c7';
+          ctx.lineWidth = 10;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(pX - 12, pY - 150);
+          ctx.lineTo(roomX + doorThick + 4, pY - 130);
+          ctx.stroke();
+
+          ctx.fillStyle = '#fed7aa';
+          ctx.beginPath();
+          ctx.arc(roomX + doorThick + 4, pY - 130, 6, 0, Math.PI * 2);
+          ctx.fill();
+
+          if (cycle >= 60) {
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+            ctx.beginPath();
+            ctx.arc(roomX + doorThick + 15 + (frame * 0.8) % 35, groundY - 4, 6 + (frame * 0.1) % 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            drawPill(ctx, isZh
+              ? '⚠️ 門縫開始滲入高溫毒煙！必須立刻取毛巾/衣物塞緊門縫！'
+              : '⚠️ Toxic smoke leaking through door crack! Seal it now!', w * 0.55, groundY - 18, 'rgba(15,23,42,0.9)', '#fca5a5', 11, 16, 5);
+          }
+
+        } else if (isAct3) {
+          drawPill(ctx, isZh
+            ? '💧 步驟 3：塞緊門縫！將濕毛巾/衣物緊實塞滿門下縫隙！'
+            : '💧 Step 3: Seal Door Cracks with Damp Towels & Linens!', w * 0.60, 30, '#10b981', '#ffffff', 12, 22, 8);
+
+          const pX = roomX + 85;
+          const pY = groundY;
+
+          ctx.fillStyle = '#1e293b';
+          ctx.beginPath();
+          ctx.roundRect(pX - 5, pY - 26, 45, 24, 8);
+          ctx.fill();
+
+          ctx.save();
+          ctx.translate(pX, pY);
+          ctx.rotate(-0.4);
+          ctx.fillStyle = '#0284c7';
+          ctx.beginPath();
+          ctx.roundRect(-22, -65, 34, 65, 8);
+          ctx.fill();
+
+          ctx.fillStyle = '#fed7aa';
+          ctx.beginPath();
+          ctx.arc(-16, -78, 14, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#1e293b';
+          ctx.beginPath();
+          ctx.arc(-16, -83, 15, Math.PI * 0.9, Math.PI * 2.1);
+          ctx.fill();
+          ctx.restore();
+
+          ctx.strokeStyle = '#0284c7';
+          ctx.lineWidth = 10;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(pX - 5, pY - 45);
+          ctx.lineTo(roomX + doorThick + 30, pY - 12);
+          ctx.stroke();
+
+          ctx.fillStyle = '#fed7aa';
+          ctx.beginPath();
+          ctx.arc(roomX + doorThick + 30, pY - 12, 6, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Rolled towels
+          const towelBaseX = roomX + doorThick - 4;
+          const towelBaseY = groundY - 14;
+          const towelW = 95;
+          const towelH = 14;
+
+          const towelGrad1 = ctx.createLinearGradient(towelBaseX, towelBaseY, towelBaseX, towelBaseY + towelH);
+          towelGrad1.addColorStop(0, '#1e40af');
+          towelGrad1.addColorStop(0.5, '#3b82f6');
+          towelGrad1.addColorStop(1, '#1d4ed8');
+          ctx.fillStyle = towelGrad1;
+          ctx.beginPath();
+          ctx.roundRect(towelBaseX, towelBaseY, towelW, towelH, 6);
+          ctx.fill();
+          ctx.strokeStyle = '#60a5fa';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+
+          const towelGrad2 = ctx.createLinearGradient(towelBaseX + 6, towelBaseY - 10, towelBaseX + 6, towelBaseY + 2);
+          towelGrad2.addColorStop(0, '#2563eb');
+          towelGrad2.addColorStop(0.5, '#60a5fa');
+          towelGrad2.addColorStop(1, '#1e40af');
+          ctx.fillStyle = towelGrad2;
+          ctx.beginPath();
+          ctx.roundRect(towelBaseX + 8, towelBaseY - 10, towelW - 16, 12, 5);
+          ctx.fill();
+          ctx.strokeStyle = '#93c5fd';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+          ctx.fillRect(towelBaseX - 4, groundY - 3, towelW + 8, 3);
+
+          drawPill(ctx, isZh
+            ? '✅ 門縫已完全封堵！濃煙與劇毒一氧化碳無法滲入！'
+            : '✅ Door crack sealed! Blocks deadly smoke & gases!', w * 0.55, groundY - 18, '#065f46', '#a7f3d0', 11, 20, 6, '#10b981');
+
+        } else {
+          // ACT 4: Student at window frantically calling for help
+          drawPill(ctx, isZh
+            ? '🪟 步驟 4：開窗呼救！揮舞鮮豔布條、照手電筒！切勿盲目跳樓！'
+            : '🪟 Step 4: Signal from Window! Wave Bright Cloth & Flashlight! Never Jump!', w * 0.60, 30, '#0284c7', '#ffffff', 12, 22, 8);
+
+          // Rolled towels remain placed
+          const towelBaseX = roomX + doorThick - 4;
+          const towelBaseY = groundY - 14;
+          const towelW = 95;
+          const towelH = 14;
+          ctx.fillStyle = '#1e40af';
+          ctx.beginPath();
+          ctx.roundRect(towelBaseX, towelBaseY, towelW, towelH, 6);
+          ctx.fill();
+          ctx.fillStyle = '#2563eb';
+          ctx.beginPath();
+          ctx.roundRect(towelBaseX + 8, towelBaseY - 10, towelW - 16, 12, 5);
+          ctx.fill();
+
+          // FRANTIC EVACUEE AT WINDOW
+          const personWinX = winX - 16;
+          const personWinY = winY + 95;
+
+          // Grounded Legs
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(personWinX - 16, personWinY + 30, 11, groundY - (personWinY + 30));
+          ctx.fillRect(personWinX + 1, personWinY + 30, 11, groundY - (personWinY + 30));
+
+          // Shoes
+          ctx.fillStyle = '#0284c7';
+          ctx.fillRect(personWinX - 18, groundY - 6, 14, 6);
+          ctx.fillRect(personWinX, groundY - 6, 14, 6);
+
+          // Torso leaning forward toward window opening
+          ctx.fillStyle = '#0284c7';
+          ctx.beginPath();
+          ctx.roundRect(personWinX - 22, personWinY - 30, 36, 62, 6);
+          ctx.fill();
+
+          // Head looking out window, mouth open shouting frantically!
+          ctx.fillStyle = '#fed7aa';
+          ctx.beginPath();
+          ctx.arc(personWinX + 6, personWinY - 45, 15, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#1e293b';
+          ctx.beginPath();
+          ctx.arc(personWinX + 6, personWinY - 52, 16, Math.PI * 0.85, Math.PI * 2.15);
+          ctx.fill();
+
+          // Open mouth shouting
+          ctx.fillStyle = '#7f1d1d';
+          ctx.beginPath();
+          ctx.ellipse(personWinX + 16, personWinY - 42, 3.5, 6, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // FRANTIC ARM 1: Waving Bright Neon Yellow Cloth outside window!
+          const waveAngle = Math.sin(frame * 0.32) * 0.65;
+          ctx.save();
+          ctx.translate(personWinX + 18, personWinY - 40);
+          ctx.rotate(waveAngle);
+
+          ctx.strokeStyle = '#0284c7';
+          ctx.lineWidth = 9;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(30, -22);
+          ctx.stroke();
+
+          ctx.fillStyle = '#facc15';
+          ctx.beginPath();
+          ctx.moveTo(30, -22);
+          ctx.lineTo(65, -42 + Math.sin(frame * 0.5) * 12);
+          ctx.lineTo(58, -6 + Math.sin(frame * 0.5 + 1.2) * 12);
+          ctx.lineTo(30, -10);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+
+          // FRANTIC ARM 2: Holding Flashlight with Wide Sweeping Cone of Light
+          const beamAngle = -0.22 + Math.sin(frame * 0.18) * 0.35;
+          ctx.save();
+          ctx.translate(personWinX + 14, personWinY - 14);
+          ctx.rotate(beamAngle);
+
+          ctx.fillStyle = '#334155';
+          ctx.fillRect(0, -5, 20, 10);
+
+          const beamGrad = ctx.createRadialGradient(20, 0, 6, 170, 0, 190);
+          beamGrad.addColorStop(0, 'rgba(254, 240, 138, 0.95)');
+          beamGrad.addColorStop(0.6, 'rgba(253, 224, 71, 0.45)');
+          beamGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+          ctx.fillStyle = beamGrad;
+          ctx.beginPath();
+          ctx.moveTo(20, 0);
+          ctx.lineTo(190, -55);
+          ctx.lineTo(190, 55);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+
+          // Emergency Fire Engine strobe reflections
+          const strobe = Math.sin(frame * 0.35) > 0;
+          ctx.fillStyle = strobe ? 'rgba(239, 68, 68, 0.35)' : 'rgba(56, 189, 248, 0.35)';
+          ctx.fillRect(winX - 45, winY + 20, 40, winH - 40);
+
+          // Speech Bubble: "HELP! 救命！" (Positioned carefully so it doesn't clip)
+          drawPill(ctx, isZh ? '🗣️「救命！我們在 4 樓寢室！」' : '🗣️ "HELP! WE ARE ON 4F!"', winX - 25, winY - 14, '#ffffff', '#0f172a', 11, 14, 5, '#ef4444');
+
+          drawPill(ctx, isZh
+            ? '✅ 保持冷靜！讓搜救人員精準定位！切勿跳樓！耐心等待雲梯車與搜救隊！'
+            : '✅ Stay calm & signal location! Never jump! Wait for ladder rescue!', w * 0.5, groundY - 18, '#065f46', '#a7f3d0', 11, 20, 6, '#10b981');
+        }
       }
-
-      // Rolled spiral curve on the towel end
-      ctx.strokeStyle = '#93c5fd';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(towelBaseX + towelW - 8, towelBaseY + 7, 5, 0, Math.PI * 1.6);
-      ctx.stroke();
-
-      // Gentle damp moisture shimmer along floor contact
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
-      ctx.fillRect(towelBaseX - 6, groundY - 3, towelW + 12, 3);
-
-      // Clean Callout Label with subtle pointer line
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(towelBaseX + 50, towelBaseY - 12);
-      ctx.lineTo(towelBaseX + 70, towelBaseY - 24);
-      ctx.lineTo(towelBaseX + 110, towelBaseY - 24);
-      ctx.stroke();
-
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 11px sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(currentLang === 'zh' ? '💧 濕毛巾/衣物塞緊門縫阻煙' : '💧 Damp Towels Packed Tightly In Crack', towelBaseX + 115, towelBaseY - 21);
-
-      // Central AC Off Notice - Dynamically measured pill (NO OVERFLOW!)
-      drawPill(ctx, currentLang === 'zh'
-        ? '🚫 關閉中央冷氣空調 (AC OFF)'
-        : '🚫 CENTRAL AC OFF (NO SMOKE)', roomX + roomW * 0.5, roomY + 22, '#ef4444', '#ffffff', 10, 16, 6);
-
-      // Large Window on the Right
-      const winX = roomX + roomW - 65;
-      const winY = roomY + 45;
-      const winW = 85;
-      const winH = 145;
-
-      ctx.fillStyle = '#020617';
-      ctx.fillRect(winX, winY, winW, winH);
-
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(winX + 25, winY + 20, 2, 2);
-      ctx.fillRect(winX + 55, winY + 40, 2, 2);
-      ctx.fillRect(winX + 38, winY + 85, 2, 2);
-
-      ctx.strokeStyle = '#94a3b8';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(winX, winY, winW, winH);
-
-      // Evacuee at window
-      const personWinX = winX - 10;
-      const personWinY = winY + 80;
-
-      ctx.fillStyle = '#0284c7';
-      ctx.beginPath();
-      ctx.roundRect(personWinX - 22, personWinY - 30, 36, 60, 6);
-      ctx.fill();
-
-      ctx.fillStyle = '#fed7aa';
-      ctx.beginPath();
-      ctx.arc(personWinX + 4, personWinY - 42, 14, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Arm 1: Waving Bright Neon Yellow Cloth
-      const waveAngle = Math.sin(frame * 0.14) * 0.45;
-      ctx.save();
-      ctx.translate(personWinX + 16, personWinY - 35);
-      ctx.rotate(waveAngle);
-
-      ctx.strokeStyle = '#0284c7';
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(25, -15);
-      ctx.stroke();
-
-      ctx.fillStyle = '#facc15';
-      ctx.beginPath();
-      ctx.moveTo(25, -15);
-      ctx.lineTo(55, -30 + Math.sin(frame * 0.25) * 8);
-      ctx.lineTo(50, 0 + Math.sin(frame * 0.25 + 1) * 8);
-      ctx.lineTo(25, -5);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-
-      // Arm 2: Holding Flashlight with Sweeping Cone of Light
-      const beamAngle = -0.2 + Math.sin(frame * 0.08) * 0.2;
-      ctx.save();
-      ctx.translate(personWinX + 12, personWinY - 10);
-      ctx.rotate(beamAngle);
-
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(0, -4, 18, 8);
-
-      const beamGrad = ctx.createRadialGradient(18, 0, 5, 140, 0, 160);
-      beamGrad.addColorStop(0, 'rgba(254, 240, 138, 0.85)');
-      beamGrad.addColorStop(1, 'rgba(254, 240, 138, 0)');
-      ctx.fillStyle = beamGrad;
-      ctx.beginPath();
-      ctx.moveTo(18, 0);
-      ctx.lineTo(160, -45);
-      ctx.lineTo(160, 45);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-
-      // Emergency light strobes reflecting from ground
-      const strobe = Math.sin(frame * 0.25) > 0;
-      ctx.fillStyle = strobe ? 'rgba(239, 68, 68, 0.4)' : 'rgba(56, 189, 248, 0.4)';
-      ctx.fillRect(winX + winW - 5, groundY - 30, 20, 14);
-
-      drawPill(ctx, currentLang === 'zh'
-        ? '🪟 步驟 4：開窗呼救 - 揮舞鮮豔布條與手電筒！切勿冒險跳樓！'
-        : '🪟 STEP 4: SIGNAL AT WINDOW WITH BRIGHT CLOTH & FLASHLIGHT! NEVER JUMP!', w * 0.5, 30, '#0284c7', '#ffffff', 13, 24, 8);
     }
 
-    // Auto-advance timer logic (Action 1: 24s; Action 2: 30s [20% slower]; Action 3: 28s; Action 4: 16s)
-    const currentActionDuration = (currentAction === 1) ? 1440 : (currentAction === 2 ? 1800 : (currentAction === 3 ? 1680 : actionDuration));
+    // Auto-advance timer logic (Action 1: 24s; Action 2: 30s [20% slower]; Action 3: 28s; Action 4: 28s)
+    const currentActionDuration = (currentAction === 1) ? 1440 : (currentAction === 2 ? 1800 : (currentAction === 3 || currentAction === 4 ? 1680 : actionDuration));
     if (isPlaying) {
       actionTimer += playbackSpeed;
       const progressPercent = Math.min(100, (actionTimer / currentActionDuration) * 100);
