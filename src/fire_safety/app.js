@@ -14,6 +14,10 @@
 let currentSlide = 0;
 const totalSlides = 9;
 let currentLang = 'zh'; // 'zh' (Traditional Chinese) or 'en' (English)
+try {
+  const initParams = new URLSearchParams(window.location.search || window.location.hash.replace(/^#/, ''));
+  if (initParams.get('lang') === 'en') currentLang = 'en';
+} catch (e) {}
 
 document.addEventListener('DOMContentLoaded', () => {
   initAmbientParticles();
@@ -161,6 +165,7 @@ const i18nData = {
     s6_title: "✅ 寢室防火安全自主查核",
     s6_desc: "檢核個人與室友之居住環境是否符合校園防火防電安全規範。",
     s6_gaugeLabel: "安全合格率",
+    s6_statusTitle: "評估狀態 (Status)",
     s6_statusHigh: "HIGH RISK (高風險)",
     s6_statusMod: "MODERATE (部分待改善)",
     s6_statusSafe: "CAMPUS SAFE (符合校園規範)",
@@ -189,7 +194,27 @@ const i18nData = {
       { title: "Anti-Fraud Hotline", subtitle: "內政部警政署反詐騙諮詢專線", desc: "遇疑似詐騙電話、假冒檢警、交友匯款或網購詐欺查證與通報。" },
       { title: "Protection Hotline", subtitle: "婦幼保護與家庭暴力防治專線", desc: "遭遇家庭暴力、性騷擾、性侵害、兒少保護等緊急求助與諮詢。" }
     ],
-    s8_note: "在台灣遭遇緊急狀況之通報原則：火警直撥 119，若遇手機收訊不良請改撥 112。注意：112仍須在有行動電話基地台訊號涵蓋時方可接通。通話時請冷靜清楚說明：(1) 所在學校校名 (2) 宿舍樓棟名稱 (3) 樓層與寢室房號 (4) 現場所見火勢與煙霧狀況。"
+    s8_note_title: "在台灣遭遇緊急狀況之通報原則：",
+    s8_note: "在台灣遭遇緊急狀況之通報原則：火警直撥 119，若遇手機收訊不良請改撥 112。注意：112仍須在有行動電話基地台訊號涵蓋時方可接通。通話時請冷靜清楚說明：(1) 所在學校校名 (2) 宿舍樓棟名稱 (3) 樓層與寢室房號 (4) 現場所見火勢與煙霧狀況。",
+    s8_note_html: "火警直撥 <strong>119</strong>，若遇手機收訊不良請改撥 <strong>112</strong>。通話時請冷靜清楚說明：(1) 所在學校校名 (2) 宿舍樓棟名稱 (3) 樓層與寢室房號 (4) 現場所見火勢與煙霧狀況。",
+
+    // Section 9: Escape
+    s9_title: "🏃 奇蹟脫困與終局生還 (Miracle Escape & Building Collapse)",
+    s9_desc: "生還者把握黃金數十秒自火場大門疾奔而出，身後宿舍大樓不堪猛烈高溫燒毀坍塌！",
+    s9_rules: [
+      {
+        title: "1. 迅速果決向外撤離 (Immediate Evacuation)",
+        desc: "確認門把不燙、開門無煙後，應立即把握黃金時間低姿迅速往一樓戶外撤離，切勿搭乘電梯或折返搶救財物！"
+      },
+      {
+        title: "2. 遠離高溫坍塌危險 (Clear Collapse Perimeter)",
+        desc: "脫困出建築物大門後，切勿停留在外牆或屋簷下方，應全力奔向安全距離（建築高度1.5倍以上）之戶外避難空地。"
+      },
+      {
+        title: "3. 點名集結回報平安 (Assembly & Roll Call)",
+        desc: "抵達安全疏散集結區後立即進行人員點名確認，並主動向宿舍管理員與消防指揮官回報室友脫困狀況。"
+      }
+    ]
   },
 
   en: {
@@ -320,6 +345,7 @@ const i18nData = {
     s6_title: "✅ Interactive Dorm Room Safety Audit",
     s6_desc: "Evaluate your dormitory room compliance against campus fire safety regulations.",
     s6_gaugeLabel: "Compliance",
+    s6_statusTitle: "Compliance Status",
     s6_statusHigh: "HIGH RISK",
     s6_statusMod: "MODERATE",
     s6_statusSafe: "CAMPUS SAFE",
@@ -337,7 +363,7 @@ const i18nData = {
     s7_desc: "Sharpen your crisis reaction instinct under simulated university dormitory emergencies.",
 
     // Section 8: Hotlines
-    s8_title: "📞 Taiwan Emergency Hotlines (台灣官方緊急求助專線)",
+    s8_title: "📞 Taiwan Emergency & Public Service Hotlines",
     s8_desc: "Official emergency numbers and citizen service hotlines in Taiwan. Click any card to dial directly.",
     s8_cards: [
       { title: "Fire & Ambulance", subtitle: "Fire, Rescue & Emergency Medical Ambulance", desc: "Available 24/7. Dial immediately for structural fire, injury, or chemical hazards." },
@@ -348,7 +374,27 @@ const i18nData = {
       { title: "Anti-Fraud Hotline", subtitle: "NPA Anti-Fraud Consultation & Reporting", desc: "Verify suspicious phone calls, phishing scams, impersonation frauds, or cyber extortion." },
       { title: "Protection Hotline", subtitle: "Domestic Violence & Women/Children Protection", desc: "24/7 confidential counseling and emergency intervention for domestic violence, abuse, or harassment." }
     ],
-    s8_note: "Emergency reporting protocol in Taiwan: Dial 119 for fire and ambulance. If your mobile has poor signal, dial 112 (requires cellular coverage from any carrier). Stay calm and state: (1) School name (2) Dorm building name (3) Floor and room number (4) Nature of fire and smoke conditions."
+    s8_note_title: "Emergency Reporting Protocols in Taiwan:",
+    s8_note: "Emergency reporting protocol in Taiwan: Dial 119 for fire and ambulance. If your mobile has poor signal, dial 112 (requires cellular coverage from any carrier). Stay calm and state: (1) School name (2) Dorm building name (3) Floor and room number (4) Nature of fire and smoke conditions.",
+    s8_note_html: "Emergency reporting protocol in Taiwan: Dial <strong>119</strong> for fire and ambulance. If mobile signal is weak, dial <strong>112</strong> (requires cellular coverage from any carrier). Stay calm and state: (1) School name (2) Dorm building name (3) Floor & room number (4) Nature of fire and smoke conditions.",
+
+    // Section 9: Escape
+    s9_title: "🏃 Miracle Escape & Structural Collapse",
+    s9_desc: "Witness the triumphant final escape as our protagonist rushes out of the burning dorm just before the structure collapses!",
+    s9_rules: [
+      {
+        title: "1. Immediate & Decisive Evacuation",
+        desc: "Once the door handle is cool and hallway is clear, evacuate low and fast to ground floor. Never use elevators or turn back for belongings!"
+      },
+      {
+        title: "2. Clear Structural Collapse Perimeter",
+        desc: "After exiting the doorway, do not linger near exterior walls or overhangs. Sprint to open ground at a safe perimeter (1.5x building height)."
+      },
+      {
+        title: "3. Roll Call & Safety Reporting",
+        desc: "Upon reaching the safe assembly zone, conduct headcount immediately and report roommate status to dorm staff and incident commanders."
+      }
+    ]
   }
 };
 
@@ -426,8 +472,8 @@ function initLanguageEngine() {
         : '💡 Slow-paced demo cycle (16s per action). Click any action tab to inspect.';
     }
 
-    const ruleCards = document.querySelectorAll('.survival-grid-cards .survival-rule-item');
-    ruleCards.forEach((card, idx) => {
+    const s2RuleCards = document.querySelectorAll('#slide-2 .survival-grid-cards .survival-rule-item');
+    s2RuleCards.forEach((card, idx) => {
       if (t.s2_ruleCards && t.s2_ruleCards[idx]) {
         const h4 = card.querySelector('h4');
         const p = card.querySelector('p');
@@ -483,6 +529,18 @@ function initLanguageEngine() {
       cards[2].querySelector('p').outerHTML = t.s4_card3_body;
     }
 
+    // Section 4 Floorplan Legend Chips
+    const legendChips = document.querySelectorAll('.floorplan-legend-bar .legend-chip');
+    const legendTexts = [t.s4_legendStairs, t.s4_legendExits, t.s4_legendStudents, t.s4_legendCourtyard];
+    legendChips.forEach((chip, i) => {
+      const colorSpan = chip.querySelector('.chip-color');
+      if (colorSpan && legendTexts[i]) {
+        chip.innerHTML = '';
+        chip.appendChild(colorSpan);
+        chip.appendChild(document.createTextNode(' ' + legendTexts[i]));
+      }
+    });
+
     // Section 5: Zones
     const s5Title = document.querySelector('#slide-5 .section-title');
     if (s5Title) s5Title.textContent = t.s5_title;
@@ -516,6 +574,9 @@ function initLanguageEngine() {
 
     const gaugeLabel = document.querySelector('.circular-gauge-inner span[style*="text-transform:uppercase"]');
     if (gaugeLabel) gaugeLabel.textContent = t.s6_gaugeLabel;
+
+    const auditStatusH4 = document.querySelector('.audit-status-card h4');
+    if (auditStatusH4) auditStatusH4.textContent = t.s6_statusTitle;
 
     const auditLabels = document.querySelectorAll('.audit-check-label');
     auditLabels.forEach((label, i) => {
@@ -551,8 +612,43 @@ function initLanguageEngine() {
       }
     });
 
+    const flagNoteTitle = document.querySelector('.taiwan-flag-note strong');
+    if (flagNoteTitle) flagNoteTitle.textContent = t.s8_note_title;
     const flagNoteP = document.querySelector('.taiwan-flag-note p');
-    if (flagNoteP) flagNoteP.textContent = t.s8_note;
+    if (flagNoteP) {
+      if (t.s8_note_html) {
+        flagNoteP.innerHTML = t.s8_note_html;
+      } else {
+        flagNoteP.textContent = t.s8_note;
+      }
+    }
+
+    // Section 9: Escape & Collapse
+    const s9Title = document.querySelector('#slide-9 .section-title');
+    if (s9Title) s9Title.textContent = t.s9_title;
+    const s9Desc = document.querySelector('#slide-9 .section-desc');
+    if (s9Desc) s9Desc.textContent = t.s9_desc;
+
+    const s9RuleCards = document.querySelectorAll('#slide-9 .survival-grid-cards .survival-rule-item');
+    s9RuleCards.forEach((card, idx) => {
+      if (t.s9_rules && t.s9_rules[idx]) {
+        const h4 = card.querySelector('h4');
+        const p = card.querySelector('p');
+        if (h4) h4.textContent = t.s9_rules[idx].title;
+        if (p) p.textContent = t.s9_rules[idx].desc;
+      }
+    });
+
+    const escReplay = document.getElementById('escapeReplayBtn');
+    if (escReplay) escReplay.title = currentLang === 'zh' ? '重新播放' : 'Replay From Start';
+    const escPlayPause = document.getElementById('escapePlayPauseBtn');
+    if (escPlayPause) escPlayPause.title = currentLang === 'zh' ? '播放或暫停' : 'Play / Pause';
+    const escSpeed = document.getElementById('escapeSpeedBtn');
+    if (escSpeed) escSpeed.title = currentLang === 'zh' ? '示範速度切換 (0.5x / 1x / 2x)' : 'Playback Speed (0.5x / 1x / 2x)';
+
+    if (window.updateEscapeSimulatorLanguage) {
+      window.updateEscapeSimulatorLanguage();
+    }
 
     if (window.updateAuditGaugeFunc) window.updateAuditGaugeFunc();
   }
@@ -672,7 +768,7 @@ function initSlideDeck() {
     }
   }, { passive: true });
 
-  const urlParams = new URLSearchParams(window.location.search);
+  const urlParams = new URLSearchParams(window.location.search || window.location.hash.replace(/^#/, ''));
   const initialSlide = urlParams.has('slide') ? parseInt(urlParams.get('slide')) : 0;
   goToSlide(initialSlide);
   if (urlParams.has('action')) {
@@ -4201,6 +4297,10 @@ function initEscapeSimulator() {
   }
 
   let lastAct = 0;
+
+  window.updateEscapeSimulatorLanguage = function() {
+    lastAct = 0;
+  };
 
   function render() {
     const w = canvas.width;
