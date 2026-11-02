@@ -29,7 +29,7 @@
         <span>CAMPUS FIRE SAFE</span>
       </a>
 
-      <!-- Compact 8-section single-line tabs -->
+      <!-- Compact 9-section single-line tabs -->
       <div class="nav-tabs-wrapper">
         <ul class="nav-tabs">
           <li><button class="nav-tab-btn active"><span>🏠</span> Home</button></li>
@@ -40,15 +40,13 @@
           <li><button class="nav-tab-btn"><span>✅</span> Audit</button></li>
           <li><button class="nav-tab-btn"><span>🧠</span> Drills</button></li>
           <li><button class="nav-tab-btn"><span>📞</span> Hotlines</button></li>
+          <li><button class="nav-tab-btn"><span>🏃</span> Escape</button></li>
         </ul>
       </div>
 
       <div class="nav-actions">
         <button class="lang-toggle-btn" id="langToggleBtn" title="Switch Language / 切換語言">
           <span>🌐</span> <span id="langBtnLabel">繁體中文</span>
-        </button>
-        <button class="alarm-toggle-btn">
-          <span>🚨</span> <span id="alarmBtnLabel">警報演習 (Alarm)</span>
         </button>
       </div>
     </div>
@@ -456,7 +454,7 @@
               <h2 class="section-title">📞 台灣緊急與服務專線 (Taiwan Emergency & Public Service Hotlines)</h2>
               <p class="section-desc">Official emergency and public service hotlines in Taiwan. Click any card to dial immediately.</p>
             </div>
-            <span class="page-indicator-pill">SECTION 08 / 08</span>
+            <span class="page-indicator-pill">SECTION 08 / 09</span>
           </div>
 
           <div class="hotlines-grid anim-block anim-d2">
@@ -543,6 +541,71 @@
         </div>
       </section>
 
+      <!-- --------------------------------------------------------------------
+           SECTION 9: MIRACLE ESCAPE & BUILDING COLLAPSE
+           -------------------------------------------------------------------- -->
+      <section class="slide-section" id="slide-9">
+        <div class="slide-content">
+          <div class="section-header anim-block anim-d1">
+            <div>
+              <h2 class="section-title">🏃 奇蹟脫困與終局生還 (Miracle Escape & Building Collapse)</h2>
+              <p class="section-desc">Witness the triumphant final escape as our protagonist rushes out of the burning dorm just before the structure collapses!</p>
+            </div>
+            <span class="page-indicator-pill">SECTION 09 / 09</span>
+          </div>
+
+          <!-- Escape Stage Panel -->
+          <div class="survival-panel">
+            <div class="survival-info-card anim-block anim-d2">
+              <div class="step-indicator-title">
+                <span class="step-badge" id="escapeStepBadge" style="background:#10b981; color:#000;">TRIUMPHANT ESCAPE</span>
+                <span class="step-instruction-text" id="escapeStepText">Dash out of the fire exit to open assembly ground before structural collapse!</span>
+              </div>
+              <div class="survival-header-controls">
+                <div class="survival-progress-container" title="Escape playback progress / 脫困進度">
+                  <div class="survival-progress-bar" id="escapeProgressBar"></div>
+                </div>
+                <div class="survival-ctrl-btns">
+                  <button class="survival-ctrl-btn" id="escapeReplayBtn" title="Replay From Start / 重新播放">⏮</button>
+                  <button class="survival-ctrl-btn" id="escapePlayPauseBtn" title="Play or Pause / 播放或暫停">⏸</button>
+                  <button class="survival-speed-btn" id="escapeSpeedBtn" title="Playback Speed (0.5x / 1x / 2x) / 速度切換">⚡ 1x</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Canvas Stage -->
+            <div class="survival-canvas-stage anim-block anim-d3">
+              <canvas id="escapeCanvas"></canvas>
+            </div>
+
+            <!-- Key Takeaways Grid -->
+            <div class="survival-grid-cards anim-block anim-d4">
+              <div class="survival-rule-item">
+                <span class="rule-icon">🚪</span>
+                <div>
+                  <h4>1. 迅速果決向外撤離 (Immediate Evacuation)</h4>
+                  <p>確認門把不燙、開門無煙後，應立即把握黃金時間低姿迅速往一樓戶外撤離，切勿搭乘電梯或折返搶救財物！</p>
+                </div>
+              </div>
+              <div class="survival-rule-item">
+                <span class="rule-icon">🛑</span>
+                <div>
+                  <h4>2. 遠離高溫坍塌危險 (Clear Collapse Perimeter)</h4>
+                  <p>脫困出建築物大門後，切勿停留在外牆或屋簷下方，應全力奔向安全距離（建築高度1.5倍以上）之戶外避難空地。</p>
+                </div>
+              </div>
+              <div class="survival-rule-item">
+                <span class="rule-icon">👍</span>
+                <div>
+                  <h4>3. 點名集結回報平安 (Assembly & Roll Call)</h4>
+                  <p>抵達安全疏散集結區後立即進行人員點名確認，並主動向宿舍管理員與消防指揮官回報室友脫困狀況。</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
   </main>
 
@@ -560,8 +623,9 @@
       <button class="slide-dot" aria-label="Slide 6: Dorm Audit" title="06. Dorm Audit"></button>
       <button class="slide-dot" aria-label="Slide 7: Decision Drills" title="07. Decision Drills"></button>
       <button class="slide-dot" aria-label="Slide 8: Taiwan Hotlines" title="08. Taiwan Hotlines"></button>
+      <button class="slide-dot" aria-label="Slide 9: Miracle Escape" title="09. Miracle Escape & Collapse"></button>
     </div>
-    <span id="currentSlideIndicator" style="font-size:0.82rem; font-weight:700; color:var(--text-secondary);">Page 1 / 8</span>
+    <span id="currentSlideIndicator" style="font-size:0.82rem; font-weight:700; color:var(--text-secondary);">Page 1 / 9</span>
     <button class="slide-nav-arrow" id="slideNextBtn" aria-label="Next Slide (Right Arrow)" title="Next Section (Right Arrow)">▶</button>
   </div>
 

@@ -350,14 +350,14 @@ header {
 
 .slider-track {
   display: flex;
-  width: 800%; /* 8 sections */
+  width: 900%; /* 9 sections */
   height: 100%;
   transition: transform var(--transition-slide);
   will-change: transform;
 }
 
 .slide-section {
-  width: 12.5%; /* 100% / 8 */
+  width: calc(100% / 9); /* 100% / 9 sections */
   height: 100%;
   overflow-y: auto;
   padding: 2rem 1.5rem 6.5rem;

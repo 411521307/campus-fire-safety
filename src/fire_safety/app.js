@@ -12,7 +12,7 @@
  */
 
 let currentSlide = 0;
-const totalSlides = 8;
+const totalSlides = 9;
 let currentLang = 'zh'; // 'zh' (Traditional Chinese) or 'en' (English)
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initAuditGauge();
   initDrills();
   initEmergencyAlarm();
+  initEscapeSimulator();
 });
 
 /* ==========================================================================
@@ -41,7 +42,7 @@ const i18nData = {
     pageIndicator: "第 {curr} 頁 / 共 {total} 頁",
 
     // Tabs
-    tabs: ["🏠 首頁", "🚨 逃生要領", "🧯 滅火器", "🗺️ 疏散簡圖", "🏢 校園分區", "✅ 寢室查核", "🧠 應變測驗", "📞 緊急專線"],
+    tabs: ["🏠 首頁", "🚨 逃生要領", "🧯 滅火器", "🗺️ 疏散簡圖", "🏢 校園分區", "✅ 寢室查核", "🧠 應變測驗", "📞 緊急專線", "🏃 奇蹟脫困"],
 
     // Section 1: Home
     s1_badge: "⚡ 校園與學生宿舍安全防護網",
@@ -200,7 +201,7 @@ const i18nData = {
     pageIndicator: "Page {curr} / {total}",
 
     // Tabs
-    tabs: ["🏠 Home", "🚨 Survival", "🧯 P.A.S.S.", "🗺️ Evacuation", "🏢 Campus", "✅ Audit", "🧠 Drills", "📞 Hotlines"],
+    tabs: ["🏠 Home", "🚨 Survival", "🧯 P.A.S.S.", "🗺️ Evacuation", "🏢 Campus", "✅ Audit", "🧠 Drills", "📞 Hotlines", "🏃 Escape"],
 
     // Section 1: Home
     s1_badge: "⚡ University Life-Safety Network",
@@ -613,6 +614,9 @@ function initSlideDeck() {
 
     if (currentSlide === 1 && window.resumeSurvivalSimulator) {
       window.resumeSurvivalSimulator();
+    }
+    if (currentSlide === 8 && window.resumeEscapeSimulator) {
+      window.resumeEscapeSimulator();
     }
 
     if (pageIndicator) {
@@ -3849,6 +3853,7 @@ function initDrills() {
    ========================================================================== */
 function initEmergencyAlarm() {
   const alarmButtons = document.querySelectorAll('.alarm-toggle-btn');
+  if (!alarmButtons.length) return;
   let audioCtx = null;
   let oscillator = null;
   let gainNode = null;
@@ -4000,4 +4005,743 @@ function initAmbientParticles() {
   }
 
   animate();
+}
+
+/* ==========================================================================
+   9. MIRACLE ESCAPE & BUILDING COLLAPSE SIMULATOR (Section 9)
+   ========================================================================== */
+function initEscapeSimulator() {
+  const canvas = document.getElementById('escapeCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = 460;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let isPlaying = true;
+  let playbackSpeed = 1.0;
+  let escapeTimer = 0;
+  const escapeDuration = 1680; // ~28s at 60fps
+  let frame = 0;
+
+  window.resumeEscapeSimulator = function() {
+    isPlaying = true;
+    updatePlayPauseUI();
+  };
+
+  const playPauseBtn = document.getElementById('escapePlayPauseBtn');
+  const speedBtn = document.getElementById('escapeSpeedBtn');
+  const replayBtn = document.getElementById('escapeReplayBtn');
+  const progressBar = document.getElementById('escapeProgressBar');
+  const badgeEl = document.getElementById('escapeStepBadge');
+  const textEl = document.getElementById('escapeStepText');
+
+  function updatePlayPauseUI() {
+    if (playPauseBtn) {
+      playPauseBtn.textContent = isPlaying ? "⏸" : "▶";
+      playPauseBtn.title = isPlaying ? "Pause Demo / 暫停示範" : "Resume Playback / 繼續播放";
+    }
+  }
+
+  if (playPauseBtn) {
+    playPauseBtn.addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      updatePlayPauseUI();
+    });
+  }
+
+  if (speedBtn) {
+    speedBtn.addEventListener('click', () => {
+      if (playbackSpeed === 1.0) {
+        playbackSpeed = 2.0;
+        speedBtn.textContent = "🚀 2x";
+        speedBtn.style.color = "#f97316";
+        speedBtn.style.borderColor = "#f97316";
+        speedBtn.style.boxShadow = "0 0 10px rgba(249, 115, 22, 0.45)";
+      } else if (playbackSpeed === 2.0) {
+        playbackSpeed = 0.5;
+        speedBtn.textContent = "🐢 0.5x";
+        speedBtn.style.color = "#38bdf8";
+        speedBtn.style.borderColor = "#38bdf8";
+        speedBtn.style.boxShadow = "0 0 10px rgba(56, 189, 248, 0.45)";
+      } else {
+        playbackSpeed = 1.0;
+        speedBtn.textContent = "⚡ 1x";
+        speedBtn.style.color = "";
+        speedBtn.style.borderColor = "";
+        speedBtn.style.boxShadow = "";
+      }
+    });
+  }
+
+  if (replayBtn) {
+    replayBtn.addEventListener('click', () => {
+      escapeTimer = 0;
+      isPlaying = true;
+      updatePlayPauseUI();
+    });
+  }
+
+  function drawPillLocal(context, text, centerX, centerY, bg, fg, fontSize = 12, padX = 18, padY = 6, border = null) {
+    context.save();
+    context.font = `bold ${fontSize}px sans-serif`;
+    const textMetrics = context.measureText(text);
+    const pillW = textMetrics.width + padX * 2;
+    const pillH = fontSize + padY * 2;
+    const pillX = centerX - pillW / 2;
+    const pillY = centerY - pillH / 2;
+
+    context.fillStyle = bg;
+    context.beginPath();
+    context.roundRect(pillX, pillY, pillW, pillH, pillH / 2);
+    context.fill();
+
+    if (border) {
+      context.strokeStyle = border;
+      context.lineWidth = 1.5;
+      context.stroke();
+    }
+
+    context.fillStyle = fg;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(text, centerX, centerY);
+    context.restore();
+  }
+
+  function drawEnchantedFireLocal(context, centerX, baseY, width, height, intensity = 1.0, driftX = 0, f = 0) {
+    context.save();
+    const tiers = [
+      { count: 10, yMin: 0.70, yMax: 1.00, rMin: width * 0.36, rMax: width * 0.52, color: 'rgba(234, 88, 12, 0.95)' },
+      { count: 8,  yMin: 0.65, yMax: 0.95, rMin: width * 0.30, rMax: width * 0.45, color: 'rgba(249, 115, 22, 0.92)' },
+      { count: 9,  yMin: 0.45, yMax: 0.78, rMin: width * 0.24, rMax: width * 0.38, color: 'rgba(239, 68, 68, 0.88)' },
+      { count: 8,  yMin: 0.28, yMax: 0.58, rMin: width * 0.20, rMax: width * 0.32, color: 'rgba(245, 158, 11, 0.82)' },
+      { count: 6,  yMin: 0.12, yMax: 0.38, rMin: width * 0.13, rMax: width * 0.24, color: 'rgba(251, 191, 36, 0.75)' },
+      { count: 5,  yMin: 0.00, yMax: 0.22, rMin: width * 0.06, rMax: width * 0.15, color: 'rgba(254, 240, 138, 0.65)' }
+    ];
+
+    for (let t = 0; t < tiers.length; t++) {
+      const tier = tiers[t];
+      context.fillStyle = tier.color;
+      for (let i = 0; i < tier.count; i++) {
+        const seed = t * 17 + i * 29;
+        const cycleRate = 0.035 + (seed % 7) * 0.004;
+        const phase = seed + f * cycleRate;
+        const prog = (Math.sin(phase) + 1) / 2;
+        const yRatio = tier.yMax - prog * (tier.yMax - tier.yMin);
+        const py = baseY - height * yRatio;
+        const sway = Math.sin(phase * 1.3) * (width * 0.28 * (1 - yRatio * 0.5));
+        const windDrift = (1 - yRatio) * driftX;
+        const px = centerX + sway + windDrift;
+        const r = (tier.rMin + prog * (tier.rMax - tier.rMin)) * intensity;
+        context.beginPath();
+        context.arc(px, py, Math.max(2, r), 0, Math.PI * 2);
+        context.fill();
+      }
+    }
+    context.restore();
+  }
+
+  function drawCharacterHeadLocal(context, headX, headY, radius = 16, mouthType = 'neutral') {
+    context.save();
+    context.fillStyle = '#fed7aa';
+    context.beginPath();
+    context.arc(headX, headY, radius, 0, Math.PI * 2);
+    context.fill();
+
+    context.beginPath();
+    context.arc(headX - radius + 1, headY + 1, 3.2, 0, Math.PI * 2);
+    context.arc(headX + radius - 1, headY + 1, 3.2, 0, Math.PI * 2);
+    context.fill();
+
+    context.fillStyle = '#1e293b';
+    context.beginPath();
+    context.arc(headX, headY - 4, radius + 1.2, Math.PI * 1.05, Math.PI * 1.95);
+    context.quadraticCurveTo(headX + 3, headY - 5, headX - radius + 2, headY - 2);
+    context.closePath();
+    context.fill();
+
+    if (mouthType === 'panting') {
+      context.fillStyle = '#0f172a';
+      context.beginPath();
+      context.arc(headX - 4, headY - 1, 1.8, 0, Math.PI * 2);
+      context.arc(headX + 4, headY - 1, 1.8, 0, Math.PI * 2);
+      context.fill();
+      context.fillStyle = '#7f1d1d';
+      context.beginPath();
+      context.ellipse(headX, headY + 6, 4, 6, 0, 0, Math.PI * 2);
+      context.fill();
+    } else if (mouthType === 'smile') {
+      context.fillStyle = '#0f172a';
+      context.beginPath();
+      context.arc(headX - 5, headY - 1, 2, 0, Math.PI * 2);
+      context.fill();
+      context.strokeStyle = '#0f172a';
+      context.lineWidth = 1.8;
+      context.beginPath();
+      context.arc(headX + 5, headY - 1, 3.2, Math.PI * 1.1, Math.PI * 1.9);
+      context.stroke();
+      context.strokeStyle = '#ea580c';
+      context.lineWidth = 2.0;
+      context.beginPath();
+      context.arc(headX, headY + 4, 6, 0.15 * Math.PI, 0.85 * Math.PI);
+      context.stroke();
+    } else {
+      context.fillStyle = '#0f172a';
+      context.beginPath();
+      context.arc(headX - 4, headY - 1, 1.8, 0, Math.PI * 2);
+      context.arc(headX + 4, headY - 1, 1.8, 0, Math.PI * 2);
+      context.fill();
+    }
+    context.restore();
+  }
+
+  let lastAct = 0;
+
+  function render() {
+    const w = canvas.width;
+    const h = canvas.height;
+    frame += playbackSpeed;
+
+    const cycle = (escapeTimer % escapeDuration);
+    const isZh = currentLang === 'zh';
+
+    const isAct1 = cycle < 450;
+    const isAct2 = cycle >= 450 && cycle < 720;
+    const isAct3 = cycle >= 720 && cycle < 1180;
+    const isAct4 = cycle >= 1180;
+
+    const currentActNum = isAct1 ? 1 : (isAct2 ? 2 : (isAct3 ? 3 : 4));
+    if (currentActNum !== lastAct) {
+      lastAct = currentActNum;
+      if (badgeEl && textEl) {
+        if (currentActNum === 1) {
+          badgeEl.textContent = isZh ? '🏃 動作一：全力狂奔脫困 (FULL SPRINT TO EXIT)' : '🏃 ACT 1: FULL SPRINT ESCAPE';
+          textEl.textContent = isZh ? '把握最後黃金數十秒，自一樓安全出口全力衝向戶外安全集結區！' : 'Dash through the fire exit into the open campus assembly zone!';
+          badgeEl.style.background = '#ef4444';
+          badgeEl.style.color = '#fff';
+        } else if (currentActNum === 2) {
+          badgeEl.textContent = isZh ? '😮‍💨 動作二：抵達安全區大口喘息 (SAFE ZONE OUT OF BREATH)' : '😮‍💨 ACT 2: SAFE ZONE EXHAUSTION';
+          textEl.textContent = isZh ? '成功脫險抵達安全區，雙手扶膝大口呼吸新鮮空氣！' : 'Reach open safety ground, panting heavily and catching fresh air!';
+          badgeEl.style.background = '#0284c7';
+          badgeEl.style.color = '#fff';
+        } else if (currentActNum === 3) {
+          badgeEl.textContent = isZh ? '💥 動作三：高溫燒毀全面坍塌 (INFERNO STRUCTURAL COLLAPSE)' : '💥 ACT 3: INFERNO STRUCTURAL COLLAPSE';
+          textEl.textContent = isZh ? '身後宿舍大樓不堪猛烈大火燒熔全面崩塌！千鈞一髮死裡逃生！' : 'The blazing dormitory collapses behind! Narrowly escaped just in time!';
+          badgeEl.style.background = '#ea580c';
+          badgeEl.style.color = '#fff';
+        } else {
+          badgeEl.textContent = isZh ? '👍 動作四：比讚致敬、平安生還 (TRIUMPHANT THUMBS UP)' : '👍 ACT 4: TRIUMPHANT THUMBS UP';
+          textEl.textContent = isZh ? '奇蹟平安生還！記住平時火災應變演練四守則，生命安全永遠第一！' : 'Miracle survival! Remember fire safety protocols, life comes first!';
+          badgeEl.style.background = '#10b981';
+          badgeEl.style.color = '#000';
+        }
+      }
+    }
+
+    let shakeX = 0;
+    let shakeY = 0;
+    if (isAct2 && cycle > 640) {
+      const rumble = (cycle - 640) / 80 * 2.5;
+      shakeX = Math.sin(frame * 0.8) * rumble;
+      shakeY = Math.cos(frame * 0.9) * rumble;
+    } else if (isAct3) {
+      const collapseProg = (cycle - 720) / 460;
+      const decay = Math.max(0, 1.0 - collapseProg * 0.85);
+      const shakeMag = 7.5 * decay;
+      shakeX = Math.sin(frame * 1.4) * shakeMag;
+      shakeY = Math.cos(frame * 1.6) * shakeMag * 0.8;
+    }
+
+    ctx.save();
+    ctx.translate(shakeX, shakeY);
+    ctx.clearRect(-20, -20, w + 40, h + 40);
+
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.65);
+    skyGrad.addColorStop(0, '#020617');
+    skyGrad.addColorStop(0.5, '#0b0f1e');
+    skyGrad.addColorStop(1, '#1e1b2e');
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(-20, -20, w + 40, h + 40);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.fillRect(80, 40, 2, 2);
+    ctx.fillRect(160, 25, 2, 2);
+    ctx.fillRect(w - 140, 35, 2, 2);
+    ctx.fillRect(w - 60, 60, 2, 2);
+
+    const horizonY = h * 0.58;
+    const groundH = h - horizonY;
+    const groundGrad = ctx.createLinearGradient(0, horizonY, 0, h);
+    groundGrad.addColorStop(0, '#0a0d16');
+    groundGrad.addColorStop(0.3, '#101524');
+    groundGrad.addColorStop(1, '#05070d');
+    ctx.fillStyle = groundGrad;
+    ctx.fillRect(0, horizonY, w, groundH);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.lineWidth = 1.5;
+    const vanishX = w * 0.48;
+    for (let p = -5; p <= 5; p++) {
+      ctx.beginPath();
+      ctx.moveTo(vanishX + p * 38, horizonY);
+      ctx.lineTo(vanishX + p * 135, h);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([14, 10]);
+    ctx.beginPath();
+    ctx.moveTo(30, h - 35);
+    ctx.lineTo(w - 30, h - 35);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    drawPillLocal(ctx, isZh ? '🟢 校園安全疏散集結區 (SAFE ZONE)' : '🟢 CAMPUS SAFE ASSEMBLY ZONE', w * 0.78, h - 18, 'rgba(6,95,70,0.85)', '#a7f3d0', 10, 14, 5);
+
+    const bldgX = w * 0.24;
+    const bldgW = w * 0.48;
+    const bldgFullH = 195;
+    const bldgBaseY = horizonY;
+
+    let collapseProgress = 0;
+    if (isAct3) {
+      const cRaw = (cycle - 720) / 360;
+      collapseProgress = Math.min(1.0, cRaw * cRaw * (3 - 2 * cRaw));
+    } else if (isAct4) {
+      collapseProgress = 1.0;
+    }
+
+    const currentBldgH = bldgFullH * (1.0 - collapseProgress * 0.82);
+    const currentBldgY = bldgBaseY - currentBldgH;
+
+    ctx.save();
+    if (collapseProgress > 0 && collapseProgress < 1.0) {
+      ctx.translate(bldgX + bldgW * 0.5, bldgBaseY);
+      ctx.rotate(Math.sin(collapseProgress * Math.PI) * 0.04);
+      ctx.translate(-(bldgX + bldgW * 0.5), -bldgBaseY);
+    }
+
+    const wallGrad = ctx.createLinearGradient(bldgX, currentBldgY, bldgX + bldgW, currentBldgY);
+    wallGrad.addColorStop(0, '#1a1f2e');
+    wallGrad.addColorStop(0.5, '#282f42');
+    wallGrad.addColorStop(1, '#171c2a');
+    ctx.fillStyle = wallGrad;
+    ctx.beginPath();
+    ctx.roundRect(bldgX, currentBldgY, bldgW, currentBldgH, [6, 6, 0, 0]);
+    ctx.fill();
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(bldgX - 10, currentBldgY - 8, bldgW + 20, 10);
+
+    if (collapseProgress < 0.6) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 1.0 - collapseProgress * 1.8);
+      drawPillLocal(ctx, isZh ? '🏢 學生第一宿舍 (DORM 1)' : '🏢 STUDENT DORM 1', bldgX + bldgW * 0.5, currentBldgY - 22, '#1e293b', '#f8fafc', 11, 16, 5, '#475569');
+      ctx.restore();
+    }
+
+    if (collapseProgress < 0.8) {
+      const floors = 3;
+      const roomsPerFloor = 4;
+      const winW = 32;
+      const winH = 24;
+
+      for (let fl = 0; fl < floors; fl++) {
+        const flY = currentBldgY + 22 + fl * 44;
+        if (flY + winH > bldgBaseY - 25) continue;
+
+        for (let rm = 0; rm < roomsPerFloor; rm++) {
+          const rX = bldgX + 28 + rm * (winW + 42);
+          ctx.fillStyle = '#0a0d16';
+          ctx.fillRect(rX, flY, winW, winH);
+          ctx.strokeStyle = '#475569';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(rX, flY, winW, winH);
+
+          drawEnchantedFireLocal(ctx, rX + winW / 2, flY + winH, 18, 30, 0.9, (rm % 2 === 0 ? 3 : -3), frame * 1.2 + rm * 15);
+          ctx.fillStyle = 'rgba(249, 115, 22, 0.3)';
+          ctx.fillRect(rX - 3, flY - 3, winW + 6, winH + 6);
+        }
+      }
+    }
+
+    const exitDoorW = 46;
+    const exitDoorH = 38;
+    const exitDoorX = bldgX + bldgW * 0.5 - exitDoorW / 2;
+    const exitDoorY = bldgBaseY - exitDoorH;
+
+    if (collapseProgress < 0.7) {
+      ctx.fillStyle = '#059669';
+      ctx.fillRect(exitDoorX + 4, exitDoorY - 14, exitDoorW - 8, 10);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 8px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('EXIT 🏃', exitDoorX + exitDoorW / 2, exitDoorY - 6);
+
+      ctx.fillStyle = '#450a0a';
+      ctx.fillRect(exitDoorX, exitDoorY, exitDoorW, exitDoorH);
+      drawEnchantedFireLocal(ctx, exitDoorX + exitDoorW / 2, exitDoorY + exitDoorH, 25, 34, 1.1, 0, frame * 1.5);
+
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(exitDoorX - 10, exitDoorY, 10, exitDoorH);
+    }
+
+    if (collapseProgress < 0.75) {
+      drawEnchantedFireLocal(ctx, bldgX + bldgW * 0.25, currentBldgY, 45, 75, 1.2, 5, frame * 1.3);
+      drawEnchantedFireLocal(ctx, bldgX + bldgW * 0.50, currentBldgY, 60, 95, 1.4, -4, frame * 1.4);
+      drawEnchantedFireLocal(ctx, bldgX + bldgW * 0.75, currentBldgY, 50, 80, 1.3, 6, frame * 1.25);
+    }
+
+    if (collapseProgress > 0.05 && collapseProgress < 0.95) {
+      ctx.strokeStyle = '#f97316';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#ea580c';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(bldgX + 50, currentBldgY + 30);
+      ctx.lineTo(bldgX + 110, currentBldgY + 80);
+      ctx.lineTo(bldgX + 90, currentBldgY + 120);
+      ctx.lineTo(bldgX + 140, bldgBaseY);
+      ctx.moveTo(bldgX + bldgW - 60, currentBldgY + 20);
+      ctx.lineTo(bldgX + bldgW - 100, currentBldgY + 95);
+      ctx.lineTo(bldgX + bldgW - 70, bldgBaseY);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+    ctx.restore();
+
+    if (collapseProgress > 0.3) {
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.moveTo(bldgX - 35, bldgBaseY);
+      ctx.lineTo(bldgX + 40, bldgBaseY - 35);
+      ctx.lineTo(bldgX + 110, bldgBaseY - 18);
+      ctx.lineTo(bldgX + bldgW * 0.5, bldgBaseY - 45);
+      ctx.lineTo(bldgX + bldgW - 90, bldgBaseY - 22);
+      ctx.lineTo(bldgX + bldgW + 25, bldgBaseY - 32);
+      ctx.lineTo(bldgX + bldgW + 45, bldgBaseY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      for (let deb = 0; deb < 10; deb++) {
+        const debX = bldgX + (deb * 39 + 17) % bldgW;
+        const debY = bldgBaseY - 10 - ((deb * 23) % 28);
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(debX, debY, 12 + (deb % 3) * 4, 8 + (deb % 2) * 4);
+      }
+
+      if (isAct3) {
+        const dustP = (cycle - 720) / 460;
+        for (let d = 0; d < 12; d++) {
+          const dustR = 30 + d * 8 + dustP * 65;
+          const dustX = bldgX + bldgW * 0.5 + Math.sin(d * 1.8) * (bldgW * 0.55 * dustP + 40);
+          const dustY = bldgBaseY - 25 - Math.cos(d * 1.2) * (55 * dustP + 10);
+          const dustAlpha = Math.max(0, (1.0 - dustP * 0.8) * 0.65);
+
+          ctx.fillStyle = (d % 3 === 0)
+            ? `rgba(249, 115, 22, ${dustAlpha * 0.45})`
+            : `rgba(100, 116, 139, ${dustAlpha * 0.55})`;
+          ctx.beginPath();
+          ctx.arc(dustX, dustY, dustR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (isAct4) {
+        for (let sw = 0; sw < 5; sw++) {
+          const smkX = bldgX + 50 + sw * 60 + Math.sin(frame * 0.05 + sw) * 15;
+          const smkY = bldgBaseY - 30 - ((frame * 0.4 + sw * 25) % 65);
+          const smkAlpha = Math.max(0, 0.4 - ((frame * 0.4 + sw * 25) % 65) / 65 * 0.4);
+          ctx.fillStyle = `rgba(148, 163, 184, ${smkAlpha})`;
+          ctx.beginPath();
+          ctx.arc(smkX, smkY, 10 + sw * 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    if (isAct1) {
+      const runProg = cycle / 450;
+      const easeRun = runProg * (2 - runProg);
+
+      const startX = w * 0.50;
+      const startY = horizonY;
+      const endX = w * 0.40;
+      const endY = h - 55;
+
+      const charX = startX + easeRun * (endX - startX);
+      const charY = startY + easeRun * (endY - startY);
+      const charScale = 0.28 + easeRun * 0.72;
+
+      const runCadence = escapeTimer * 0.38;
+      const legAngle = Math.sin(runCadence) * 0.85;
+      const armAngle = Math.sin(runCadence + Math.PI) * 0.75;
+      const bounce = Math.abs(Math.sin(runCadence)) * 6 * charScale;
+
+      for (let dp = 0; dp < 3; dp++) {
+        const puffProg = ((escapeTimer * 0.12 + dp * 0.33) % 1);
+        const puffX = charX + 18 * charScale + puffProg * 25 * charScale;
+        const puffY = charY - puffProg * 8 * charScale;
+        ctx.fillStyle = `rgba(148, 163, 184, ${(1 - puffProg) * 0.45})`;
+        ctx.beginPath();
+        ctx.arc(puffX, puffY, (3 + puffProg * 6) * charScale, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.save();
+      ctx.translate(charX, charY - bounce);
+      ctx.scale(charScale, charScale);
+      ctx.rotate(-0.16);
+
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 11;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-5, -60);
+      ctx.lineTo(-5 - Math.sin(legAngle) * 28, -30);
+      ctx.lineTo(-5 - Math.sin(legAngle) * 52, 0);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 11;
+      ctx.beginPath();
+      ctx.moveTo(8, -60);
+      ctx.lineTo(8 + Math.sin(legAngle) * 28, -30);
+      ctx.lineTo(8 + Math.sin(legAngle) * 52, 0);
+      ctx.stroke();
+
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(-12 - Math.sin(legAngle) * 52, -4, 16, 7);
+      ctx.fillRect(2 + Math.sin(legAngle) * 52, -4, 16, 7);
+
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.roundRect(-16, -125, 32, 68, 8);
+      ctx.fill();
+
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 9;
+      ctx.beginPath();
+      ctx.moveTo(0, -115);
+      ctx.lineTo(-Math.sin(armAngle) * 28, -95);
+      ctx.lineTo(-Math.sin(armAngle) * 45, -75);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#0369a1';
+      ctx.lineWidth = 9;
+      ctx.beginPath();
+      ctx.moveTo(0, -115);
+      ctx.lineTo(Math.sin(armAngle) * 28, -95);
+      ctx.lineTo(Math.sin(armAngle) * 45, -75);
+      ctx.stroke();
+
+      ctx.fillStyle = '#fed7aa';
+      ctx.beginPath();
+      ctx.arc(Math.sin(armAngle) * 45, -75, 5, 0, Math.PI * 2);
+      ctx.arc(-Math.sin(armAngle) * 45, -75, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      drawCharacterHeadLocal(ctx, 4, -142, 16, 'neutral');
+
+      ctx.restore();
+
+      drawPillLocal(ctx, isZh
+        ? '🏃 衝出火場！從安全出口全力奔向戶外安全集結區！'
+        : '🏃 DASHING OUT! Sprinting from burning exit to the safety zone!', w * 0.5, 32, '#dc2626', '#ffffff', 13, 24, 8);
+
+    } else if (isAct2 || isAct3) {
+      const charX = w * 0.40;
+      const charY = h - 55;
+
+      const pantCycle = escapeTimer * 0.18;
+      const heave = Math.sin(pantCycle) * 4.5;
+      const hunch = 0.32 + Math.sin(pantCycle) * 0.05;
+
+      ctx.save();
+      ctx.translate(charX, charY);
+
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 12;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-16, -65);
+      ctx.lineTo(-28, -32);
+      ctx.lineTo(-24, 0);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(14, -65);
+      ctx.lineTo(6, -32);
+      ctx.lineTo(10, 0);
+      ctx.stroke();
+
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(-34, -6, 18, 6);
+      ctx.fillRect(4, -6, 18, 6);
+
+      ctx.save();
+      ctx.translate(0, -65);
+      ctx.rotate(-hunch);
+
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.roundRect(-16, -65 + heave * 0.3, 32, 65, 8);
+      ctx.fill();
+
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 9;
+      ctx.beginPath();
+      ctx.moveTo(-10, -55);
+      ctx.lineTo(-18, -15);
+      ctx.stroke();
+
+      ctx.fillStyle = '#fed7aa';
+      ctx.beginPath();
+      ctx.arc(-18, -15, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      drawCharacterHeadLocal(ctx, -6, -78, 16, 'panting');
+
+      ctx.restore();
+
+      const pantPuff = (escapeTimer * 0.08) % 1;
+      ctx.fillStyle = `rgba(241, 245, 249, ${(1 - pantPuff) * 0.7})`;
+      ctx.beginPath();
+      ctx.arc(-35 - pantPuff * 16, -95 - pantPuff * 8, 3.5 + pantPuff * 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      const sweatY = ((escapeTimer * 0.15) % 1) * 18;
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.8)';
+      ctx.beginPath();
+      ctx.ellipse(-26, -112 + sweatY, 2.5, 4, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+
+      if (isAct2) {
+        drawPillLocal(ctx, isZh
+          ? '😮‍💨 脫困抵達安全區！氣喘吁吁、大口呼吸新鮮空氣！'
+          : '😮‍💨 MADE IT OUT! Panting heavily, catching breath in safe open air!', w * 0.5, 32, '#0284c7', '#ffffff', 13, 24, 8);
+      } else {
+        drawPillLocal(ctx, isZh
+          ? '💥 轟然巨響！建築物因高溫燒熔全面坍塌！千鈞一髮成功脫險！'
+          : '💥 INFERNO COLLAPSE! The building caves in! Narrowly escaped in time!', w * 0.5, 32, '#ea580c', '#ffffff', 13, 24, 8);
+      }
+
+    } else {
+      const charX = w * 0.40;
+      const charY = h - 55;
+
+      ctx.save();
+      ctx.translate(charX, charY);
+
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(-16, -75, 12, 75);
+      ctx.fillRect(4, -75, 12, 75);
+
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(-20, -6, 18, 6);
+      ctx.fillRect(2, -6, 18, 6);
+
+      ctx.fillStyle = '#0284c7';
+      ctx.beginPath();
+      ctx.roundRect(-18, -145, 36, 72, 8);
+      ctx.fill();
+
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 10;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-16, -135);
+      ctx.lineTo(-32, -105);
+      ctx.lineTo(-18, -90);
+      ctx.stroke();
+
+      const thumbArmX = 16;
+      const thumbArmY = -135;
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.moveTo(thumbArmX, thumbArmY);
+      ctx.lineTo(thumbArmX + 22, thumbArmY + 8);
+      ctx.lineTo(thumbArmX + 36, thumbArmY - 20);
+      ctx.stroke();
+
+      const handX = thumbArmX + 36;
+      const handY = thumbArmY - 20;
+
+      ctx.fillStyle = '#fed7aa';
+      ctx.beginPath();
+      ctx.roundRect(handX - 7, handY - 8, 18, 18, 5);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.roundRect(handX - 3, handY - 24, 9, 18, 4);
+      ctx.fill();
+
+      ctx.strokeStyle = '#ea580c';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(handX - 5, handY - 1);
+      ctx.lineTo(handX + 8, handY - 1);
+      ctx.moveTo(handX - 5, handY + 4);
+      ctx.lineTo(handX + 8, handY + 4);
+      ctx.stroke();
+
+      const starSpin = frame * 0.08;
+      ctx.save();
+      ctx.translate(handX + 2, handY - 28);
+      ctx.rotate(starSpin);
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      for (let sp = 0; sp < 4; sp++) {
+        ctx.rotate(Math.PI / 2);
+        ctx.lineTo(0, -11);
+        ctx.lineTo(3.5, -3.5);
+        ctx.lineTo(11, 0);
+        ctx.lineTo(3.5, 3.5);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      drawCharacterHeadLocal(ctx, 0, -165, 17, 'smile');
+
+      ctx.restore();
+
+      drawPillLocal(ctx, isZh
+        ? '👍「平安脫困！記住逃生四守則，生命安全永遠第一！」'
+        : '👍 "Made it out alive! Remember survival protocols, safety comes first!"', w * 0.62, h * 0.42, '#ffffff', '#0f172a', 13, 22, 8, '#10b981');
+
+      drawPillLocal(ctx, isZh
+        ? '🏆 奇蹟生還！冷靜判斷、低姿爬行、關門塞縫，絕處逢生！'
+        : '🏆 MIRACLE ESCAPE! Stay calm, crawl low, shelter in place, and survive!', w * 0.5, 32, '#059669', '#ffffff', 13, 24, 8);
+    }
+
+    ctx.restore();
+
+    if (isPlaying) {
+      escapeTimer += playbackSpeed;
+      const progressPercent = Math.min(100, (escapeTimer / escapeDuration) * 100);
+      if (progressBar) progressBar.style.width = `${progressPercent}%`;
+
+      if (escapeTimer >= escapeDuration) {
+        escapeTimer = 0;
+      }
+    } else {
+      if (progressBar) progressBar.style.width = '100%';
+    }
+
+    requestAnimationFrame(render);
+  }
+
+  updatePlayPauseUI();
+  render();
 }
