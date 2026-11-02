@@ -917,7 +917,7 @@ function initSurvivalSimulator() {
     const hintEl = document.getElementById('survivalStatusHint');
     if (!hintEl) return;
     const isZh = currentLang === 'zh';
-    const sec = (currentAction >= 1 && currentAction <= 3) ? 24 : 16;
+    const sec = (currentAction === 1 || currentAction === 2) ? 24 : (currentAction === 3 ? 28 : 16);
     if (isPlaying) {
       hintEl.textContent = isZh
         ? `💡 自動輪播中（此動作完整示範 ${sec} 秒，速度 ${playbackSpeed}x）。點擊任一動作可停駐觀看細節。`
@@ -2015,15 +2015,15 @@ function initSurvivalSimulator() {
     // SCENE 3: STOP, DROP & ROLL (Empty Room Pause -> Panic Burst -> Out of Breath Stop -> Drop -> Roll -> Extinguished)
     // =============================================================
     else if (currentAction === 3) {
-      const cycle = (actionTimer % 1440);
+      const cycle = (actionTimer % 1680);
       const centerX = w * 0.55;
 
       const isAct0 = cycle < 110;
       const isAct1 = cycle >= 110 && cycle < 450;
-      const isAct2 = cycle >= 450 && cycle < 650;
-      const isAct3 = cycle >= 650 && cycle < 820;
-      const isAct4 = cycle >= 820 && cycle < 1280;
-      const isAct5 = cycle >= 1280;
+      const isAct2 = cycle >= 450 && cycle < 700;
+      const isAct3 = cycle >= 700 && cycle < 910;
+      const isAct4 = cycle >= 910 && cycle < 1485;
+      const isAct5 = cycle >= 1485;
 
       // -------------------------------------------------------------
       // 1. BACKGROUND: ROOM WITH OPEN DOORWAY AND RAGING INFERNO BEHIND IT
@@ -2253,7 +2253,7 @@ function initSurvivalSimulator() {
         const personX = centerX;
         const personY = groundY;
 
-        const pantCycle = actionTimer * 0.22 * playbackSpeed;
+        const pantCycle = actionTimer * 0.176 * playbackSpeed;
         const chestHeave = Math.sin(pantCycle) * 4.5;
         const hunchAngle = 0.26 + Math.sin(pantCycle) * 0.05;
 
@@ -2338,8 +2338,8 @@ function initSurvivalSimulator() {
 
         ctx.restore(); // end torso transform
 
-        // Panting steam puffs from mouth
-        const pantPuff = (actionTimer * 0.12 * playbackSpeed) % 1;
+        // Panting steam puffs from mouth (20% slower rhythm)
+        const pantPuff = (actionTimer * 0.096 * playbackSpeed) % 1;
         ctx.fillStyle = `rgba(241, 245, 249, ${0.7 - pantPuff * 0.65})`;
         ctx.beginPath();
         ctx.arc(28 + pantPuff * 14, -160 + pantPuff * 8, 3.5 + pantPuff * 5, 0, Math.PI * 2);
@@ -2352,12 +2352,12 @@ function initSurvivalSimulator() {
           : 'Exhausted from running! Halt movement immediately to cut convective airflow!', w * 0.5, groundY - 14, 'rgba(15,23,42,0.85)', '#fca5a5', 11, 16, 5);
 
       } else if (isAct3) {
-        // ACT 3: Dropping / Laying down on the ground, covering face!
+        // ACT 3: Dropping / Laying down on the ground, covering face! (20% slower, smooth descent)
         drawPill(ctx, currentLang === 'zh'
           ? '🧎 步驟 2：躺 (DROP) - 順勢趴躺地面，雙手緊摀臉部！'
           : '🧎 STEP 2: DROP - DROP DOWN TO FLOOR, CUP HANDS OVER FACE!', w * 0.5, 30, '#f59e0b', '#000000', 14, 24, 9);
 
-        const dropT = Math.min(1.0, (cycle - 650) / 150);
+        const dropT = Math.min(1.0, (cycle - 700) / 190);
         const easeT = dropT * dropT * (3 - 2 * dropT);
 
         const hipY = (groundY - 80) + easeT * 60;
@@ -2403,17 +2403,17 @@ function initSurvivalSimulator() {
           : 'Cup hands firmly over mouth, nose, and eyes to protect airway!', w * 0.5, groundY - 14, 'rgba(15,23,42,0.85)', '#fef08a', 11, 16, 5);
 
       } else if (isAct4) {
-        // ACT 4: Spin around until the fire is out!
+        // ACT 4: Spin around until the fire is out! (20% slower rolling spin & smothering)
         drawPill(ctx, currentLang === 'zh'
           ? '🔄 步驟 3：滾 (ROLL) - 來回翻滾壓滅火苗！完全撲滅！'
           : '🔄 STEP 3: ROLL - ROLL BACK & FORTH TO SMOTHER ALL FLAMES!', w * 0.5, 30, '#10b981', '#ffffff', 14, 24, 9);
 
-        const rollCycle = (cycle - 820) * 0.08 * playbackSpeed;
+        const rollCycle = (cycle - 910) * 0.064 * playbackSpeed;
         const rollX = centerX + Math.sin(rollCycle * 0.5) * 90;
         const rollY = groundY - 22;
-        const rollAngle = rollCycle * 1.5;
+        const rollAngle = rollCycle * 1.25;
 
-        const rollProgress = Math.min(1.0, (cycle - 820) / 420);
+        const rollProgress = Math.min(1.0, (cycle - 910) / 525);
         const remainingFire = Math.max(0, 1.0 - rollProgress);
 
         ctx.save();
@@ -2715,8 +2715,8 @@ function initSurvivalSimulator() {
         : '🪟 STEP 4: SIGNAL AT WINDOW WITH BRIGHT CLOTH & FLASHLIGHT! NEVER JUMP!', w * 0.5, 30, '#0284c7', '#ffffff', 13, 24, 8);
     }
 
-    // Auto-advance timer logic (Actions 1, 2, and 3 are 24s cinematic experiences; Action 4 is 16s)
-    const currentActionDuration = (currentAction >= 1 && currentAction <= 3) ? 1440 : actionDuration;
+    // Auto-advance timer logic (Action 1 & 2: 24s; Action 3: 28s for 20% slower out-of-breath & rolling; Action 4: 16s)
+    const currentActionDuration = (currentAction === 1 || currentAction === 2) ? 1440 : (currentAction === 3 ? 1680 : actionDuration);
     if (isPlaying) {
       actionTimer += playbackSpeed;
       const progressPercent = Math.min(100, (actionTimer / currentActionDuration) * 100);
