@@ -917,10 +917,11 @@ function initSurvivalSimulator() {
     const hintEl = document.getElementById('survivalStatusHint');
     if (!hintEl) return;
     const isZh = currentLang === 'zh';
+    const sec = currentAction === 1 ? 24 : 16;
     if (isPlaying) {
       hintEl.textContent = isZh
-        ? `💡 自動輪播中（每動作停留 16 秒，速度 ${playbackSpeed}x）。點擊任一動作可停駐觀看細節。`
-        : `💡 Auto-advancing (16s per action, speed ${playbackSpeed}x). Click any action tab to pause & inspect.`;
+        ? `💡 自動輪播中（此動作完整示範 ${sec} 秒，速度 ${playbackSpeed}x）。點擊任一動作可停駐觀看細節。`
+        : `💡 Auto-advancing (${sec}s complete demo, speed ${playbackSpeed}x). Click any action tab to pause & inspect.`;
     } else {
       hintEl.textContent = isZh
         ? `⏸ 已停駐於動作 ${currentAction}。點擊「▶」可恢復自動輪播。`
@@ -1005,8 +1006,8 @@ function initSurvivalSimulator() {
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(0, 0, w, groundY);
 
-      // Cycle calculation: 900 frames total (~15 seconds at 60fps)
-      const cycle = (actionTimer % 900);
+      // Cycle calculation: 1440 frames total (~24 seconds at 60fps for clear, deliberate, cinematic pacing)
+      const cycle = (actionTimer % 1440);
 
       let zoom = 1.0;
       let doorOpenAngle = 0; // 0 (closed) to 1 (fully cracked open)
@@ -1014,31 +1015,31 @@ function initSurvivalSimulator() {
       let isInfernoAct = false;
       let isBackOfHandAct = false;
 
-      if (cycle < 240) {
-        // Act 1: Fatal Palm Mistake (0 - 240)
+      if (cycle < 380) {
+        // Act 1: Fatal Palm Mistake (0 - 380, ~6.3s)
         isPalmAct = true;
         zoom = 1.0;
-      } else if (cycle < 500) {
-        // Act 2: Zoom in & Inferno behind door (240 - 500)
+      } else if (cycle < 820) {
+        // Act 2: Zoom in & Inferno behind door (380 - 820, ~7.3s)
         isInfernoAct = true;
-        const zoomProg = Math.min(1.0, (cycle - 240) / 45);
+        const zoomProg = Math.min(1.0, (cycle - 380) / 90);
         const easeZ = 0.5 - 0.5 * Math.cos(zoomProg * Math.PI);
         zoom = 1.0 + easeZ * 0.65; // Cinematic 1.65x zoom
 
-        if (cycle > 275) {
-          const openProg = Math.min(1.0, (cycle - 275) / 45);
+        if (cycle > 470) {
+          const openProg = Math.min(1.0, (cycle - 470) / 80);
           doorOpenAngle = 0.5 - 0.5 * Math.cos(openProg * Math.PI);
         }
-      } else if (cycle < 640) {
-        // Act 3: Slam shut & zoom back out (500 - 640)
-        const shutProg = Math.min(1.0, (cycle - 500) / 22);
+      } else if (cycle < 980) {
+        // Act 3: Slam shut & zoom back out (820 - 980, ~2.6s)
+        const shutProg = Math.min(1.0, (cycle - 820) / 40);
         doorOpenAngle = Math.max(0, 1.0 - shutProg);
 
-        const zoomOutProg = Math.min(1.0, (cycle - 522) / 48);
+        const zoomOutProg = Math.min(1.0, (cycle - 860) / 90);
         const easeZO = 0.5 - 0.5 * Math.cos(zoomOutProg * Math.PI);
         zoom = 1.65 - easeZO * 0.65;
       } else {
-        // Act 4: Correct Back-of-Hand Protocol (640 - 900)
+        // Act 4: Correct Back-of-Hand Protocol (980 - 1440, ~7.7s)
         isBackOfHandAct = true;
         zoom = 1.0;
       }
@@ -1144,7 +1145,7 @@ function initSurvivalSimulator() {
       // Lever Door Handle on right latch edge
       const currentKnobX = doorX + swingW - 26;
       const currentKnobY = knobY;
-      const isHandleHot = isPalmAct ? (cycle > 50) : (isBackOfHandAct ? (cycle > 710) : false);
+      const isHandleHot = isPalmAct ? (cycle > 90) : (isBackOfHandAct ? (cycle > 1150) : false);
 
       ctx.fillStyle = isHandleHot ? '#ef4444' : '#cbd5e1';
       ctx.shadowColor = isHandleHot ? 'rgba(239, 68, 68, 0.9)' : 'transparent';
@@ -1176,13 +1177,13 @@ function initSurvivalSimulator() {
       let pOffsetX = 0;
       let pOffsetY = 0;
       if (isPalmAct) {
-        pOffsetX = cycle < 50 ? (cycle / 50) * 8 : 8;
+        pOffsetX = cycle < 90 ? (cycle / 90) * 8 : 8;
       } else if (isInfernoAct) {
         pOffsetX = -36; // jumps backward in alarm!
         pOffsetY = 4;
       } else if (isBackOfHandAct) {
-        const reachCycle = (cycle - 640);
-        pOffsetX = reachCycle < 60 ? (reachCycle / 60) * 6 : (reachCycle > 150 ? -20 : 6);
+        const reachCycle = (cycle - 980);
+        pOffsetX = reachCycle < 90 ? (reachCycle / 90) * 6 : (reachCycle > 270 ? -20 : 6);
       }
 
       const pX = pBaseX - pOffsetX;
@@ -1276,8 +1277,8 @@ function initSurvivalSimulator() {
         elbowX = pX - 35;
         elbowY = curY - 150;
       } else if (isBackOfHandAct) {
-        const reachCycle = (cycle - 640);
-        if (reachCycle > 150) {
+        const reachCycle = (cycle - 980);
+        if (reachCycle > 270) {
           // Safe recoil: hand springs back from heat!
           targetHandX = pX - 22;
           targetHandY = currentKnobY + 15;
@@ -1327,7 +1328,7 @@ function initSurvivalSimulator() {
         ctx.fillStyle = '#fed7aa';
         ctx.fillRect(-2, -14, 6, 5);
 
-        if (cycle > 50) {
+        if (cycle > 120) {
           ctx.strokeStyle = '#ef4444';
           ctx.lineWidth = 2;
           ctx.strokeRect(-6, -16, 22, 28);
@@ -1353,8 +1354,8 @@ function initSurvivalSimulator() {
         ctx.fillRect(9, 2, 2.5, 3);
         ctx.fillRect(8, 6.5, 2.5, 3);
 
-        const reachCycle = (cycle - 640);
-        if (reachCycle > 150) {
+        const reachCycle = (cycle - 980);
+        if (reachCycle > 270) {
           drawPill(ctx, currentLang === 'zh' ? '✅ 自然後彈縮回' : '✅ Recoils Safely', 2, -26, '#10b981', '#ffffff', 10, 10, 4);
         }
       } else {
@@ -1378,7 +1379,7 @@ function initSurvivalSimulator() {
         drawPill(ctx, currentLang === 'zh'
           ? '🔥 門外已是烈焰火海！盲目開門會引發閃燃，瞬間奪命！'
           : '🔥 HALLWAY IS A RAGING INFERNO! OPENING CAUSES LETHAL FLASHOVER!', w * 0.5, 30, '#dc2626', '#ffffff', 14, 24, 8);
-      } else if (cycle >= 500 && cycle < 640) {
+      } else if (cycle >= 820 && cycle < 980) {
         drawPill(ctx, currentLang === 'zh'
           ? '🛑 立即緊閉房門！常閉式防火門能阻隔濃煙 30~60 分鐘！'
           : '🛑 SLAM DOOR SHUT! Fire doors seal out lethal smoke for 30–60 minutes!', w * 0.5, 30, '#0284c7', '#ffffff', 14, 24, 8);
@@ -1421,7 +1422,7 @@ function initSurvivalSimulator() {
           ctx.fillText('• Severe burns on palms destroy crawling mobility.', cardX + 14, cardY + 80);
           ctx.fillText('• Gripping unlatches door, pulling inferno inside!', cardX + 14, cardY + 98);
         }
-      } else if (isInfernoAct || (cycle >= 500 && cycle < 640)) {
+      } else if (isInfernoAct || (cycle >= 820 && cycle < 980)) {
         ctx.fillText(currentLang === 'zh' ? '🔥 門外是火海時的致命陷阱' : '🔥 DEADLY TRAP BEHIND DOOR', cardX + 14, cardY + 22);
         ctx.fillStyle = '#e2e8f0';
         ctx.font = '10px sans-serif';
@@ -2073,14 +2074,15 @@ function initSurvivalSimulator() {
         : '🪟 STEP 4: SIGNAL AT WINDOW WITH BRIGHT CLOTH & FLASHLIGHT! NEVER JUMP!', w * 0.5, 30, '#0284c7', '#ffffff', 13, 24, 8);
     }
 
-    // Auto-advance timer logic
+    // Auto-advance timer logic (Action 1 is a 24s cinematic experience; other actions are 16s)
+    const currentActionDuration = (currentAction === 1) ? 1440 : actionDuration;
     if (isPlaying) {
       actionTimer += playbackSpeed;
-      const progressPercent = Math.min(100, (actionTimer / actionDuration) * 100);
+      const progressPercent = Math.min(100, (actionTimer / currentActionDuration) * 100);
       const progressBar = document.getElementById('survivalProgressBar');
       if (progressBar) progressBar.style.width = `${progressPercent}%`;
 
-      if (actionTimer >= actionDuration) {
+      if (actionTimer >= currentActionDuration) {
         let nextAction = currentAction + 1;
         if (nextAction > 4) nextAction = 1;
         setAction(nextAction, false);
