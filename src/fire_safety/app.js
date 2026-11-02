@@ -917,7 +917,7 @@ function initSurvivalSimulator() {
     const hintEl = document.getElementById('survivalStatusHint');
     if (!hintEl) return;
     const isZh = currentLang === 'zh';
-    const sec = (currentAction === 1 || currentAction === 2) ? 24 : (currentAction === 3 ? 28 : 16);
+    const sec = currentAction === 1 ? 24 : (currentAction === 2 ? 30 : (currentAction === 3 ? 28 : 16));
     if (isPlaying) {
       hintEl.textContent = isZh
         ? `💡 自動輪播中（此動作完整示範 ${sec} 秒，速度 ${playbackSpeed}x）。點擊任一動作可停駐觀看細節。`
@@ -1456,56 +1456,61 @@ function initSurvivalSimulator() {
     }
 
     // =============================================================
-    // SCENE 2: LOW SMOKE CRAWL (濃煙低姿勢沿牆爬行 - 4幕身歷其境教學)
+    // SCENE 2: LOW SMOKE CRAWL (濃煙低姿勢沿牆爬行 - 4幕身歷其境教學 [20% Slower Pacing])
     // =============================================================
     else if (currentAction === 2) {
-      const cycle = (actionTimer % 1440);
+      // 1800 frames total (~30 seconds, 20% slower pacing)
+      const cycle = (actionTimer % 1800);
 
       // Acts:
-      // Act 1: 0 - 360 (Clean room -> Alarm -> Smoke suddenly fills ceiling and descends)
-      // Act 2: 360 - 660 (Duck down from standing to hands & knees below 60cm clean layer)
-      // Act 3: 660 - 960 (Crawls toward door, doorway expands/zooms as he crawls outside)
-      // Act 4: 960 - 1440 (Corridor view: crawling to the left towards green EXIT sign)
+      // Act 1: 0 - 450 (Clean room -> Alarm -> Smoke suddenly fills ceiling and descends)
+      // Act 2: 450 - 820 (Duck down from standing to hands & knees below 60cm clean layer)
+      // Act 3: 820 - 1200 (Crawls into the first door opening threshold without overshooting)
+      // Act 4: 1200 - 1800 (Corridor view: crawling to the left towards second door / EXIT sign)
 
-      const isAct1 = cycle < 360;
-      const isAct2 = cycle >= 360 && cycle < 660;
-      const isAct3 = cycle >= 660 && cycle < 960;
-      const isAct4 = cycle >= 960;
+      const isAct1 = cycle < 450;
+      const isAct2 = cycle >= 450 && cycle < 820;
+      const isAct3 = cycle >= 820 && cycle < 1200;
+      const isAct4 = cycle >= 1200;
 
       // Smoke descent level
-      // In Act 1: Starts at 0 (clear room), descends down to groundY - 140 (~60cm mark)
       let smokeDescendY = 0;
       if (isAct1) {
-        if (cycle < 90) {
+        if (cycle < 110) {
           smokeDescendY = 0; // completely clear room!
         } else {
-          const fillProg = Math.min(1.0, (cycle - 90) / 220);
+          const fillProg = Math.min(1.0, (cycle - 110) / 280);
           smokeDescendY = fillProg * (groundY - 140);
         }
       } else {
         smokeDescendY = groundY - 140; // stable at 60cm smoke boundary
       }
 
-      // Camera / Door Scale in Act 3: "door becomes bigger as if he is crawling outside"
+      // Camera / Perspective in Act 3: smooth subtle zoom into doorway without distortion
       let sceneZoom = 1.0;
       let cameraPanX = 0;
 
       if (isAct3) {
-        const crawlOutProg = (cycle - 660) / 300;
+        const crawlOutProg = (cycle - 820) / 380;
         const zoomCurve = Math.sin(crawlOutProg * Math.PI);
-        sceneZoom = 1.0 + zoomCurve * 0.55;
-        cameraPanX = crawlOutProg * 120;
+        sceneZoom = 1.0 + zoomCurve * 0.28;
+        cameraPanX = crawlOutProg * 60;
       }
 
       ctx.save();
 
       if (sceneZoom !== 1.0 || cameraPanX !== 0) {
-        const focusX = w * 0.25;
+        const focusX = w * 0.28;
         const focusY = groundY - 80;
         ctx.translate(focusX, focusY);
         ctx.scale(sceneZoom, sceneZoom);
-        ctx.translate(-focusX + cameraPanX * 0.5, -focusY);
+        ctx.translate(-focusX + cameraPanX * 0.4, -focusY);
       }
+
+      // First Door Base parameters
+      const doorBaseW = 120;
+      const doorBaseH = groundY - 45;
+      const doorBaseX = w * 0.10;
 
       // ==============================================================
       // SCENERY DRAWING
@@ -1532,10 +1537,9 @@ function initSurvivalSimulator() {
         ctx.fillRect(deskX, groundY - 75, 110, 75);
         ctx.fillStyle = '#334155';
         ctx.fillRect(deskX - 5, groundY - 80, 120, 6);
-        // Desk lamp
         ctx.fillStyle = '#0284c7';
         ctx.fillRect(deskX + 85, groundY - 105, 16, 25);
-        // Wall poster
+
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(w * 0.48, 80, 70, 90);
         ctx.strokeStyle = '#334155';
@@ -1545,20 +1549,10 @@ function initSurvivalSimulator() {
         ctx.textAlign = 'center';
         ctx.fillText('CAMPUS LIFE', w * 0.48 + 35, 125);
 
-        // DOORWAY on the LEFT: The exit door of the dorm room!
-        const doorBaseW = 110;
-        const doorBaseH = groundY - 45;
-        const doorBaseX = w * 0.12;
-
-        let scaleDoor = 1.0;
-        if (isAct3) {
-          const prog = (cycle - 660) / 300;
-          scaleDoor = 1.0 + prog * 0.45; // Doorway physically expands as student crawls outside!
-        }
-
-        const dW = doorBaseW * scaleDoor;
-        const dH = doorBaseH * scaleDoor;
-        const dX = doorBaseX - (scaleDoor - 1.0) * 40;
+        // FIRST DOORWAY: Room exit door on the left
+        const dW = doorBaseW;
+        const dH = doorBaseH;
+        const dX = doorBaseX;
         const dY = groundY - dH;
 
         // Outer door frame
@@ -1573,16 +1567,16 @@ function initSurvivalSimulator() {
 
         // Corridor light through door
         const doorLight = ctx.createLinearGradient(dX, dY, dX + dW, dY);
-        doorLight.addColorStop(0, 'rgba(16, 185, 129, 0.25)'); // green exit glow in hallway
+        doorLight.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
         doorLight.addColorStop(1, 'rgba(15, 23, 42, 0.1)');
         ctx.fillStyle = doorLight;
         ctx.fillRect(dX, dY, dW, dH);
 
         // Open door slab swinging outward into hallway
         ctx.fillStyle = '#1c2438';
-        ctx.fillRect(dX - 16, dY, 16, dH);
+        ctx.fillRect(dX - 18, dY, 18, dH);
         ctx.strokeStyle = '#334155';
-        ctx.strokeRect(dX - 16, dY, 16, dH);
+        ctx.strokeRect(dX - 18, dY, 18, dH);
 
       } else {
         // SCENE B: EVACUATION CORRIDOR (Act 4: Crawling to the left to the exit)
@@ -1608,61 +1602,59 @@ function initSurvivalSimulator() {
         ctx.fillStyle = 'rgba(16, 185, 129, 0.4)';
         ctx.fillRect(0, groundY - 4, w, 4);
 
-        // Corridor doors passing by in background
+        // Corridor doors passing by in background (placed cleanly away from the gauge!)
         ctx.fillStyle = '#131b2e';
-        ctx.fillRect(w * 0.45, 55, 65, groundY - 55);
+        ctx.fillRect(w * 0.36, 55, 65, groundY - 55);
         ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-        ctx.strokeRect(w * 0.45, 55, 65, groundY - 55);
+        ctx.strokeRect(w * 0.36, 55, 65, groundY - 55);
 
-        ctx.fillRect(w * 0.75, 55, 65, groundY - 55);
-        ctx.strokeRect(w * 0.75, 55, 65, groundY - 55);
+        ctx.fillRect(w * 0.60, 55, 65, groundY - 55);
+        ctx.strokeRect(w * 0.60, 55, 65, groundY - 55);
 
-        // ILLUMINATED GREEN EMERGENCY EXIT ON THE FAR LEFT!
-        const exitX = 18;
-        const exitW = 85;
-        const exitH = groundY - 40;
-        const exitY = 40;
+        // SECOND DOOR: FIXED POSITION EMERGENCY EXIT DOOR ON THE LEFT
+        const exitX = 35;
+        const exitW = 100;
+        const exitH = groundY - 35;
+        const exitY = 35;
 
-        // Exit frame
+        // Outer emergency exit frame
         ctx.fillStyle = '#064e3b';
-        ctx.fillRect(exitX, exitY, exitW, exitH);
+        ctx.fillRect(exitX - 6, exitY - 6, exitW + 12, exitH + 6);
         ctx.strokeStyle = '#10b981';
         ctx.lineWidth = 2.5;
-        ctx.strokeRect(exitX, exitY, exitW, exitH);
+        ctx.strokeRect(exitX - 6, exitY - 6, exitW + 12, exitH + 6);
+
+        // Exit door panel
+        ctx.fillStyle = '#022c22';
+        ctx.fillRect(exitX, exitY, exitW, exitH);
 
         // Bright green Exit doorway beam
-        const exitBeam = ctx.createLinearGradient(exitX, exitY, exitX + exitW + 80, exitY);
+        const exitBeam = ctx.createLinearGradient(exitX + exitW, exitY, exitX + exitW + 120, exitY);
         exitBeam.addColorStop(0, 'rgba(16, 185, 129, 0.45)');
         exitBeam.addColorStop(1, 'rgba(16, 185, 129, 0)');
         ctx.fillStyle = exitBeam;
-        ctx.fillRect(exitX, exitY, exitW + 80, exitH);
+        ctx.fillRect(exitX + exitW, exitY, 120, exitH);
 
-        // Glowing EXIT SIGN over the door
-        ctx.fillStyle = '#10b981';
-        ctx.shadowColor = '#10b981';
-        ctx.shadowBlur = 18;
-        ctx.fillRect(exitX + 5, exitY - 26, exitW - 10, 22);
-        ctx.shadowBlur = 0;
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 11px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('EXIT 🏃 ➔', exitX + exitW / 2, exitY - 12);
+        // Emergency Panic Push Bar (橫推逃生門鎖) at standard 100cm height
+        const barY = groundY - 85;
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(exitX + 8, barY, exitW - 16, 10);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(exitX + 8, barY, exitW - 16, 10);
       }
 
       // ==============================================================
       // DESCENDING TOXIC SMOKE LAYER
       // ==============================================================
       if (smokeDescendY > 5) {
-        // Searing toxic dark smoke body
         const smokeGrad = ctx.createLinearGradient(0, 0, 0, smokeDescendY);
-        smokeGrad.addColorStop(0, '#020408'); // pitch black at ceiling
+        smokeGrad.addColorStop(0, '#020408');
         smokeGrad.addColorStop(0.7, '#0b0f19');
-        smokeGrad.addColorStop(1, 'rgba(30, 41, 59, 0.95)'); // rolling dark smoke boundary
+        smokeGrad.addColorStop(1, 'rgba(30, 41, 59, 0.95)');
         ctx.fillStyle = smokeGrad;
         ctx.fillRect(0, 0, w, smokeDescendY);
 
-        // Animated swirling smoke billows
         smokeParticles.forEach(p => {
           p.x += p.vx * playbackSpeed;
           p.y += p.vy * playbackSpeed;
@@ -1677,7 +1669,6 @@ function initSurvivalSimulator() {
           ctx.fill();
         });
 
-        // Glowing red smoke hazard line
         ctx.strokeStyle = '#ef4444';
         ctx.lineWidth = 2;
         ctx.setLineDash([8, 8]);
@@ -1687,11 +1678,9 @@ function initSurvivalSimulator() {
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Clean air layer below (30-60 cm)
         ctx.fillStyle = 'rgba(16, 185, 129, 0.08)';
         ctx.fillRect(0, smokeDescendY, w, groundY - smokeDescendY);
 
-        // Green boundary line
         ctx.strokeStyle = '#10b981';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -1704,25 +1693,22 @@ function initSurvivalSimulator() {
       // CHARACTER ANIMATION: STANDING -> DUCKING -> CRAWLING OUT -> CRAWLING LEFT
       // ==============================================================
       if (isAct1) {
-        // ACT 1: Standing in room, alarm sounds at cycle 90, looks up at smoke in panic!
+        // ACT 1: Standing in room, alarm sounds at cycle 110, looks up at smoke in panic!
         const personX = w * 0.58;
         const curY = groundY;
-        const isAlarm = cycle > 90;
+        const isAlarm = cycle > 110;
 
-        // Legs
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(personX - 15, curY - 95, 13, 95);
         ctx.fillRect(personX + 2, curY - 95, 13, 95);
-        // Shoes
+
         ctx.fillStyle = '#0f172a';
         ctx.fillRect(personX - 20, curY - 12, 20, 12);
         ctx.fillRect(personX - 2, curY - 12, 20, 12);
 
-        // Torso
         ctx.fillStyle = '#0284c7';
         ctx.fillRect(personX - 18, curY - 170, 36, 75);
 
-        // Arms: coughing or alarmed gesture
         ctx.strokeStyle = '#0284c7';
         ctx.lineWidth = 11;
         ctx.lineCap = 'round';
@@ -1739,7 +1725,6 @@ function initSurvivalSimulator() {
           ctx.stroke();
         }
 
-        // Head looking up toward ceiling smoke
         const headX = personX - 1;
         const headY = curY - 195;
         const headR = 15;
@@ -1749,7 +1734,6 @@ function initSurvivalSimulator() {
         ctx.arc(headX, headY, headR, 0, Math.PI * 2);
         ctx.fill();
 
-        // Modern cropped hair
         ctx.fillStyle = '#1e293b';
         ctx.beginPath();
         ctx.moveTo(headX + 5, headY + 8);
@@ -1762,7 +1746,6 @@ function initSurvivalSimulator() {
         ctx.closePath();
         ctx.fill();
 
-        // Eye looking up toward smoke
         ctx.fillStyle = '#0f172a';
         ctx.beginPath();
         ctx.arc(headX - 7, headY - (isAlarm ? 5 : 1), 1.8, 0, Math.PI * 2);
@@ -1771,13 +1754,13 @@ function initSurvivalSimulator() {
         if (isAlarm) {
           ctx.fillStyle = 'rgba(255,255,255,0.7)';
           ctx.beginPath();
-          ctx.arc(headX - 20, headY, 4 + (actionTimer * 0.1) % 3, 0, Math.PI * 2);
+          ctx.arc(headX - 20, headY, 4 + (actionTimer * 0.08) % 3, 0, Math.PI * 2);
           ctx.fill();
         }
 
       } else if (isAct2) {
         // ACT 2: Duck down from standing to hands & knees!
-        const duckProg = Math.min(1.0, (cycle - 360) / 100);
+        const duckProg = Math.min(1.0, (cycle - 450) / 130);
         const easeDuck = 0.5 - 0.5 * Math.cos(duckProg * Math.PI);
 
         const pX = w * 0.58 - easeDuck * 80;
@@ -1824,13 +1807,16 @@ function initSurvivalSimulator() {
         ctx.restore();
 
       } else if (isAct3) {
-        // ACT 3: Crawling out through the door! Door expands in perspective!
-        const crawlOutProg = (cycle - 660) / 300;
-        const crawlX = w * 0.42 - crawlOutProg * (w * 0.36);
+        // ACT 3: Crawling into the first door opening threshold!
+        // FIX: Student crawls toward door and stops cleanly INSIDE the doorway opening threshold, NEVER passing the left door frame!
+        const crawlOutProg = (cycle - 820) / 380;
+        const targetDoorX = doorBaseX + doorBaseW * 0.55;
+        const startX = w * 0.48;
+        const crawlX = startX - crawlOutProg * (startX - targetDoorX);
         const crawlY = groundY;
 
-        const gait = (actionTimer * 0.14) % (Math.PI * 2);
-        const undulate = Math.sin(gait) * 3;
+        const gait = (actionTimer * 0.11 * playbackSpeed) % (Math.PI * 2); // 20% slower crawling rhythm
+        const undulate = Math.sin(gait) * 2.5;
 
         ctx.save();
         ctx.translate(crawlX, crawlY);
@@ -1872,13 +1858,15 @@ function initSurvivalSimulator() {
         ctx.restore();
 
       } else {
-        // ACT 4: In corridor, crawling steadily to the left toward the green EXIT sign!
-        const corridorProg = (cycle - 960) / 480;
-        const crawlX = w * 0.85 - corridorProg * (w * 0.70);
+        // ACT 4: In corridor, crawling steadily to the left toward the second door (Exit door)!
+        const corridorProg = (cycle - 1200) / 600;
+        const exitDoorStopX = 35 + 100 + 35;
+        const startX = w * 0.78;
+        const crawlX = startX - corridorProg * (startX - exitDoorStopX);
         const crawlY = groundY;
 
-        const gait = (actionTimer * 0.16) % (Math.PI * 2);
-        const undulate = Math.sin(gait) * 3;
+        const gait = (actionTimer * 0.12 * playbackSpeed) % (Math.PI * 2); // 20% slower crawling
+        const undulate = Math.sin(gait) * 2.5;
 
         ctx.save();
         ctx.translate(crawlX, crawlY);
@@ -1933,10 +1921,29 @@ function initSurvivalSimulator() {
       ctx.restore(); // END CAMERA/ZOOM TRANSFORM
 
       // ==============================================================
-      // CRYSTAL-SHARP HUD OVERLAYS (Fixed On Screen)
+      // CRYSTAL-SHARP HUD OVERLAYS (Fixed On Screen, piercing smoke)
       // ==============================================================
+      if (isAct4) {
+        // High-luminescence EXIT SIGN on the second door, visible through smoke!
+        const exitX = 35;
+        const exitW = 100;
+        ctx.fillStyle = '#10b981';
+        ctx.shadowColor = '#10b981';
+        ctx.shadowBlur = 18;
+        ctx.fillRect(exitX + 10, 16, exitW - 20, 24);
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('EXIT 🏃 ➔', exitX + exitW / 2, 32);
+
+        // Low-level luminous ground exit badge (for crawling eye level)
+        drawPill(ctx, currentLang === 'zh' ? '🟢 逃生方向 ➔ (EXIT)' : '🟢 ESCAPE ROUTE ➔', exitX + exitW / 2 + 10, groundY - 45, '#064e3b', '#a7f3d0', 10, 12, 4, '#10b981');
+      }
+
       if (isAct1) {
-        if (cycle < 90) {
+        if (cycle < 110) {
           drawPill(ctx, currentLang === 'zh'
             ? '🏠 寢室原狀：空氣清新正常 (NORMAL ROOM CONDITIONS)'
             : '🏠 NORMAL DORM CONDITIONS: CLEAR AIR BEFORE FIRE', w * 0.5, 30, '#0284c7', '#ffffff', 13, 24, 8);
@@ -2715,8 +2722,8 @@ function initSurvivalSimulator() {
         : '🪟 STEP 4: SIGNAL AT WINDOW WITH BRIGHT CLOTH & FLASHLIGHT! NEVER JUMP!', w * 0.5, 30, '#0284c7', '#ffffff', 13, 24, 8);
     }
 
-    // Auto-advance timer logic (Action 1 & 2: 24s; Action 3: 28s for 20% slower out-of-breath & rolling; Action 4: 16s)
-    const currentActionDuration = (currentAction === 1 || currentAction === 2) ? 1440 : (currentAction === 3 ? 1680 : actionDuration);
+    // Auto-advance timer logic (Action 1: 24s; Action 2: 30s [20% slower]; Action 3: 28s; Action 4: 16s)
+    const currentActionDuration = (currentAction === 1) ? 1440 : (currentAction === 2 ? 1800 : (currentAction === 3 ? 1680 : actionDuration));
     if (isPlaying) {
       actionTimer += playbackSpeed;
       const progressPercent = Math.min(100, (actionTimer / currentActionDuration) * 100);
