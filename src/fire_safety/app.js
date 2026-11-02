@@ -917,7 +917,7 @@ function initSurvivalSimulator() {
     const hintEl = document.getElementById('survivalStatusHint');
     if (!hintEl) return;
     const isZh = currentLang === 'zh';
-    const sec = currentAction === 1 ? 24 : 16;
+    const sec = (currentAction === 1 || currentAction === 2) ? 24 : 16;
     if (isPlaying) {
       hintEl.textContent = isZh
         ? `💡 自動輪播中（此動作完整示範 ${sec} 秒，速度 ${playbackSpeed}x）。點擊任一動作可停駐觀看細節。`
@@ -1456,143 +1456,559 @@ function initSurvivalSimulator() {
     }
 
     // =============================================================
-    // SCENE 2: LOW SMOKE CRAWL (濃煙低姿勢沿牆爬行)
+    // SCENE 2: LOW SMOKE CRAWL (濃煙低姿勢沿牆爬行 - 4幕身歷其境教學)
     // =============================================================
     else if (currentAction === 2) {
-      const smokeBoundaryY = groundY - 140;
+      const cycle = (actionTimer % 1440);
 
-      ctx.fillStyle = '#060913';
-      ctx.fillRect(0, 0, w, smokeBoundaryY);
+      // Acts:
+      // Act 1: 0 - 360 (Clean room -> Alarm -> Smoke suddenly fills ceiling and descends)
+      // Act 2: 360 - 660 (Duck down from standing to hands & knees below 60cm clean layer)
+      // Act 3: 660 - 960 (Crawls toward door, doorway expands/zooms as he crawls outside)
+      // Act 4: 960 - 1440 (Corridor view: crawling to the left towards green EXIT sign)
 
-      smokeParticles.forEach(p => {
-        p.x += p.vx * playbackSpeed;
-        p.y += p.vy * playbackSpeed;
-        if (p.x < -60) p.x = w + 60;
-        if (p.x > w + 60) p.x = -60;
-        if (p.y < 10) p.y = smokeBoundaryY - 15;
-        if (p.y > smokeBoundaryY) p.y = 20;
+      const isAct1 = cycle < 360;
+      const isAct2 = cycle >= 360 && cycle < 660;
+      const isAct3 = cycle >= 660 && cycle < 960;
+      const isAct4 = cycle >= 960;
 
-        ctx.fillStyle = `rgba(30, 41, 59, ${p.opacity})`;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fill();
-      });
+      // Smoke descent level
+      // In Act 1: Starts at 0 (clear room), descends down to groundY - 140 (~60cm mark)
+      let smokeDescendY = 0;
+      if (isAct1) {
+        if (cycle < 90) {
+          smokeDescendY = 0; // completely clear room!
+        } else {
+          const fillProg = Math.min(1.0, (cycle - 90) / 220);
+          smokeDescendY = fillProg * (groundY - 140);
+        }
+      } else {
+        smokeDescendY = groundY - 140; // stable at 60cm smoke boundary
+      }
 
-      drawPill(ctx, currentLang === 'zh'
-        ? '⚠️ 致命濃煙高溫層 (>500°C 劇毒一氧化碳 CO，吸入數口迅速致命！)'
-        : '⚠️ LETHAL TOXIC SMOKE LAYER (>500°C Carbon Monoxide & Cyanide)', w * 0.5, 30, 'rgba(239, 68, 68, 0.9)', '#ffffff', 12, 22, 7);
+      // Camera / Door Scale in Act 3: "door becomes bigger as if he is crawling outside"
+      let sceneZoom = 1.0;
+      let cameraPanX = 0;
 
-      ctx.fillStyle = 'rgba(16, 185, 129, 0.06)';
-      ctx.fillRect(0, smokeBoundaryY, w, groundY - smokeBoundaryY);
-
-      ctx.strokeStyle = '#10b981';
-      ctx.lineWidth = 2.5;
-      ctx.setLineDash([8, 8]);
-      ctx.beginPath();
-      ctx.moveTo(0, smokeBoundaryY);
-      ctx.lineTo(w, smokeBoundaryY);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      ctx.fillStyle = '#10b981';
-      ctx.font = 'bold 12px sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(currentLang === 'zh'
-        ? '🟢 離地 30-60 公分：新鮮高含氧呼吸層 (CLEAN AIR LAYER - CRAWL HERE)'
-        : '🟢 30-60 CM ABOVE FLOOR: CLEAN BREATHABLE AIR LAYER (CRAWL HERE)', 15, smokeBoundaryY + 18);
-
-      // Height ruler
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-      ctx.fillRect(8, 55, 60, groundY - 55);
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-      ctx.strokeRect(8, 55, 60, groundY - 55);
-
-      ctx.font = 'bold 9px sans-serif';
-      ctx.fillStyle = '#ef4444';
-      ctx.fillText('180cm 💀', 14, 75);
-      ctx.fillText('100cm ⚠️', 14, 135);
-      ctx.fillStyle = '#10b981';
-      ctx.fillText('60cm 🟢', 14, smokeBoundaryY + 3);
-      ctx.fillText('0cm ──', 14, groundY - 4);
-
-      // Exit Door
-      const exitDoorX = w - 70;
-      ctx.fillStyle = '#065f46';
-      ctx.fillRect(exitDoorX, groundY - 170, 55, 170);
-      ctx.strokeStyle = '#10b981';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(exitDoorX, groundY - 170, 55, 170);
-
-      ctx.fillStyle = '#10b981';
-      ctx.fillRect(exitDoorX - 10, groundY - 200, 75, 24);
-      ctx.fillStyle = '#000000';
-      ctx.font = 'bold 11px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('EXIT 🏃', exitDoorX + 27, groundY - 184);
-
-      // Crawling student
-      const crawlSpan = w - 240;
-      const crawlX = 85 + ((frame * 1.6) % crawlSpan);
-      const crawlY = groundY - 20;
-
-      const gait = (frame * 0.12) % (Math.PI * 2);
-      const spineUndulate = Math.sin(gait) * 3;
+      if (isAct3) {
+        const crawlOutProg = (cycle - 660) / 300;
+        const zoomCurve = Math.sin(crawlOutProg * Math.PI);
+        sceneZoom = 1.0 + zoomCurve * 0.55;
+        cameraPanX = crawlOutProg * 120;
+      }
 
       ctx.save();
-      ctx.translate(crawlX, crawlY);
 
-      ctx.strokeStyle = '#0f172a';
-      ctx.lineWidth = 10;
-      ctx.lineCap = 'round';
+      if (sceneZoom !== 1.0 || cameraPanX !== 0) {
+        const focusX = w * 0.25;
+        const focusY = groundY - 80;
+        ctx.translate(focusX, focusY);
+        ctx.scale(sceneZoom, sceneZoom);
+        ctx.translate(-focusX + cameraPanX * 0.5, -focusY);
+      }
+
+      // ==============================================================
+      // SCENERY DRAWING
+      // ==============================================================
+      if (!isAct4) {
+        // SCENE A: DORMITORY ROOM INTERIOR (Acts 1, 2, and 3)
+        // Walls & Floor
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, w, groundY);
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(0, groundY, w, h - groundY);
+
+        // Ground floor line
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, groundY);
+        ctx.lineTo(w, groundY);
+        ctx.stroke();
+
+        // Room Background details: Window, desk, poster on wall
+        const deskX = w * 0.72;
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(deskX, groundY - 75, 110, 75);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(deskX - 5, groundY - 80, 120, 6);
+        // Desk lamp
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(deskX + 85, groundY - 105, 16, 25);
+        // Wall poster
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(w * 0.48, 80, 70, 90);
+        ctx.strokeStyle = '#334155';
+        ctx.strokeRect(w * 0.48, 80, 70, 90);
+        ctx.fillStyle = '#64748b';
+        ctx.font = '8px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('CAMPUS LIFE', w * 0.48 + 35, 125);
+
+        // DOORWAY on the LEFT: The exit door of the dorm room!
+        const doorBaseW = 110;
+        const doorBaseH = groundY - 45;
+        const doorBaseX = w * 0.12;
+
+        let scaleDoor = 1.0;
+        if (isAct3) {
+          const prog = (cycle - 660) / 300;
+          scaleDoor = 1.0 + prog * 0.45; // Doorway physically expands as student crawls outside!
+        }
+
+        const dW = doorBaseW * scaleDoor;
+        const dH = doorBaseH * scaleDoor;
+        const dX = doorBaseX - (scaleDoor - 1.0) * 40;
+        const dY = groundY - dH;
+
+        // Outer door frame
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(dX - 14, dY - 10, dW + 28, dH + 10);
+        ctx.strokeStyle = '#334155';
+        ctx.strokeRect(dX - 14, dY - 10, dW + 28, dH + 10);
+
+        // Open door doorway leading to corridor
+        ctx.fillStyle = '#05070f';
+        ctx.fillRect(dX, dY, dW, dH);
+
+        // Corridor light through door
+        const doorLight = ctx.createLinearGradient(dX, dY, dX + dW, dY);
+        doorLight.addColorStop(0, 'rgba(16, 185, 129, 0.25)'); // green exit glow in hallway
+        doorLight.addColorStop(1, 'rgba(15, 23, 42, 0.1)');
+        ctx.fillStyle = doorLight;
+        ctx.fillRect(dX, dY, dW, dH);
+
+        // Open door slab swinging outward into hallway
+        ctx.fillStyle = '#1c2438';
+        ctx.fillRect(dX - 16, dY, 16, dH);
+        ctx.strokeStyle = '#334155';
+        ctx.strokeRect(dX - 16, dY, 16, dH);
+
+      } else {
+        // SCENE B: EVACUATION CORRIDOR (Act 4: Crawling to the left to the exit)
+        ctx.fillStyle = '#0a0e1a';
+        ctx.fillRect(0, 0, w, groundY);
+        ctx.fillStyle = '#060911';
+        ctx.fillRect(0, groundY, w, h - groundY);
+
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, groundY);
+        ctx.lineTo(w, groundY);
+        ctx.stroke();
+
+        // Wall base skirting board (tactile guide: 沿牆爬行)
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(0, groundY - 18, w, 18);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(0, groundY - 18, w, 2.5);
+
+        // Low-level luminous floor escape strip (綠色地面避難標線)
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.4)';
+        ctx.fillRect(0, groundY - 4, w, 4);
+
+        // Corridor doors passing by in background
+        ctx.fillStyle = '#131b2e';
+        ctx.fillRect(w * 0.45, 55, 65, groundY - 55);
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        ctx.strokeRect(w * 0.45, 55, 65, groundY - 55);
+
+        ctx.fillRect(w * 0.75, 55, 65, groundY - 55);
+        ctx.strokeRect(w * 0.75, 55, 65, groundY - 55);
+
+        // ILLUMINATED GREEN EMERGENCY EXIT ON THE FAR LEFT!
+        const exitX = 18;
+        const exitW = 85;
+        const exitH = groundY - 40;
+        const exitY = 40;
+
+        // Exit frame
+        ctx.fillStyle = '#064e3b';
+        ctx.fillRect(exitX, exitY, exitW, exitH);
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(exitX, exitY, exitW, exitH);
+
+        // Bright green Exit doorway beam
+        const exitBeam = ctx.createLinearGradient(exitX, exitY, exitX + exitW + 80, exitY);
+        exitBeam.addColorStop(0, 'rgba(16, 185, 129, 0.45)');
+        exitBeam.addColorStop(1, 'rgba(16, 185, 129, 0)');
+        ctx.fillStyle = exitBeam;
+        ctx.fillRect(exitX, exitY, exitW + 80, exitH);
+
+        // Glowing EXIT SIGN over the door
+        ctx.fillStyle = '#10b981';
+        ctx.shadowColor = '#10b981';
+        ctx.shadowBlur = 18;
+        ctx.fillRect(exitX + 5, exitY - 26, exitW - 10, 22);
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('EXIT 🏃 ➔', exitX + exitW / 2, exitY - 12);
+      }
+
+      // ==============================================================
+      // DESCENDING TOXIC SMOKE LAYER
+      // ==============================================================
+      if (smokeDescendY > 5) {
+        // Searing toxic dark smoke body
+        const smokeGrad = ctx.createLinearGradient(0, 0, 0, smokeDescendY);
+        smokeGrad.addColorStop(0, '#020408'); // pitch black at ceiling
+        smokeGrad.addColorStop(0.7, '#0b0f19');
+        smokeGrad.addColorStop(1, 'rgba(30, 41, 59, 0.95)'); // rolling dark smoke boundary
+        ctx.fillStyle = smokeGrad;
+        ctx.fillRect(0, 0, w, smokeDescendY);
+
+        // Animated swirling smoke billows
+        smokeParticles.forEach(p => {
+          p.x += p.vx * playbackSpeed;
+          p.y += p.vy * playbackSpeed;
+          if (p.x < -40) p.x = w + 40;
+          if (p.x > w + 40) p.x = -40;
+          if (p.y < 10) p.y = smokeDescendY - 15;
+          if (p.y > smokeDescendY) p.y = 20;
+
+          ctx.fillStyle = `rgba(30, 41, 59, ${p.opacity || 0.4})`;
+          ctx.beginPath();
+          ctx.arc(p.x, (p.y % smokeDescendY), p.radius || 20, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Glowing red smoke hazard line
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 8]);
+        ctx.beginPath();
+        ctx.moveTo(0, smokeDescendY);
+        ctx.lineTo(w, smokeDescendY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Clean air layer below (30-60 cm)
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.08)';
+        ctx.fillRect(0, smokeDescendY, w, groundY - smokeDescendY);
+
+        // Green boundary line
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, smokeDescendY + 2);
+        ctx.lineTo(w, smokeDescendY + 2);
+        ctx.stroke();
+      }
+
+      // ==============================================================
+      // CHARACTER ANIMATION: STANDING -> DUCKING -> CRAWLING OUT -> CRAWLING LEFT
+      // ==============================================================
+      if (isAct1) {
+        // ACT 1: Standing in room, alarm sounds at cycle 90, looks up at smoke in panic!
+        const personX = w * 0.58;
+        const curY = groundY;
+        const isAlarm = cycle > 90;
+
+        // Legs
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(personX - 15, curY - 95, 13, 95);
+        ctx.fillRect(personX + 2, curY - 95, 13, 95);
+        // Shoes
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(personX - 20, curY - 12, 20, 12);
+        ctx.fillRect(personX - 2, curY - 12, 20, 12);
+
+        // Torso
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(personX - 18, curY - 170, 36, 75);
+
+        // Arms: coughing or alarmed gesture
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 11;
+        ctx.lineCap = 'round';
+        if (isAlarm) {
+          ctx.beginPath();
+          ctx.moveTo(personX - 12, curY - 165);
+          ctx.lineTo(personX - 24, curY - 180);
+          ctx.lineTo(personX - 10, curY - 192);
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(personX - 14, curY - 165);
+          ctx.lineTo(personX - 22, curY - 120);
+          ctx.stroke();
+        }
+
+        // Head looking up toward ceiling smoke
+        const headX = personX - 1;
+        const headY = curY - 195;
+        const headR = 15;
+
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(headX, headY, headR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Modern cropped hair
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.moveTo(headX + 5, headY + 8);
+        ctx.quadraticCurveTo(headX + headR + 2, headY + 2, headX + headR + 1, headY - 6);
+        ctx.quadraticCurveTo(headX + 4, headY - headR - 3, headX - 4, headY - headR - 2);
+        ctx.quadraticCurveTo(headX - headR - 2, headY - headR + 4, headX - headR + 1, headY - 2);
+        ctx.lineTo(headX - 6, headY - 4);
+        ctx.lineTo(headX + 2, headY - 2);
+        ctx.quadraticCurveTo(headX + 8, headY + 2, headX + 5, headY + 8);
+        ctx.closePath();
+        ctx.fill();
+
+        // Eye looking up toward smoke
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(headX - 7, headY - (isAlarm ? 5 : 1), 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (isAlarm) {
+          ctx.fillStyle = 'rgba(255,255,255,0.7)';
+          ctx.beginPath();
+          ctx.arc(headX - 20, headY, 4 + (actionTimer * 0.1) % 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+      } else if (isAct2) {
+        // ACT 2: Duck down from standing to hands & knees!
+        const duckProg = Math.min(1.0, (cycle - 360) / 100);
+        const easeDuck = 0.5 - 0.5 * Math.cos(duckProg * Math.PI);
+
+        const pX = w * 0.58 - easeDuck * 80;
+        const pY = groundY;
+        const spineH = 170 - easeDuck * 135;
+
+        ctx.save();
+        ctx.translate(pX, pY);
+
+        ctx.fillStyle = '#1e293b';
+        if (duckProg < 0.5) {
+          ctx.fillRect(-15, -95 + easeDuck * 60, 13, 95 - easeDuck * 60);
+          ctx.fillRect(2, -95 + easeDuck * 60, 13, 95 - easeDuck * 60);
+        } else {
+          ctx.beginPath();
+          ctx.roundRect(10, -22, 35, 20, 6);
+          ctx.fill();
+        }
+
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.roundRect(-25, -spineH, 50 + easeDuck * 20, 35 - easeDuck * 10, 8);
+        ctx.fill();
+
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-15, -spineH + 10);
+        ctx.lineTo(-30, 0);
+        ctx.stroke();
+
+        const hY = -spineH - 8;
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(-28, hY, 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(-28, hY - 3, 15, Math.PI * 0.9, Math.PI * 2.1);
+        ctx.fill();
+
+        ctx.restore();
+
+      } else if (isAct3) {
+        // ACT 3: Crawling out through the door! Door expands in perspective!
+        const crawlOutProg = (cycle - 660) / 300;
+        const crawlX = w * 0.42 - crawlOutProg * (w * 0.36);
+        const crawlY = groundY;
+
+        const gait = (actionTimer * 0.14) % (Math.PI * 2);
+        const undulate = Math.sin(gait) * 3;
+
+        ctx.save();
+        ctx.translate(crawlX, crawlY);
+
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.roundRect(15 + Math.sin(gait) * 10, -22, 38, 20, 8);
+        ctx.fill();
+
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.roundRect(-22, -36 + undulate, 58, 24, 8);
+        ctx.fill();
+
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 9;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-14, -26);
+        ctx.lineTo(-35 + Math.cos(gait) * 16, 0);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#0369a1';
+        ctx.beginPath();
+        ctx.moveTo(-14, -26);
+        ctx.lineTo(-35 + Math.cos(gait + Math.PI) * 16, 0);
+        ctx.stroke();
+
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(-36, -26 + undulate, 13, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(-36, -29 + undulate, 14, Math.PI * 0.85, Math.PI * 2.15);
+        ctx.fill();
+
+        ctx.restore();
+
+      } else {
+        // ACT 4: In corridor, crawling steadily to the left toward the green EXIT sign!
+        const corridorProg = (cycle - 960) / 480;
+        const crawlX = w * 0.85 - corridorProg * (w * 0.70);
+        const crawlY = groundY;
+
+        const gait = (actionTimer * 0.16) % (Math.PI * 2);
+        const undulate = Math.sin(gait) * 3;
+
+        ctx.save();
+        ctx.translate(crawlX, crawlY);
+
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(-42, -10, 8, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.roundRect(14 + Math.sin(gait) * 12, -22, 38, 20, 8);
+        ctx.fill();
+
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.roundRect(-22, -36 + undulate, 58, 24, 8);
+        ctx.fill();
+
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 9;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-14, -26);
+        ctx.lineTo(-36 + Math.cos(gait) * 16, 0);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#0369a1';
+        ctx.beginPath();
+        ctx.moveTo(-14, -26);
+        ctx.lineTo(-36 + Math.cos(gait + Math.PI) * 16, 0);
+        ctx.stroke();
+
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(-36, -26 + undulate, 13, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(-36, -29 + undulate, 14, Math.PI * 0.85, Math.PI * 2.15);
+        ctx.fill();
+
+        ctx.fillStyle = '#10b981';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillText('⬅', -65, -16);
+
+        ctx.restore();
+      }
+
+      ctx.restore(); // END CAMERA/ZOOM TRANSFORM
+
+      // ==============================================================
+      // CRYSTAL-SHARP HUD OVERLAYS (Fixed On Screen)
+      // ==============================================================
+      if (isAct1) {
+        if (cycle < 90) {
+          drawPill(ctx, currentLang === 'zh'
+            ? '🏠 寢室原狀：空氣清新正常 (NORMAL ROOM CONDITIONS)'
+            : '🏠 NORMAL DORM CONDITIONS: CLEAR AIR BEFORE FIRE', w * 0.5, 30, '#0284c7', '#ffffff', 13, 24, 8);
+        } else {
+          drawPill(ctx, currentLang === 'zh'
+            ? '🚨 火警驟響！劇毒濃煙自天花板迅速蓄積下壓！'
+            : '🚨 ALARM SOUNDS! DENSE TOXIC SMOKE POURS IN FROM CEILING!', w * 0.5, 30, '#ef4444', '#ffffff', 13, 24, 8);
+        }
+      } else if (isAct2) {
+        drawPill(ctx, currentLang === 'zh'
+          ? '💨 立即壓低身姿！雙膝著地，頭部保持離地 30~60 公分呼吸層！'
+          : '💨 DROP LOW IMMEDIATELY! HANDS & KNEES BELOW 30-60CM CLEAN LAYER!', w * 0.5, 30, '#10b981', '#ffffff', 13, 24, 8);
+      } else if (isAct3) {
+        drawPill(ctx, currentLang === 'zh'
+          ? '🚪 壓低身軀爬出房門，進入避難走廊！隨手關門阻隔濃煙！'
+          : '🚪 CRAWL OUT THROUGH DOORWAY INTO CORRIDOR! CLOSE DOOR BEHIND!', w * 0.5, 30, '#0284c7', '#ffffff', 13, 24, 8);
+      } else {
+        drawPill(ctx, currentLang === 'zh'
+          ? '🟢 沿著牆壁基座摸索向左爬向緊急出口（EXIT）！絕對不要站立！'
+          : '🟢 FEEL BASEBOARD, CRAWL LEFT TOWARDS EMERGENCY EXIT! NEVER STAND!', w * 0.5, 30, '#10b981', '#ffffff', 13, 24, 8);
+      }
+
+      // Height ruler / temperature stratification gauge on the right
+      const gaugeX = w - 150;
+      const gaugeY = 65;
+      const gaugeW = 138;
+      const gaugeH = groundY - 75;
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(-15, -20);
-      ctx.lineTo(-30 + Math.cos(gait + Math.PI) * 12, 0);
+      ctx.roundRect(gaugeX, gaugeY, gaugeW, gaugeH, 8);
+      ctx.fill();
       ctx.stroke();
 
-      ctx.strokeStyle = '#1e293b';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.fillStyle = '#ef4444';
+      ctx.textAlign = 'left';
+      ctx.fillText(currentLang === 'zh' ? '天花板 300°C+ 💀' : 'Ceiling 300°C+ 💀', gaugeX + 10, gaugeY + 22);
+      ctx.fillStyle = '#fca5a5';
+      ctx.fillText(currentLang === 'zh' ? '含劇毒一氧化碳 CO' : 'Lethal CO & Cyanide', gaugeX + 10, gaugeY + 38);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
       ctx.beginPath();
-      ctx.moveTo(-15, -20);
-      ctx.lineTo(-30 + Math.cos(gait) * 12, 0);
+      ctx.moveTo(gaugeX + 8, gaugeY + 50);
+      ctx.lineTo(gaugeX + gaugeW - 8, gaugeY + 50);
       ctx.stroke();
 
-      ctx.fillStyle = '#0284c7';
-      ctx.beginPath();
-      ctx.roundRect(-25, -34 + spineUndulate, 65, 24, 8);
-      ctx.fill();
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillText(currentLang === 'zh' ? '100cm ⚠️ 危險嗆咳' : '100cm ⚠️ Severe Irritation', gaugeX + 10, gaugeY + 70);
 
-      ctx.strokeStyle = '#0284c7';
-      ctx.lineWidth = 8;
+      ctx.strokeStyle = '#10b981';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(25, -25);
-      ctx.lineTo(35 + Math.sin(gait + Math.PI) * 16, 0);
+      ctx.moveTo(gaugeX + 8, groundY - 140);
+      ctx.lineTo(gaugeX + gaugeW - 8, groundY - 140);
       ctx.stroke();
 
-      ctx.fillStyle = '#fed7aa';
-      ctx.beginPath();
-      ctx.arc(46, -26 + spineUndulate, 14, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#1e293b';
-      ctx.beginPath();
-      ctx.arc(46, -30 + spineUndulate, 14, Math.PI * 1.1, Math.PI * 2.2);
-      ctx.fill();
-
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.moveTo(25, -22);
-      ctx.lineTo(46, -18 + spineUndulate);
-      ctx.stroke();
-
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.7)';
-      ctx.beginPath();
-      ctx.arc(58, -20 + spineUndulate, 5 + Math.sin(frame * 0.15) * 2, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#10b981';
-      ctx.font = 'bold 16px sans-serif';
-      ctx.fillText('➡', 75, -18);
-
-      ctx.restore();
+      ctx.fillStyle = '#34d399';
+      ctx.fillText(currentLang === 'zh' ? '30-60cm 🟢 清新呼吸層' : '30-60cm 🟢 Clean Air', gaugeX + 10, groundY - 120);
+      ctx.fillStyle = '#a7f3d0';
+      ctx.font = '9px sans-serif';
+      if (currentLang === 'zh') {
+        ctx.fillText('溫度最低・氧氣最足', gaugeX + 10, groundY - 105);
+        ctx.fillText('雙膝著地・雙手爬行', gaugeX + 10, groundY - 90);
+        ctx.fillText('單手摸牆・定向逃生', gaugeX + 10, groundY - 75);
+      } else {
+        ctx.fillText('Coolest & highest O₂', gaugeX + 10, groundY - 105);
+        ctx.fillText('On hands and knees', gaugeX + 10, groundY - 90);
+        ctx.fillText('Follow skirting board', gaugeX + 10, groundY - 75);
+      }
     }
 
     // =============================================================
@@ -2074,8 +2490,8 @@ function initSurvivalSimulator() {
         : '🪟 STEP 4: SIGNAL AT WINDOW WITH BRIGHT CLOTH & FLASHLIGHT! NEVER JUMP!', w * 0.5, 30, '#0284c7', '#ffffff', 13, 24, 8);
     }
 
-    // Auto-advance timer logic (Action 1 is a 24s cinematic experience; other actions are 16s)
-    const currentActionDuration = (currentAction === 1) ? 1440 : actionDuration;
+    // Auto-advance timer logic (Action 1 & 2 are 24s cinematic experiences; other actions are 16s)
+    const currentActionDuration = (currentAction === 1 || currentAction === 2) ? 1440 : actionDuration;
     if (isPlaying) {
       actionTimer += playbackSpeed;
       const progressPercent = Math.min(100, (actionTimer / currentActionDuration) * 100);
