@@ -704,6 +704,13 @@ function initSurvivalSimulator() {
   const actionDuration = 960; // ~16 seconds at 60fps (thorough cinematic pacing)
   let frame = 0;
 
+  // Action-to-action cinematic transition state
+  const prevActionCanvas = document.createElement('canvas');
+  let transitionTimer = 0;
+  const TRANSITION_DURATION = 36; // ~0.6s cinematic wipe at 60fps
+  let transitionFrom = 1;
+  let transitionTo = 1;
+
   // Particle systems
   const smokeParticles = [];
   for (let i = 0; i < 45; i++) {
@@ -882,6 +889,18 @@ function initSurvivalSimulator() {
   }
 
   function setAction(action, pauseAutoplay = false) {
+    if (action !== currentAction && canvas.width > 0 && canvas.height > 0) {
+      // Snapshot current canvas frame to offscreen buffer for seamless wipe transition
+      prevActionCanvas.width = canvas.width;
+      prevActionCanvas.height = canvas.height;
+      const prevCtx = prevActionCanvas.getContext('2d');
+      prevCtx.drawImage(canvas, 0, 0);
+
+      transitionFrom = currentAction;
+      transitionTo = action;
+      transitionTimer = TRANSITION_DURATION;
+    }
+
     currentAction = action;
     actionTimer = 0;
     if (pauseAutoplay) {
@@ -900,6 +919,13 @@ function initSurvivalSimulator() {
 
     if (badgeEl && info) badgeEl.textContent = info.badge;
     if (textEl && info) textEl.textContent = info.text;
+
+    const titleContainer = document.querySelector('.step-indicator-title');
+    if (titleContainer) {
+      titleContainer.classList.remove('action-text-swap');
+      void titleContainer.offsetWidth;
+      titleContainer.classList.add('action-text-swap');
+    }
 
     updateStatusHint();
   }
@@ -3019,6 +3045,106 @@ function initSurvivalSimulator() {
             : '✅ Stay calm & signal location! Never jump! Wait for ladder rescue!', w * 0.5, groundY - 18, '#065f46', '#a7f3d0', 11, 20, 6, '#10b981');
         }
       }
+    }
+
+    // =============================================================
+    // CINEMATIC ACTION-TO-ACTION TRANSITION OVERLAY
+    // =============================================================
+    if (transitionTimer > 0) {
+      const progress = 1.0 - (transitionTimer / TRANSITION_DURATION); // 0.0 -> 1.0
+      // Smooth cubic ease-in-out curve
+      const ease = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+      ctx.save();
+
+      // Wipe seam position moving from right (w) to left (0)
+      const seamX = (1.0 - ease) * w;
+
+      // Draw the previous scene clipped to [0, 0, seamX, h]
+      if (prevActionCanvas.width > 0 && seamX > 0) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, seamX, h);
+        ctx.clip();
+        ctx.drawImage(prevActionCanvas, 0, 0);
+
+        // Subtle 3D shadow along the left of the trailing edge
+        const shadowGrad = ctx.createLinearGradient(seamX - 30, 0, seamX, 0);
+        shadowGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0.55)');
+        ctx.fillStyle = shadowGrad;
+        ctx.fillRect(seamX - 30, 0, 30, h);
+        ctx.restore();
+      }
+
+      // High-tech Glowing Laser / Energy Seam
+      const seamGrad = ctx.createLinearGradient(seamX - 20, 0, seamX + 20, 0);
+      seamGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+      seamGrad.addColorStop(0.35, 'rgba(56, 189, 248, 0.55)');
+      seamGrad.addColorStop(0.5, '#ffffff');
+      seamGrad.addColorStop(0.65, 'rgba(249, 115, 22, 0.55)');
+      seamGrad.addColorStop(1, 'rgba(249, 115, 22, 0)');
+
+      ctx.fillStyle = seamGrad;
+      ctx.fillRect(seamX - 20, 0, 40, h);
+
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#0284c7';
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.moveTo(seamX, 0);
+      ctx.lineTo(seamX, h);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Sparkles along seam
+      for (let s = 0; s < 8; s++) {
+        const sparkY = ((frame * 6 + s * 67) % h);
+        const sparkOffset = Math.sin(frame * 0.25 + s) * 7;
+        ctx.fillStyle = (s % 2 === 0) ? '#fef08a' : '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(seamX + sparkOffset, sparkY, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Center Motion Card announcing the action transition
+      const actionTitles = {
+        1: { zh: '動作一：摸門測溫 (DOOR HEAT CHECK)', en: 'ACTION 1: DOOR HEAT CHECK' },
+        2: { zh: '動作二：低姿勢爬行避濃煙 (CRAWL LOW)', en: 'ACTION 2: CRAWL LOW UNDER SMOKE' },
+        3: { zh: '動作三：停、躺、滾 (STOP, DROP & ROLL)', en: 'ACTION 3: STOP, DROP & ROLL' },
+        4: { zh: '動作四：關門塞縫、開窗呼救 (SHELTER & SIGNAL)', en: 'ACTION 4: SHELTER & SIGNAL' }
+      };
+
+      const targetTitle = actionTitles[transitionTo]
+        ? (currentLang === 'zh' ? actionTitles[transitionTo].zh : actionTitles[transitionTo].en)
+        : `ACTION ${transitionTo}`;
+
+      const pillAlpha = Math.sin(progress * Math.PI);
+      if (pillAlpha > 0.05) {
+        ctx.save();
+        ctx.globalAlpha = Math.min(1.0, pillAlpha * 1.25);
+        drawPill(
+          ctx,
+          `⚡ NEXT ➔ ${targetTitle}`,
+          w * 0.5,
+          h * 0.5,
+          'rgba(15, 23, 42, 0.94)',
+          '#38bdf8',
+          13,
+          26,
+          10,
+          '#0284c7'
+        );
+        ctx.restore();
+      }
+
+      ctx.restore();
+
+      transitionTimer -= Math.max(0.5, playbackSpeed);
+      if (transitionTimer < 0) transitionTimer = 0;
     }
 
     // Auto-advance timer logic (Action 1: 24s; Action 2: 30s [20% slower]; Action 3: 28s; Action 4: 28s)
