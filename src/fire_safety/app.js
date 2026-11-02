@@ -2012,17 +2012,18 @@ function initSurvivalSimulator() {
     }
 
     // =============================================================
-    // SCENE 3: STOP, DROP & ROLL (Burning Doorway -> Panic Run -> Stop -> Drop -> Roll -> Extinguished)
+    // SCENE 3: STOP, DROP & ROLL (Empty Room Pause -> Panic Burst -> Out of Breath Stop -> Drop -> Roll -> Extinguished)
     // =============================================================
     else if (currentAction === 3) {
       const cycle = (actionTimer % 1440);
       const centerX = w * 0.55;
 
-      const isAct1 = cycle < 380;
-      const isAct2 = cycle >= 380 && cycle < 560;
-      const isAct3 = cycle >= 560 && cycle < 740;
-      const isAct4 = cycle >= 740 && cycle < 1240;
-      const isAct5 = cycle >= 1240;
+      const isAct0 = cycle < 110;
+      const isAct1 = cycle >= 110 && cycle < 450;
+      const isAct2 = cycle >= 450 && cycle < 650;
+      const isAct3 = cycle >= 650 && cycle < 820;
+      const isAct4 = cycle >= 820 && cycle < 1280;
+      const isAct5 = cycle >= 1280;
 
       // -------------------------------------------------------------
       // 1. BACKGROUND: ROOM WITH OPEN DOORWAY AND RAGING INFERNO BEHIND IT
@@ -2122,37 +2123,48 @@ function initSurvivalSimulator() {
       // -------------------------------------------------------------
       // 2. CHARACTER ACTIONS & PANIC / EXTINCTION ANIMATION
       // -------------------------------------------------------------
-      if (isAct1) {
+      if (isAct0) {
+        // ACT 0: Empty room pause! Character has not appeared yet!
+        drawPill(ctx, currentLang === 'zh'
+          ? '🏠 寢室門外猛烈火海！(安靜片刻，突發狀況即將發生...)'
+          : '🏠 RAGING INFERNO OUTSIDE DOOR (PREPARING SURVIVAL DEMONSTRATION...)', w * 0.5, 30, '#0284c7', '#ffffff', 13, 24, 8);
+        drawPill(ctx, currentLang === 'zh'
+          ? '門外走廊已被大火吞噬，切勿隨意打開門扇！'
+          : 'Hallway engulfed in flames. Never open door carelessly!', w * 0.5, groundY - 14, 'rgba(15,23,42,0.85)', '#93c5fd', 11, 16, 5);
+
+      } else if (isAct1) {
         // ACT 1: Burst out of door on fire, running around like crazy with hands waving in panic!
         drawPill(ctx, currentLang === 'zh'
           ? '⚠️ 著火驚慌失措！雙手亂揮狂奔！(錯誤示範：狂奔灌注氧氣如鼓風爐，助長火勢！)'
           : '⚠️ PANIC FLAGGING & RUNNING! (RUNNING FEEDS OXYGEN LIKE A BELLOWS!)', w * 0.5, 30, '#ef4444', '#ffffff', 13, 24, 8);
 
+        const runProg = (cycle - 110) / 340;
         let personX;
         let facingRight = true;
-        if (cycle < 160) {
-          const t = cycle / 160;
-          personX = (doorX + 90) + t * (w * 0.65 - (doorX + 90));
+
+        if (runProg < 0.45) {
+          const t = runProg / 0.45;
+          personX = (doorX + 90) + t * (w * 0.68 - (doorX + 90));
           facingRight = true;
-        } else if (cycle < 270) {
-          const t = (cycle - 160) / 110;
-          personX = w * 0.65 - t * 90;
+        } else if (runProg < 0.75) {
+          const t = (runProg - 0.45) / 0.30;
+          personX = w * 0.68 - t * 110;
           facingRight = false;
         } else {
-          const t = (cycle - 270) / 110;
-          personX = (w * 0.65 - 90) + t * (centerX - (w * 0.65 - 90));
+          const t = (runProg - 0.75) / 0.25;
+          personX = (w * 0.68 - 110) + t * (centerX - (w * 0.68 - 110));
           facingRight = true;
         }
 
         const personY = groundY;
-        const runGait = actionTimer * 0.35 * playbackSpeed;
+        const runGait = actionTimer * 0.38 * playbackSpeed;
         const legSwing = Math.sin(runGait) * 36;
 
         ctx.save();
         ctx.translate(personX, personY);
 
-        const waveAngle1 = Math.sin(actionTimer * 0.45 * playbackSpeed) * 0.65 + 0.4;
-        const waveAngle2 = Math.cos(actionTimer * 0.48 * playbackSpeed) * 0.65 + 0.4;
+        const waveAngle1 = Math.sin(actionTimer * 0.48 * playbackSpeed) * 0.65 + 0.4;
+        const waveAngle2 = Math.cos(actionTimer * 0.52 * playbackSpeed) * 0.65 + 0.4;
 
         // Legs (scissoring fast)
         ctx.strokeStyle = '#1e293b';
@@ -2171,7 +2183,7 @@ function initSurvivalSimulator() {
         ctx.stroke();
 
         // Leaning Torso (wobbly frantically)
-        const torsoTilt = (facingRight ? 0.22 : -0.22) + Math.sin(actionTimer * 0.3) * 0.08;
+        const torsoTilt = (facingRight ? 0.24 : -0.24) + Math.sin(actionTimer * 0.3) * 0.08;
         ctx.rotate(torsoTilt);
 
         // Clothes (on fire!)
@@ -2233,58 +2245,123 @@ function initSurvivalSimulator() {
           : 'Wind from running feeds flames like a bellows. Flailing hands pull flames toward face!', w * 0.5, groundY - 14, 'rgba(15,23,42,0.85)', '#fca5a5', 11, 16, 5);
 
       } else if (isAct2) {
-        // ACT 2: Stop for a second! Realizes running makes it worse!
+        // ACT 2: Guy stops, visibly OUT OF BREATH (hunched, heaving chest, gasping for air)!
         drawPill(ctx, currentLang === 'zh'
-          ? '🛑 步驟 1：停 (STOP) - 立即站定停住腳步！絕對不要奔跑！'
-          : '🛑 STEP 1: STOP - HALT IMMEDIATELY! NEVER RUN!', w * 0.5, 30, '#dc2626', '#ffffff', 14, 24, 9);
+          ? '🛑 步驟 1：停 (STOP) - 氣喘吁吁立即站定！停止狂奔切斷對流！'
+          : '🛑 STEP 1: STOP - PANTING & OUT OF BREATH! HALT TO CUT OFF AIRFLOW!', w * 0.5, 30, '#dc2626', '#ffffff', 14, 24, 9);
 
         const personX = centerX;
         const personY = groundY;
 
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(personX - 14, personY - 85, 12, 85);
-        ctx.fillRect(personX + 2, personY - 85, 12, 85);
+        const pantCycle = actionTimer * 0.22 * playbackSpeed;
+        const chestHeave = Math.sin(pantCycle) * 4.5;
+        const hunchAngle = 0.26 + Math.sin(pantCycle) * 0.05;
+
+        ctx.save();
+        ctx.translate(personX, personY);
+
+        // Legs slightly bent at knees, bracing against exhaustion
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 11;
+        ctx.lineCap = 'round';
+
+        ctx.beginPath();
+        ctx.moveTo(-10, -75);
+        ctx.lineTo(-18, -40);
+        ctx.lineTo(-12, -4);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(10, -75);
+        ctx.lineTo(18, -40);
+        ctx.lineTo(14, -4);
+        ctx.stroke();
+
+        // Torso hunched forward from exhaustion
+        ctx.save();
+        ctx.translate(0, -75);
+        ctx.rotate(hunchAngle);
 
         ctx.fillStyle = '#0284c7';
-        ctx.fillRect(personX - 18, personY - 165, 36, 80);
+        ctx.beginPath();
+        ctx.roundRect(-18, -75 + chestHeave * 0.5, 36, 75, 6);
+        ctx.fill();
+
+        // Head drooped forward, mouth open gasping
+        const headX = 4;
+        const headY = -92 + chestHeave;
+        ctx.fillStyle = '#fed7aa';
+        ctx.beginPath();
+        ctx.arc(headX, headY, 16, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(headX, headY - 6, 17, Math.PI * 0.85, Math.PI * 2.15);
+        ctx.fill();
+
+        // Tired closed eyes
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(headX + 5, headY - 2);
+        ctx.lineTo(headX + 11, headY);
+        ctx.stroke();
+
+        // Open gasping mouth
+        ctx.fillStyle = '#7f1d1d';
+        ctx.beginPath();
+        ctx.ellipse(headX + 10, headY + 7, 3.5, 5 + chestHeave * 0.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hands braced on thighs / knees
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 9;
+        ctx.beginPath();
+        ctx.moveTo(10, -55);
+        ctx.lineTo(16, -20);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(-10, -55);
+        ctx.lineTo(-4, -20);
+        ctx.stroke();
 
         ctx.fillStyle = '#fed7aa';
         ctx.beginPath();
-        ctx.arc(personX, personY - 188, 16, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#1e293b';
-        ctx.beginPath();
-        ctx.arc(personX, personY - 195, 17, Math.PI, Math.PI * 2);
+        ctx.arc(16, -18, 5, 0, Math.PI * 2);
+        ctx.arc(-4, -18, 5, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.strokeStyle = '#0284c7';
-        ctx.lineWidth = 10;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(personX - 16, personY - 155);
-        ctx.lineTo(personX - 22, personY - 105);
-        ctx.moveTo(personX + 16, personY - 155);
-        ctx.lineTo(personX + 22, personY - 105);
-        ctx.stroke();
+        // Fire on back (steady burning without running wind)
+        drawEnchantedFire(ctx, -16, -35, 30, 55, 1.05, -3, frame);
 
-        // Fire on clothes (vertical, air wind halted)
-        drawEnchantedFire(ctx, personX - 14, personY - 110, 32, 60, 1.1, -4, frame);
+        ctx.restore(); // end torso transform
+
+        // Panting steam puffs from mouth
+        const pantPuff = (actionTimer * 0.12 * playbackSpeed) % 1;
+        ctx.fillStyle = `rgba(241, 245, 249, ${0.7 - pantPuff * 0.65})`;
+        ctx.beginPath();
+        ctx.arc(28 + pantPuff * 14, -160 + pantPuff * 8, 3.5 + pantPuff * 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore(); // end character transform
 
         drawPill(ctx, currentLang === 'zh'
-          ? '立即站定切斷對流風勢！準備順勢趴下！'
-          : 'Standing still halts convective airflow. Prepare to drop to the floor!', w * 0.5, groundY - 14, 'rgba(15,23,42,0.85)', '#fca5a5', 11, 16, 5);
+          ? '狂奔耗盡體力且使火勢猛烈！立即停步氣喘站定，切斷風勢對流！'
+          : 'Exhausted from running! Halt movement immediately to cut convective airflow!', w * 0.5, groundY - 14, 'rgba(15,23,42,0.85)', '#fca5a5', 11, 16, 5);
 
       } else if (isAct3) {
-        // ACT 3: Dropping / Lying down on the ground, covering face!
+        // ACT 3: Dropping / Laying down on the ground, covering face!
         drawPill(ctx, currentLang === 'zh'
           ? '🧎 步驟 2：躺 (DROP) - 順勢趴躺地面，雙手緊摀臉部！'
           : '🧎 STEP 2: DROP - DROP DOWN TO FLOOR, CUP HANDS OVER FACE!', w * 0.5, 30, '#f59e0b', '#000000', 14, 24, 9);
 
-        const dropT = Math.min(1.0, (cycle - 560) / 160);
+        const dropT = Math.min(1.0, (cycle - 650) / 150);
         const easeT = dropT * dropT * (3 - 2 * dropT);
 
-        const hipY = (groundY - 85) + easeT * 65;
-        const torsoAngle = easeT * (Math.PI / 2);
+        const hipY = (groundY - 80) + easeT * 60;
+        const torsoAngle = 0.26 + easeT * (Math.PI / 2 - 0.26);
         const personX = centerX;
 
         ctx.save();
@@ -2331,12 +2408,12 @@ function initSurvivalSimulator() {
           ? '🔄 步驟 3：滾 (ROLL) - 來回翻滾壓滅火苗！完全撲滅！'
           : '🔄 STEP 3: ROLL - ROLL BACK & FORTH TO SMOTHER ALL FLAMES!', w * 0.5, 30, '#10b981', '#ffffff', 14, 24, 9);
 
-        const rollCycle = (cycle - 740) * 0.08 * playbackSpeed;
+        const rollCycle = (cycle - 820) * 0.08 * playbackSpeed;
         const rollX = centerX + Math.sin(rollCycle * 0.5) * 90;
         const rollY = groundY - 22;
         const rollAngle = rollCycle * 1.5;
 
-        const rollProgress = Math.min(1.0, (cycle - 740) / 440);
+        const rollProgress = Math.min(1.0, (cycle - 820) / 420);
         const remainingFire = Math.max(0, 1.0 - rollProgress);
 
         ctx.save();
